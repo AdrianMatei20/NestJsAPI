@@ -1,8 +1,9 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, NotFoundException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, NotFoundException, UseGuards } from '@nestjs/common';
 import { UserService } from './user.service';
 import { RegisterUserDto } from './dto/register-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { ApiTags } from '@nestjs/swagger';
+import { AuthenticatedGuard } from 'src/auth/guards/authenticated.guard';
 
 @ApiTags('user')
 @Controller('user')
@@ -15,13 +16,14 @@ export class UserController {
   }
 
   @Get()
+  @UseGuards(AuthenticatedGuard)
   async findAll() {
     return await this.userService.findAll();
   }
 
   @Get(':id')
   async findOne(@Param('id') id: string) {
-    const user = await this.userService.findOne(id);
+    const user = await this.userService.findOneById(id);
     if(!user) {
       throw new NotFoundException('User not found!')
     }
@@ -35,7 +37,7 @@ export class UserController {
 
   @Delete(':id')
   async remove(@Param('id') id: string) {
-    const user = await this.userService.findOne(id);
+    const user = await this.userService.findOneById(id);
     if(!user) {
       throw new NotFoundException('User not found!')
     }

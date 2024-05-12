@@ -6,6 +6,8 @@ services:
     container_name: nestjs-app
     image: user/nestjsapp:1.0.0
     build: .
+    env_file:
+      - ./.env
     ports:
       - '3001:3001'
     environment:
