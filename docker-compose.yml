@@ -17,6 +17,12 @@ services:
       - PG_PASSWORD=postgres
       - PG_DB=postgres
       - PG_PORT=5432
+      - EMAIL=${EMAIL}
+      - PASS=${PASS}
+      - EMAIL_JS_SERVICE_ID=${EMAIL_JS_SERVICE_ID}
+      - EMAIL_JS_TEMPLATE_ID=${EMAIL_JS_TEMPLATE_ID}
+      - EMAIL_JS_PUBLIC_KEY=${EMAIL_JS_PUBLIC_KEY}
+      - EMAIL_JS_PRIVATE_KEY=${EMAIL_JS_PRIVATE_KEY}
     depends_on:
       - postgres
 

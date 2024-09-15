@@ -41,6 +41,11 @@ export class UserService {
     return await this.usersRepository.findOne({where: {id}});
   }
 
+  async markUserAccountAsVerified(user: User) {
+    user.emailVerified = true;
+    return await this.usersRepository.save(user);
+  }
+
   // delete user
   async delete(id: string): Promise<void> {
     await this.usersRepository.delete(id);

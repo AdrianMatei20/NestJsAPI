@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Delete, UseGuards, Req, Res } from '@nestjs/common';
+import { Controller, Get, Post, Body, Delete, UseGuards, Req, Res, Param } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { RegisterUserDto } from 'src/resources/user/dto/register-user.dto';
@@ -22,6 +22,20 @@ export class AuthController {
   @ApiResponse({status: 503, description: 'couldn\'t send confirmation email'})
   async registerUser(@Body() registerUserDto: RegisterUserDto) {
     return this.authService.registerUser(registerUserDto);
+  }
+
+  @Get('verify-user/:id/:token')
+  @ApiOperation({summary: 'Marks the account as \'verified\'.'})
+  @ApiResponse({status: 201, description: 'user verified successfully'})
+  @ApiResponse({status: 400, description: 'invalid user id'})
+  @ApiResponse({status: 403, description: 'expired or invalid token'})
+  @ApiResponse({status: 404, description: 'user not found'})
+  @ApiResponse({status: 500, description: 'internal server error'})
+  async verifyUser(
+    @Param('id') id: string,
+    @Param('token') token: string,
+  ) {
+    return this.authService.verifyUser(id, token);
   }
 
   @Post('login')
