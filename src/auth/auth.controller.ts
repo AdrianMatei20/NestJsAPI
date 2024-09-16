@@ -60,7 +60,7 @@ export class AuthController {
       req.session.destroy();
       res.clearCookie('SESSION_ID');
       await this.authService.deleteUser(req.user.id);
-      return { message: 'user session has ended' }
+      return { message: 'account deleted' }
     }
   }
 
