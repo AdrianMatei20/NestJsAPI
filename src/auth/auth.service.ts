@@ -9,6 +9,9 @@ import { EmailService } from 'src/services/email/email.service';
 import customMessage from 'src/shared/customMessage.response';
 import { validate as isValidUUID } from 'uuid';
 import { TokenService } from 'src/services/token/token.service';
+import { ResetPasswordService } from './reset-password/reset-password.service';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 
 @Injectable()
 export class AuthService {
@@ -18,6 +21,7 @@ export class AuthService {
     private readonly objectValidationService: ObjectValidationService,
     private readonly emailService: EmailService,
     private readonly tokenService: TokenService,
+    private readonly resetPasswordService: ResetPasswordService,
   ) { }
 
   async validateUser(user: LogInUserDto) {
@@ -109,6 +113,95 @@ export class AuthService {
     }
 
     throw new ServiceUnavailableException('something went wrong, please try again later')
+  }
+
+  async sendResetPasswordEmail(id: string) {
+    const user = await this.userService.findOneById(id);
+
+    if (!user) {
+      throw new NotFoundException(
+        customMessage(HttpStatus.NOT_FOUND, 'user not found')
+      );
+    }
+
+    const token = await this.resetPasswordService.createResetToken(user.id);
+    const link = "http://localhost:3001/auth/'reset-password/" + user.id + "/" + token;
+
+    if(await this.emailService.sendResetPasswordEmail(user.email, user.firstname + " " + user.lastname, link)){
+      return customMessage(
+        HttpStatus.OK,
+        'you will receive an email with a password reset link shortly'
+      );
+    }
+
+    throw new ServiceUnavailableException(
+      customMessage(HttpStatus.SERVICE_UNAVAILABLE, 'service is unavailable')
+    );
+  }
+
+  async sendForgotPasswordEmail(forgotPasswordDto: ForgotPasswordDto) {
+    const email = forgotPasswordDto.email;
+    const user = await this.userService.findOneByEmail(email);
+
+    if (!user) {
+      throw new NotFoundException(
+        customMessage(HttpStatus.NOT_FOUND, 'invalid email address')
+      );
+    }
+
+    const token = await this.resetPasswordService.createResetToken(user.id);
+    const link = "http://localhost:3001/auth/reset-password/" + user.id + "/" + token;
+
+    if(await this.emailService.sendResetPasswordEmail(user.email, user.firstname + " " + user.lastname, link)){
+      return customMessage(
+        HttpStatus.OK,
+        'if you are registered, you will receive an email with a password reset link shortly'
+      );
+    }
+
+    throw new ServiceUnavailableException(
+      customMessage(HttpStatus.SERVICE_UNAVAILABLE, 'service is unavailable')
+    );
+  }
+
+  async resetPassword(id: string, token: string, resetPasswordDto: ResetPasswordDto) {
+
+    if (!isValidUUID(id)) {
+      throw new BadRequestException('invalid user id');
+    }
+
+    var user = await this.userService.findOneById(id);
+    
+    if (!user) {
+      throw new NotFoundException(
+        customMessage(HttpStatus.NOT_FOUND, 'user not found')
+      );
+    }
+
+    const isValid = await this.resetPasswordService.validateResetToken(token);
+
+    if(!isValid) {
+      throw new ForbiddenException('expired or invalid token');
+    }
+
+    if (resetPasswordDto.password !== resetPasswordDto.passwordConfirmation) {
+      throw new BadRequestException('passwords don\'t match');
+    }
+
+    const newPassword = await hash(resetPasswordDto.password, 12);
+    user.password = newPassword;
+
+    const resetPassword = await this.resetPasswordService.findByToken(token);
+
+    if (!(await this.userService.update(resetPassword.user.id, user))) {
+      throw new ServiceUnavailableException(
+        customMessage(HttpStatus.SERVICE_UNAVAILABLE, 'service is unavailable'),
+      );
+    } else {
+      await this.resetPasswordService.invalidateResetToken(token);
+    }
+
+    return customMessage(HttpStatus.OK, 'password reset successful');
   }
 
   async findById(id: string): Promise<Omit<User, 'password'>> {

@@ -5,6 +5,8 @@ import { RegisterUserDto } from 'src/resources/user/dto/register-user.dto';
 import { LogInUserDto } from './dto/log-in-user.dto';
 import { LocalAuthGuard } from './guards/local.guard';
 import { AuthenticatedGuard } from './guards/authenticated.guard';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -47,6 +49,43 @@ export class AuthController {
   async loginUser(@Body() loginUserDto: LogInUserDto) {
     const user = await this.authService.findByEmail(loginUserDto.email);
     return { message: `Successfully logged in. Welcome ${user.firstname} ${user.lastname}!` }
+  }
+
+  @Get('reset-password')
+  @UseGuards(AuthenticatedGuard)
+  @ApiOperation({summary: 'Sends a password reset email. (user is logged in and wants to change the password)'})
+  @ApiResponse({status: 200, description: 'password reset email sent'})
+  @ApiResponse({status: 401, description: 'invalid credentials'})
+  @ApiResponse({status: 404, description: 'user not found'})
+  @ApiResponse({status: 500, description: 'internal server error'})
+  @ApiResponse({status: 503, description: 'could\'t send password reset email'})
+  async sendResetPasswordEmail(@Req() req) {
+    return await this.authService.sendResetPasswordEmail(req.user.id);
+  }
+
+  @Post('forgot-password')
+  @ApiOperation({summary: 'Sends a password reset email. (user doesn\'t remember the password and can\'t log in)'})
+  @ApiResponse({status: 200, description: 'password reset email sent'})
+  @ApiResponse({status: 404, description: 'user not found'})
+  @ApiResponse({status: 500, description: 'internal server error'})
+  @ApiResponse({status: 503, description: 'could\'t send password reset email'})
+  async sendForgotPasswordEmail(@Body() forgotPasswordDto: ForgotPasswordDto) {
+    return await this.authService.sendForgotPasswordEmail(forgotPasswordDto);
+  }
+
+  @Post('reset-password/:id/:token')
+  @ApiOperation({summary: 'Resets the user\'s password.'})
+  @ApiResponse({status: 200, description: 'password reset successful'})
+  @ApiResponse({status: 400, description: 'invalid user id or passwords don\'t match'})
+  @ApiResponse({status: 403, description: 'expired or invalid token'})
+  @ApiResponse({status: 404, description: 'user not found'})
+  @ApiResponse({status: 500, description: 'internal server error'})
+  @ApiResponse({status: 503, description: 'could\'t update user password'})
+  async resetPassword(
+    @Param('id') id: string,
+    @Param('token') token: string,
+    @Body() resetPasswordDto: ResetPasswordDto) {
+    return await this.authService.resetPassword(id, token, resetPasswordDto);
   }
 
   @Delete()
