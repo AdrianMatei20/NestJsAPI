@@ -11,10 +11,12 @@ import { JwtService } from '@nestjs/jwt';
 import { ResetPasswordService } from './reset-password/reset-password.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ResetPassword } from './reset-password/reset-password.entity';
+import { ResetPasswordCleanupService } from './reset-password-cleanup/reset-password-cleanup.service';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
-  imports: [UserModule, TypeOrmModule.forFeature([ResetPassword])],
+  imports: [UserModule, TypeOrmModule.forFeature([ResetPassword]), ScheduleModule.forRoot()],
   controllers: [AuthController],
-  providers: [AuthService, LocalStrategy, SessionSerializer, ObjectValidationService, EmailService, TokenService, JwtService, ResetPasswordService],
+  providers: [AuthService, LocalStrategy, SessionSerializer, ObjectValidationService, EmailService, TokenService, JwtService, ResetPasswordService, ResetPasswordCleanupService],
 })
 export class AuthModule {}
