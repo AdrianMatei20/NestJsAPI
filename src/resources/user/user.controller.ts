@@ -2,11 +2,12 @@ import { Controller, Get, Post, Body, Patch, Param, Delete, NotFoundException, U
 import { UserService } from './user.service';
 import { RegisterUserDto } from './dto/register-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiExcludeController, ApiTags } from '@nestjs/swagger';
 import { AuthenticatedGuard } from 'src/auth/guards/authenticated.guard';
 
 @ApiTags('user')
 @Controller('user')
+@ApiExcludeController(true)
 export class UserController {
   constructor(private readonly userService: UserService) {}
 

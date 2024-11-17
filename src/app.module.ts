@@ -9,6 +9,7 @@ import { PassportModule } from '@nestjs/passport';
 import { EmailService } from './services/email/email.service';
 import { TokenService } from './services/token/token.service';
 import { JwtService } from '@nestjs/jwt';
+import { ProjectModule } from './resources/project/project.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { JwtService } from '@nestjs/jwt';
     }),
     AuthModule,
     UserModule,
+    ProjectModule,
     TypeOrmModule.forRoot({
       type: process.env.DB_TYPE as any,
       host: process.env.PG_HOST,

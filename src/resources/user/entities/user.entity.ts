@@ -1,4 +1,5 @@
 import { ResetPassword } from "src/auth/reset-password/reset-password.entity";
+import { Project } from "src/resources/project/entities/project.entity";
 import { Entity, Column, PrimaryGeneratedColumn, OneToMany } from "typeorm";
 
 @Entity()
@@ -7,16 +8,16 @@ export class User {
     @PrimaryGeneratedColumn("uuid")
     id: string;
 
-    @Column()
+    @Column({ length: 25 })
     firstname: string;
 
-    @Column()
+    @Column({ length: 25 })
     lastname: string;
 
-    @Column()
+    @Column({ length: 100 })
     email: string;
 
-    @Column()
+    @Column({ length: 100 })
     password: string;
 
     @Column('boolean', {default: false})
@@ -24,4 +25,8 @@ export class User {
 
     @OneToMany(() => ResetPassword, (resetPassword) => resetPassword.user)
     resetPassword: ResetPassword[];
+
+    @OneToMany(() => Project, (project) => project.owner)
+    projects: Project[];
+
 }
