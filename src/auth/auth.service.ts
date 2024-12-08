@@ -79,7 +79,9 @@ export class AuthService {
     // Create new user
     try {
       newUser.password = await hash(newUser.password, 12);
-      const user: User = await this.userService.create(newUser);
+      const user: User = await this.userService.create({
+        ...newUser,
+      });
       var payload = { id: user.id, email: user.email, firstname: user.firstname, lastname: user.lastname };
       var token: string = this.tokenService.createToken(payload);
       var link: string = 'http://localhost:3001/auth/verify-user/' + user.id + "/" + token;

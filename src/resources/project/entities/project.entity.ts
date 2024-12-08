@@ -1,11 +1,11 @@
-import { User } from "src/resources/user/entities/user.entity";
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import { UserProjectRole } from "./user-project-role.entity";
 
 @Entity()
 export class Project {
 
     @PrimaryGeneratedColumn("uuid")
-    id: string;
+    readonly id: string;
 
     @Column({ length: 25 })
     name: string;
@@ -16,7 +16,7 @@ export class Project {
     @Column({ type: 'timestamptz' })
     createdAt: Date;
 
-    @ManyToOne(() => User, (user) => user.projects)
-    owner: User;
+    @OneToMany(() => UserProjectRole, (userProjectRole) => userProjectRole.project, { cascade: true })
+    userProjectRole: UserProjectRole[];
 
 }

@@ -6,12 +6,12 @@ export class UserDto {
     readonly id: string;
 
     @ApiProperty({type: String, description: 'User\'s firstname.', example: 'Adrian'})
-    firstname: string;
+    readonly firstname: string;
     
     @ApiProperty({type: String, description: 'User\'s lastname.', example: 'Matei'})
-    lastname: string;
+    readonly lastname: string;
 
     @ApiProperty({type: String, description: 'User\'s email address.', example: 'adrian.matei@fakemail.com'})
-    email: string;
+    readonly email: string;
 
 }

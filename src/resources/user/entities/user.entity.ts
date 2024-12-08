@@ -1,12 +1,13 @@
 import { ResetPassword } from "src/auth/reset-password/reset-password.entity";
-import { Project } from "src/resources/project/entities/project.entity";
 import { Entity, Column, PrimaryGeneratedColumn, OneToMany } from "typeorm";
+import { GlobalRole } from "../enums/global-role";
+import { UserProjectRole } from "src/resources/project/entities/user-project-role.entity";
 
 @Entity()
 export class User {
 
     @PrimaryGeneratedColumn("uuid")
-    id: string;
+    readonly id: string;
 
     @Column({ length: 25 })
     firstname: string;
@@ -23,10 +24,16 @@ export class User {
     @Column('boolean', {default: false})
     emailVerified: boolean;
 
+    @Column({type: 'enum', enum: GlobalRole, default: GlobalRole.REGULAR_USER})
+    globalRole: GlobalRole;
+
+    @Column({ type: 'timestamptz' })
+    createdAt: Date;
+
     @OneToMany(() => ResetPassword, (resetPassword) => resetPassword.user)
     resetPassword: ResetPassword[];
-
-    @OneToMany(() => Project, (project) => project.owner)
-    projects: Project[];
+    
+    @OneToMany(() => UserProjectRole, (userProjectRole) => userProjectRole.user)
+    userProjectRole: UserProjectRole[];
 
 }

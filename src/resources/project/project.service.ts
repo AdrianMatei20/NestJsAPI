@@ -11,12 +11,17 @@ import { CustomMessageDto } from 'src/shared/utils/custom-message.dto';
 import { ProjectDto } from './dto/project.dto';
 import { SimpleMessageDto } from 'src/shared/utils/simple-message.dto';
 import { User } from '../user/entities/user.entity';
+import { ProjectRole } from './enums/project-role';
+import { UserProjectRole } from './entities/user-project-role.entity';
+import { AssignUserDto } from './dto/assign-user.dto';
+import { UserDto } from '../user/dto/user.dto';
 
 @Injectable()
 export class ProjectService {
 
   constructor(
     @InjectRepository(Project) private projectRepository: Repository<Project>,
+    @InjectRepository(UserProjectRole) private userProjectRoleRepository: Repository<UserProjectRole>,
     private readonly userService: UserService,
     private readonly objectValidationService: ObjectValidationService,
   ) {
@@ -47,24 +52,48 @@ export class ProjectService {
       });
     }
 
-    const project: Project = this.projectRepository.create({
+    const project: Project = await this.projectRepository.create({
       ...newProject,
       createdAt: new Date(),
-      owner: user,
     });
 
     if (await this.projectRepository.save(project)) {
-      return {
-        statusCode: HttpStatus.OK,
-        message: 'project created',
-        data: {
-          id: project.id,
-          name: project.name,
-          description: project.description,
-          createdAt: project.createdAt,
-          ownerId: project.owner.id,
-        },
-      };
+
+      const userProjectRole: AssignUserDto = {
+        project: project,
+        user: user,
+        projectRole: ProjectRole.OWNER,
+        createdAt: new Date(),
+      }
+
+      if (await this.userProjectRoleRepository.save(userProjectRole)) {
+        const createdProject: Project = await this.projectRepository.findOne({
+          where: { id: project.id },
+          relations: ['userProjectRole', 'userProjectRole.user'],
+        });
+
+        const foundUserProjectRole: UserProjectRole = createdProject.userProjectRole
+          .find(userProjectRole => userProjectRole.projectRole === ProjectRole.OWNER);
+
+        const owner: UserDto = foundUserProjectRole?.user;
+
+        return {
+          statusCode: HttpStatus.OK,
+          message: 'project created',
+          data: {
+            id: createdProject.id,
+            name: createdProject.name,
+            description: createdProject.description,
+            createdAt: createdProject.createdAt,
+            owner: {
+              id: owner.id,
+              firstname: owner.firstname,
+              lastname: owner.lastname,
+              email: owner.email,
+            },
+          },
+        };
+      }
     }
 
     return {
@@ -96,20 +125,41 @@ export class ProjectService {
       });
     }
 
-    var projects: Project[] = await this.projectRepository.find({
-      where: { owner: { id: userId } },
-      relations: { owner: true }
+    const userProjectRoles: UserProjectRole[] = await this.userProjectRoleRepository.find({
+      relations: {
+        user: true,
+        project: true,
+      }
     });
+
+    const userProjectRolesForUser: UserProjectRole[] = userProjectRoles.filter(userProjectRole => 
+      userProjectRole.user.id === userId
+    );
+
+    const userProjects: Project[] = userProjectRolesForUser.map(userProjectRole => userProjectRole.project);
+
+    const userProjectsWithOwner = userProjects.map(project => ({
+      id: project.id,
+      name: project.name,
+      description: project.description,
+      createdAt: project.createdAt,
+      owner: userProjectRoles.find(userProjectRole => userProjectRole.project.id === project.id && userProjectRole.projectRole === ProjectRole.OWNER)?.user,
+    }));
 
     return {
       statusCode: HttpStatus.OK,
-      message: `${projects.length} project${projects.length == 1 ? '' : 's'} found`,
-      data: projects.map(project => ({
+      message: `${userProjects.length} project${userProjects.length == 1 ? '' : 's'} found`,
+      data: userProjectsWithOwner.map(project => ({
         id: project.id,
         name: project.name,
         description: project.description,
         createdAt: project.createdAt,
-        ownerId: project.owner.id,
+        owner: {
+          id: project.owner.id,
+          firstname: project.owner.firstname,
+          lastname: project.owner.lastname,
+          email: project.owner.email,
+        }
       })),
     };
   }
@@ -126,7 +176,7 @@ export class ProjectService {
     // Check if project exists
     const project: Project = await this.projectRepository.findOne({
       where: { id },
-      relations: { owner: true }
+      relations: ['userProjectRole', 'userProjectRole.user']
     });
 
     if (!project) {
@@ -136,6 +186,8 @@ export class ProjectService {
       });
     }
 
+    const owner: User = project.userProjectRole.find(userProjectRole => userProjectRole.projectRole === ProjectRole.OWNER).user;
+
     return {
       statusCode: 200,
       message: 'project found',
@@ -144,7 +196,12 @@ export class ProjectService {
         name: project.name,
         description: project.description,
         createdAt: project.createdAt,
-        ownerId: project.owner.id,
+        owner: {
+          id: owner.id,
+          firstname: owner.firstname,
+          lastname: owner.lastname,
+          email: owner.email,
+        },
       }
     }
   }
@@ -159,7 +216,7 @@ export class ProjectService {
     }
 
     // Check if project exists
-    var project: Project = await this.projectRepository.findOne({where: {id}});
+    var project: Project = await this.projectRepository.findOne({ where: { id } });
 
     if (!project) {
       throw new NotFoundException({
@@ -173,10 +230,10 @@ export class ProjectService {
       await this.projectRepository.update(id, updateProjectDto);
       var updatedProject: Project = await this.projectRepository.findOne({
         where: { id },
-        relations: { owner: true }
+        relations: { userProjectRole: true },
       });
 
-      console.log('updatedProject.id: ' + updatedProject.id);
+      const owner = project.userProjectRole.find(userProjectRole => userProjectRole.projectRole === ProjectRole.OWNER).user;
 
       return {
         statusCode: HttpStatus.OK,
@@ -186,7 +243,12 @@ export class ProjectService {
           name: updatedProject.name,
           description: updatedProject.description,
           createdAt: updatedProject.createdAt,
-          ownerId: updatedProject.owner.id,
+          owner: {
+            id: owner.id,
+            firstname: owner.firstname,
+            lastname: owner.lastname,
+            email: owner.email,
+          }
         },
       };
     } catch (e) {

@@ -1,0 +1,252 @@
+[
+    {
+        "name": "Project Phoenix",
+        "description": "A platform to streamline inventory management and logistics for small businesses.",
+        "createdAt": "2020/01/18 18:52:54"
+    },
+    {
+        "name": "Aurora CRM",
+        "description": "A customer relationship management tool tailored for freelancers and startups.",
+        "createdAt": "2020/02/07 04:54:31"
+    },
+    {
+        "name": "EcoTrail",
+        "description": "An application to track and reduce carbon footprints for eco-conscious individuals.",
+        "createdAt": "2020/03/28 02:17:06"
+    },
+    {
+        "name": "MindMesh",
+        "description": "A collaborative mind-mapping tool designed for creative teams.",
+        "createdAt": "2020/04/06 23:30:33"
+    },
+    {
+        "name": "CodeForge",
+        "description": "A cloud-based IDE and collaboration platform for software developers.",
+        "createdAt": "2020/05/02 00:43:31"
+    },
+    {
+        "name": "HealthPro Analytics",
+        "description": "A data visualization tool for hospitals to track patient outcomes and efficiency.",
+        "createdAt": "2020/07/07 21:01:26"
+    },
+    {
+        "name": "GreenThumb",
+        "description": "An app to help gardeners manage and optimize their plant care routines.",
+        "createdAt": "2020/08/22 05:56:52"
+    },
+    {
+        "name": "PixelVault",
+        "description": "A digital asset management system for photographers and graphic designers.",
+        "createdAt": "2020/09/13 22:59:34"
+    },
+    {
+        "name": "SoundWave Studio",
+        "description": "An online music production platform with real-time collaboration features.",
+        "createdAt": "2020/11/17 05:01:13"
+    },
+    {
+        "name": "AutoLinker",
+        "description": "A tool to automate and optimize vehicle dealership inventory management.",
+        "createdAt": "2020/11/20 14:02:53"
+    },
+    {
+        "name": "TaskTitan",
+        "description": "A task and time management app for busy professionals.",
+        "createdAt": "2020/12/16 21:35:01"
+    },
+    {
+        "name": "HomeHaven",
+        "description": "A smart home management system integrating multiple IoT devices.",
+        "createdAt": "2021/01/01 18:04:47"
+    },
+    {
+        "name": "EventHorizon",
+        "description": "An event planning platform for personal and corporate use.",
+        "createdAt": "2021/01/21 01:58:58"
+    },
+    {
+        "name": "FoodWise",
+        "description": "A meal planning app focused on nutrition and minimizing food waste.",
+        "createdAt": "2021/02/07 05:26:16"
+    },
+    {
+        "name": "ShopSnap",
+        "description": "An e-commerce platform for small businesses to set up online stores easily.",
+        "createdAt": "2021/02/26 15:10:59"
+    },
+    {
+        "name": "Zenith Wiki",
+        "description": "A customizable internal wiki tool for team knowledge management.",
+        "createdAt": "2021/04/13 04:40:01"
+    },
+    {
+        "name": "RunTracker",
+        "description": "A fitness app to track running routes and personal performance goals.",
+        "createdAt": "2021/04/27 19:37:56"
+    },
+    {
+        "name": "TravelNest",
+        "description": "An itinerary planning tool for group travel enthusiasts.",
+        "createdAt": "2021/06/07 16:36:41"
+    },
+    {
+        "name": "BrightStudy",
+        "description": "A learning platform offering customizable courses and study materials.",
+        "createdAt": "2021/07/27 03:36:14"
+    },
+    {
+        "name": "TeamPulse",
+        "description": "A performance tracking and feedback tool for agile teams.",
+        "createdAt": "2021/08/20 19:28:04"
+    },
+    {
+        "name": "StyleBoard",
+        "description": "A fashion and wardrobe planning app for individuals and stylists.",
+        "createdAt": "2021/09/26 20:57:51"
+    },
+    {
+        "name": "IdeaVault",
+        "description": "A brainstorming and idea management tool for entrepreneurs.",
+        "createdAt": "2021/09/28 06:57:57"
+    },
+    {
+        "name": "SnapFix",
+        "description": "A mobile app for quick home repair and maintenance requests.",
+        "createdAt": "2021/10/09 14:53:45"
+    },
+    {
+        "name": "AutoScheduler",
+        "description": "An AI-driven tool to optimize meeting schedules and resource allocation.",
+        "createdAt": "2021/11/27 15:03:11"
+    },
+    {
+        "name": "BookBridge",
+        "description": "A platform connecting book clubs and independent authors.",
+        "createdAt": "2022/01/04 09:16:14"
+    },
+    {
+        "name": "StockScope",
+        "description": "A real-time stock market analysis and portfolio tracking application.",
+        "createdAt": "2022/02/08 12:14:51"
+    },
+    {
+        "name": "StreamMaster",
+        "description": "An analytics tool for content creators to monitor and grow their audience.",
+        "createdAt": "2022/02/23 22:16:42"
+    },
+    {
+        "name": "Artistry AI",
+        "description": "A tool for creating AI-generated art with customizable parameters.",
+        "createdAt": "2022/03/27 14:22:21"
+    },
+    {
+        "name": "CityConnect",
+        "description": "An urban navigation app integrating public transport and local events.",
+        "createdAt": "2022/07/17 20:23:16"
+    },
+    {
+        "name": "SkillHub",
+        "description": "A marketplace for skill-sharing and mentoring opportunities.",
+        "createdAt": "2022/09/03 04:03:15"
+    },
+    {
+        "name": "EnergySaver",
+        "description": "A tool to track and optimize household energy consumption.",
+        "createdAt": "2022/11/11 01:17:45"
+    },
+    {
+        "name": "GameForge",
+        "description": "A platform for indie game developers to collaborate and showcase projects.",
+        "createdAt": "2022/11/18 00:26:12"
+    },
+    {
+        "name": "PetBuddy",
+        "description": "An app to manage pet care, training schedules, and vet appointments.",
+        "createdAt": "2022/11/26 15:14:58"
+    },
+    {
+        "name": "CloudScape",
+        "description": "A cloud storage platform with integrated collaboration features.",
+        "createdAt": "2023/02/02 14:13:42"
+    },
+    {
+        "name": "HarmonyHub",
+        "description": "A meditation and wellness app offering guided sessions and mood tracking.",
+        "createdAt": "2023/02/13 09:46:16"
+    },
+    {
+        "name": "RepairPro",
+        "description": "A service management system for appliance repair companies.",
+        "createdAt": "2023/03/18 03:57:45"
+    },
+    {
+        "name": "RoomSync",
+        "description": "A room booking and resource management tool for coworking spaces.",
+        "createdAt": "2023/05/09 00:46:50"
+    },
+    {
+        "name": "PlanItOut",
+        "description": "A personal productivity planner with goal-setting features.",
+        "createdAt": "2023/07/07 12:32:23"
+    },
+    {
+        "name": "TechTutor",
+        "description": "An online platform connecting tech learners with expert mentors.",
+        "createdAt": "2023/07/12 02:56:05"
+    },
+    {
+        "name": "NewsSphere",
+        "description": "A news aggregation app tailored to user preferences and interests.",
+        "createdAt": "2024/03/16 22:35:48"
+    },
+    {
+        "name": "QuickBudget",
+        "description": "A personal finance app for budgeting and expense tracking.",
+        "createdAt": "2024/03/31 13:27:20"
+    },
+    {
+        "name": "CraftBase",
+        "description": "A project management tool for craft businesses and hobbyists.",
+        "createdAt": "2024/06/17 22:43:07"
+    },
+    {
+        "name": "FitTogether",
+        "description": "A fitness social network encouraging group challenges and activities.",
+        "createdAt": "2024/09/04 01:23:26"
+    },
+    {
+        "name": "GlowFund",
+        "description": "A crowdfunding platform with an emphasis on eco-friendly projects.",
+        "createdAt": "2024/09/26 13:21:38"
+    },
+    {
+        "name": "RideSync",
+        "description": "A carpooling app for daily commuters in urban areas.",
+        "createdAt": "2024/10/02 21:31:31"
+    },
+    {
+        "name": "OpenCanvas",
+        "description": "An online platform for collaborative graphic design projects.",
+        "createdAt": "2024/11/02 23:12:49"
+    },
+    {
+        "name": "SafeVault",
+        "description": "A password and sensitive data management tool with advanced encryption.",
+        "createdAt": "2023/11/28 13:24:18"
+    },
+    {
+        "name": "EduReach",
+        "description": "An online platform for tutoring and remote education services.",
+        "createdAt": "2024/12/26 00:26:41"
+    },
+    {
+        "name": "DreamDiary",
+        "description": "An app to record and analyze dreams with built-in interpretation tools.",
+        "createdAt": "2024/12/29 15:02:38"
+    },
+    {
+        "name": "FarmConnect",
+        "description": "A platform linking farmers with local markets and buyers.",
+        "createdAt": "2024/12/31 01:33:08"
+    }
+]

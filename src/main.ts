@@ -1,7 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import * as session from 'express-session';
+import session from 'express-session';
 import * as passport from 'passport';
 import * as dotenv from 'dotenv';
 

@@ -10,6 +10,10 @@ import { EmailService } from './services/email/email.service';
 import { TokenService } from './services/token/token.service';
 import { JwtService } from '@nestjs/jwt';
 import { ProjectModule } from './resources/project/project.module';
+import { SeedService } from './services/seed/seed.service';
+import { User } from './resources/user/entities/user.entity';
+import { Project } from './resources/project/entities/project.entity';
+import { UserProjectRole } from './resources/project/entities/user-project-role.entity';
 
 @Module({
   imports: [
@@ -30,8 +34,17 @@ import { ProjectModule } from './resources/project/project.module';
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
       synchronize: true,
     }),
+    TypeOrmModule.forFeature([User, Project, UserProjectRole])
   ],
   controllers: [AppController],
-  providers: [AppService, EmailService, TokenService, JwtService],
+  providers: [AppService, EmailService, TokenService, JwtService, SeedService],
 })
-export class AppModule {}
+export class AppModule {
+
+  constructor(private readonly seedService: SeedService) {}
+
+  async onModuleInit() {
+    await this.seedService.seed();
+  }
+
+}

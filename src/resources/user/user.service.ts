@@ -9,46 +9,49 @@ import { User } from './entities/user.entity';
 export class UserService {
 
   constructor(
-    @InjectRepository(User) private usersRepository: Repository<User>,
+    @InjectRepository(User) private userRepository: Repository<User>,
   ) {
-    
+
   }
 
   // create user
   async create(createUserDto: RegisterUserDto): Promise<User> {
-    const newUser = this.usersRepository.create(createUserDto);
-    return await this.usersRepository.save(newUser);
+    const newUser = await this.userRepository.create({
+      ...createUserDto,
+      createdAt: new Date(),
+    });
+    return await this.userRepository.save(newUser);
   }
 
   // get all users
   async findAll(): Promise<User[]> {
-    return await this.usersRepository.find();
+    return await this.userRepository.find();
   }
 
   // get one user by id
   async findOneById(id: string): Promise<User> {
-    return await this.usersRepository.findOne({where: {id}});
+    return await this.userRepository.findOne({ where: { id } });
   }
 
   // get one user by email
   async findOneByEmail(email: string): Promise<User> {
-    return await this.usersRepository.findOne({where: {email}});
+    return await this.userRepository.findOne({ where: { email } });
   }
 
   // update user
   async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
-    await this.usersRepository.update(id, updateUserDto);
-    return await this.usersRepository.findOne({where: {id}});
+    await this.userRepository.update(id, updateUserDto);
+    return await this.userRepository.findOne({ where: { id } });
   }
 
   async markUserAccountAsVerified(user: User) {
     user.emailVerified = true;
-    return await this.usersRepository.save(user);
+    return await this.userRepository.save(user);
   }
 
   // delete user
   async delete(id: string): Promise<void> {
-    await this.usersRepository.delete(id);
+    await this.userRepository.delete(id);
   }
 
 }
