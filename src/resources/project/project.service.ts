@@ -52,12 +52,13 @@ export class ProjectService {
       });
     }
 
-    const project: Project = await this.projectRepository.create({
-      ...newProject,
-      createdAt: new Date(),
-    });
+    try {
+      const project: Project = await this.projectRepository.create({
+        ...newProject,
+        createdAt: new Date(),
+      });
 
-    if (await this.projectRepository.save(project)) {
+      await this.projectRepository.save(project);
 
       const userProjectRole: AssignUserDto = {
         project: project,
@@ -66,44 +67,45 @@ export class ProjectService {
         createdAt: new Date(),
       }
 
-      if (await this.userProjectRoleRepository.save(userProjectRole)) {
-        const createdProject: Project = await this.projectRepository.findOne({
-          where: { id: project.id },
-          relations: ['userProjectRole', 'userProjectRole.user'],
-        });
+      await this.userProjectRoleRepository.save(userProjectRole);
 
-        const foundUserProjectRole: UserProjectRole = createdProject.userProjectRole
-          .find(userProjectRole => userProjectRole.projectRole === ProjectRole.OWNER);
+      const createdProject: Project = await this.projectRepository.findOne({
+        where: { id: project.id },
+        relations: ['userProjectRole', 'userProjectRole.user'],
+      });
 
-        const owner: UserDto = foundUserProjectRole?.user;
+      const foundUserProjectRole: UserProjectRole = createdProject.userProjectRole
+        .find(userProjectRole => userProjectRole.projectRole === ProjectRole.OWNER);
 
-        return {
-          statusCode: HttpStatus.OK,
-          message: 'project created',
-          data: {
-            id: createdProject.id,
-            name: createdProject.name,
-            description: createdProject.description,
-            createdAt: createdProject.createdAt,
-            owner: {
-              id: owner.id,
-              firstname: owner.firstname,
-              lastname: owner.lastname,
-              email: owner.email,
-            },
+      const owner: UserDto = foundUserProjectRole?.user;
+
+      return {
+        statusCode: HttpStatus.OK,
+        message: 'project created',
+        data: {
+          id: createdProject.id,
+          name: createdProject.name,
+          description: createdProject.description,
+          createdAt: createdProject.createdAt,
+          owner: {
+            id: owner.id,
+            firstname: owner.firstname,
+            lastname: owner.lastname,
+            email: owner.email,
           },
-        };
-      }
+        },
+      };
+    } catch (e) {
+      throw new InternalServerErrorException({
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+        message: 'something went wrong, please try again later: ' + e,
+      });
     }
-
-    return {
-      statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-      message: 'couldn\'t create project',
-    };
   }
 
   async findAll() {
-    return await this.projectRepository.find();
+    const projects = await this.projectRepository.find();
+    return Array.isArray(projects) ? projects : [];
   }
 
   async findAllByUserId(userId: string): Promise<CustomMessageDto<ProjectDto[]>> {
@@ -132,7 +134,7 @@ export class ProjectService {
       }
     });
 
-    const userProjectRolesForUser: UserProjectRole[] = userProjectRoles.filter(userProjectRole => 
+    const userProjectRolesForUser: UserProjectRole[] = userProjectRoles.filter(userProjectRole =>
       userProjectRole.user.id === userId
     );
 
@@ -260,6 +262,14 @@ export class ProjectService {
   }
 
   async remove(id: string): Promise<SimpleMessageDto> {
+    // Check if the id is a valid UUID
+    if (!isValidUUID(id)) {
+      throw new BadRequestException({
+        statusCode: HttpStatus.BAD_REQUEST,
+        message: 'invalid project id',
+      });
+    }
+
     const project: Project = await this.projectRepository.findOne({
       where: { id },
     });
