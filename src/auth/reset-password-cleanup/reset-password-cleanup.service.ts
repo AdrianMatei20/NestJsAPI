@@ -8,8 +8,7 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 export class ResetPasswordCleanupService {
 
     constructor(
-        @InjectRepository(ResetPassword)
-        private passwordResetRepository: Repository<ResetPassword>,
+        @InjectRepository(ResetPassword) private passwordResetRepository: Repository<ResetPassword>,
     ) { }
 
     @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)

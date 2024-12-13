@@ -12,6 +12,7 @@ import { CreateProjectDto } from 'src/resources/project/dto/create-project.dto';
 import { AssignUserDto } from 'src/resources/project/dto/assign-user.dto';
 import { UserProjectRole } from 'src/resources/project/entities/user-project-role.entity';
 import { ProjectRole } from 'src/resources/project/enums/project-role';
+import { Log } from 'src/logger/entities/log.entity';
 
 @Injectable()
 export class SeedService {
@@ -20,6 +21,7 @@ export class SeedService {
         @InjectRepository(User) private readonly userRepository: Repository<User>,
         @InjectRepository(Project) private readonly projectRepository: Repository<Project>,
         @InjectRepository(UserProjectRole) private readonly userProjectRoleRepository: Repository<UserProjectRole>,
+        @InjectRepository(Log) private readonly logRepository: Repository<Log>,
     ) { }
 
     public async seed() {
@@ -27,6 +29,7 @@ export class SeedService {
         await this.seedMyUser();
         await this.seedUsers();
         await this.seedProjects();
+        await this.seedLogs();
     }
 
     private async seedAdmin() {
@@ -113,7 +116,7 @@ export class SeedService {
 
             if (user) {
                 user.emailVerified = true;
-                await this.userRepository.save(user);
+                const createdUser = await this.userRepository.save(user);
             }
         }
     }
@@ -125,9 +128,9 @@ export class SeedService {
             return;
         }
 
-        const userProjectRole: UserProjectRole[] = await this.userProjectRoleRepository.find({where: {user: {id: testUsers[0].id}}});
+        const userProjectRole: UserProjectRole[] = await this.userProjectRoleRepository.find({ where: { user: { id: testUsers[0].id } } });
 
-        if(userProjectRole.length > 0) {
+        if (userProjectRole.length > 0) {
             return;
         }
 
@@ -139,7 +142,7 @@ export class SeedService {
                 description: projects[i].description,
             }
 
-            const createdProject: Project = await this.projectRepository.create({
+            const createdProject: Project = this.projectRepository.create({
                 ...newProject,
                 createdAt: projects[i].createdAt,
             });
@@ -172,6 +175,147 @@ export class SeedService {
                 }
             }
         }
+    }
+
+    private async seedLogs() {
+        const logs: Log[] = await this.logRepository.find();
+        if (logs.length > 0) {
+            return;
+        }
+
+        const jamesSmithId = (await this.userRepository.findOne({
+            where: {
+                email: 'jamessmith@test.com',
+            }
+        })).id;
+
+        const randomUserId = 'af7c1fe6-d669-414e-b066-e9733f0de7a8';
+        const randomProjectId = '5108babc-bf35-44d5-a9ba-de08badfa80a';
+        const invalidId = '1';
+
+        const project = {
+            name: 'Test Project',
+            description: 'This is a test project.'
+        }
+        const emptyProject = {};
+        const projectWithNoName = {
+            description: 'This is a test project.'
+        };
+        const projectWithNoDescription = {
+            name: 'Test Project'
+        };
+
+        const missingProjectNameAndDescription = "name,description";
+        const missingProjectName = "name";
+        const missingProjectDescription = "description";
+
+        const ERROR: string = 'ERROR';
+        const WARN: string = 'WARN';
+        const INFO: string = 'INFO';
+
+        const databaseErrorMessage = 'Database connection error.';
+
+        const projectServiceCreateContext = 'ProjectService.create';
+        const projectsServiceFindAllByUserIdContext = 'ProjectService.findAllByUserId';
+        const projectServiceFindOneByIdContext = 'ProjectService.findOneById';
+        const projectServiceUpdateContext = 'ProjectService.update';
+        const projectServiceRemoveContext = 'ProjectService.remove';
+
+
+
+        // 01. ProjectService.create - userService.findOneById fails
+        await this.addLog(ERROR, `Failed to find user with id ${jamesSmithId}.`, projectServiceCreateContext, new Date("2020/01/18 18:50:09"), { project, jamesSmithId }, databaseErrorMessage);
+
+        // 02. ProjectService.create - user not found
+        await this.addLog(WARN, `Failed to find user with id ${randomUserId}.`, projectServiceCreateContext, new Date("2020/01/19 10:27:42"), { project, randomUserId });
+
+        // 03. ProjectService.create - no name, no description
+        await this.addLog(WARN, `Could not create project. Missing properties: ${missingProjectNameAndDescription}.`, projectServiceCreateContext, new Date("2020/01/19 10:32:51"), { emptyProject, jamesSmithId });
+
+        // 04. ProjectService.create - no name
+        await this.addLog(WARN, `Could not create project. Missing properties: ${missingProjectName}.`, projectServiceCreateContext, new Date("2020/01/19 10:37:21"), { projectWithNoName, jamesSmithId });
+
+        // 05. ProjectService.create - no description
+        await this.addLog(WARN, `Could not create project. Missing properties: ${missingProjectDescription}.`, projectServiceCreateContext, new Date("2020/01/19 10:40:37"), { projectWithNoDescription, jamesSmithId });
+
+        // 06. ProjectService.create - database calls fail
+        await this.addLog(ERROR, `Failed to create project "${project.name}".`, projectServiceCreateContext, new Date("2020/01/19 10:50:13"), { project, jamesSmithId }, databaseErrorMessage);
+
+        // 07. ProjectService.create - create project
+        await this.addLog(INFO, `Created project: "${project.name}"`, projectServiceCreateContext, new Date("2020/01/19 10:57:48"), { project, jamesSmithId });
+
+
+
+        // 08. ProjectService.findAllByUserId - invalid user id
+        await this.addLog(WARN, `Could not retrieve user's projects. The provided user id (${invalidId}) was not a valid UUID.`, projectsServiceFindAllByUserIdContext, new Date("2020/01/19 11:02:55"), invalidId);
+
+        // 09. ProjectService.findAllByUserId - userService.findOneById fails
+        await this.addLog(ERROR, `Failed to find user with id ${jamesSmithId}.`, projectsServiceFindAllByUserIdContext, new Date("2020/01/19 11:10:22"), jamesSmithId);
+
+        // 10. ProjectService.findAllByUserId - user not found
+        await this.addLog(WARN, `Failed to find user with id ${randomUserId}.`, projectsServiceFindAllByUserIdContext, new Date("2020/01/19 11:23:39"), randomUserId);
+
+        // 11. ProjectService.findAllByUserId - database calls fail
+        await this.addLog(ERROR, `Failed to retrieve user's projects.`, projectsServiceFindAllByUserIdContext, new Date("2020/01/19 11:33:30"), randomUserId, databaseErrorMessage);
+
+
+
+        // 12. ProjectService.findOneById - invalid project id
+        await this.addLog(WARN, `Could not retrieve project. The provided project id (${randomProjectId}) was not a valid UUID.`, projectServiceFindOneByIdContext, new Date("2020/01/19 12:13:59"), randomProjectId);
+
+        // 13. ProjectService.findOneById - projectRepository.findOne fails
+        await this.addLog(ERROR, `Failed to find project with id ${randomProjectId}.`, projectServiceFindOneByIdContext, new Date("2020/01/19 12:21:12"), randomProjectId, databaseErrorMessage);
+
+        // 14. ProjectService.findOneById - project not found
+        await this.addLog(WARN, `Could not retreive project. Project with id ${randomProjectId} not found.`, projectServiceFindOneByIdContext, new Date("2020/01/19 12:35:26"), randomProjectId);
+
+
+
+        // 15. ProjectService.update - invalid project id
+        await this.addLog(WARN, `Could not update project. The provided project id (${randomProjectId}) was not a valid UUID.`, projectServiceUpdateContext, new Date("2020/01/20 11:10:02"), { randomProjectId, project });
+
+        // 16. ProjectService.update - projectRepository.findOne fails
+        await this.addLog(ERROR, `Failed to find project with id ${randomProjectId}.`, projectServiceUpdateContext, new Date("2020/01/20 11:14:28"), { randomProjectId, project }, databaseErrorMessage);
+
+        // 17. ProjectService.update - project not found
+        await this.addLog(WARN, `Could not update project. Project with id ${randomProjectId} not found.`, projectServiceUpdateContext, new Date("2020/01/20 11:19:53"), { randomProjectId, project });
+
+        // 18. ProjectService.update - no name, no description
+        await this.addLog(WARN, `Could not update project "${project.name}". Missing properties: ${missingProjectNameAndDescription}.`, projectServiceUpdateContext, new Date("2020/01/20 11:31:44"), { randomProjectId, emptyProject });
+
+        // 19. ProjectService.update - no name
+        await this.addLog(WARN, `Could not update project "${project.name}". Missing properties: ${missingProjectName}.`, projectServiceUpdateContext, new Date("2020/01/20 11:36:18"), { randomProjectId, projectWithNoName });
+
+        // 20. ProjectService.update - no description
+        await this.addLog(WARN, `Could not update project "${project.name}". Missing properties: ${missingProjectDescription}.`, projectServiceUpdateContext, new Date("2020/01/20 11:39:58"), { randomProjectId, projectWithNoDescription });
+
+        // 21. ProjectService.update - projectRepository.update fails
+        await this.addLog(WARN, `Failed to update project "${project.name}".`, projectServiceUpdateContext, new Date("2020/01/20 11:43:19"), { randomProjectId, project });
+
+        // 22. ProjectService.update - update project
+        await this.addLog(INFO, `Updated project: ${project.name}`, projectServiceUpdateContext, new Date("2020/01/20 11:57:43"), { randomProjectId, project });
+
+
+
+        // 23. ProjectService.remove - invalid project id
+        await this.addLog(WARN, `Could not update project. The provided project id (${invalidId}) was not a valid UUID.`, projectServiceRemoveContext, new Date("2020/01/28 16:09:15"), { invalidId, project });
+
+        // 24. ProjectService.remove - projectRepository.findOne fails
+        await this.addLog(ERROR, `Failed to find project with id ${randomProjectId}.`, projectServiceRemoveContext, new Date("2020/01/28 16:11:42"), { randomProjectId, project }, databaseErrorMessage);
+
+        // 25. ProjectService.remove - project not found
+        await this.addLog(WARN, `Could not update project. Project with id ${randomProjectId} not found.`, projectServiceRemoveContext, new Date("2020/01/28 16:13:56"), { randomProjectId, project });
+
+        // 26. ProjectService.update - projectRepository.remove fails
+        await this.addLog(ERROR, `Failed to update project "${project.name}".`, projectServiceRemoveContext, new Date("2020/01/28 16:20:03"), { randomProjectId, project }, databaseErrorMessage);
+
+        // 27. ProjectService.update - delete project
+        await this.addLog(INFO, `Deleted project: ${project.name}`, projectServiceRemoveContext, new Date("2020/01/28 16:31:59"), { randomProjectId, project });
+    }
+
+    private async addLog(level: string, message: string, context: string, timestamp: Date, metadata?: any, trace?: string) {
+        const log = this.logRepository.create({ level, message, context, metadata, trace, timestamp });
+        await this.logRepository.save(log);
     }
 
 }

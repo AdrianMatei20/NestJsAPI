@@ -40,7 +40,8 @@
     "rxjs": "^7.8.1",
     "swagger-ui-express": "^5.0.0",
     "typeorm": "^0.3.20",
-    "uuid": "^9.0.1"
+    "uuid": "^9.0.1",
+    "winston": "^3.17.0"
   },
   "devDependencies": {
     "@nestjs/cli": "^10.0.0",
@@ -77,9 +78,10 @@
       "^.+\\.(t|j)s$": "ts-jest"
     },
     "collectCoverageFrom": [
-      "**/*.(t|j)s"
+      "**/*.(t|j)s",
+      "!test/**/*.ts"
     ],
-    "coverageDirectory": "../coverage",
+    "coverageDirectory": "./coverage/",
     "testEnvironment": "node",
     "preset": "ts-jest",
     "modulePaths": [
@@ -88,6 +90,11 @@
     "moduleDirectories": [
       "node_modules",
       "src"
+    ],
+    "collectCoverage": true,
+    "coverageReporters": [
+      "text",
+      "html"
     ]
   }
 }

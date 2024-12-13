@@ -1,15 +1,18 @@
 import { Module } from '@nestjs/common';
-import { ProjectService } from './project.service';
-import { ProjectController } from './project.controller';
+import { UserModule } from '../user/user.module';
+import { LoggerModule } from 'src/logger/logger.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Project } from './entities/project.entity';
-import { UserModule } from '../user/user.module';
-import { ObjectValidationService } from 'src/services/object-validation.service';
 import { UserProjectRole } from './entities/user-project-role.entity';
+import { Log } from 'src/logger/entities/log.entity';
+import { ProjectController } from './project.controller';
+import { ProjectService } from './project.service';
+import { ObjectValidationService } from 'src/services/object-validation.service';
+import { LoggerService } from 'src/logger/logger.service';
 
 @Module({
-  imports: [UserModule, TypeOrmModule.forFeature([Project, UserProjectRole])],
+  imports: [UserModule, LoggerModule, TypeOrmModule.forFeature([Project, UserProjectRole, Log])],
   controllers: [ProjectController],
-  providers: [ProjectService, ObjectValidationService],
+  providers: [ProjectService, ObjectValidationService, LoggerService],
 })
 export class ProjectModule {}

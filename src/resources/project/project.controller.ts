@@ -21,10 +21,10 @@ export class ProjectController {
   @ApiResponse({ status: HttpStatus.CREATED, description: 'project created' })
   @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'invalid json or missing properties' })
   @ApiResponse({ status: HttpStatus.INTERNAL_SERVER_ERROR, description: 'internal server error' })
-  create(
+  async create(
     @Req() req,
     @Body() createProjectDto: CreateProjectDto) {
-    return this.projectService.create(createProjectDto, req.user.id);
+    return await this.projectService.create(createProjectDto, req.user.id);
   }
 
   @Get()
@@ -66,8 +66,8 @@ export class ProjectController {
     }
   })
   @ApiResponse({ status: HttpStatus.INTERNAL_SERVER_ERROR, description: 'internal server error' })
-  findAll(@Req() req) {
-    return this.projectService.findAllByUserId(req.user.id);
+  async findAll(@Req() req) {
+    return await this.projectService.findAllByUserId(req.user.id);
   }
 
   @Get(':id')
@@ -95,8 +95,8 @@ export class ProjectController {
   @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'invalid project id' })
   @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'project not found' })
   @ApiResponse({ status: HttpStatus.INTERNAL_SERVER_ERROR, description: 'internal server error' })
-  findOne(@Param('id') id: string) {
-    return this.projectService.findOneById(id);
+  async findOne(@Param('id') id: string) {
+    return await this.projectService.findOneById(id);
   }
 
   @Patch(':id')
@@ -126,8 +126,8 @@ export class ProjectController {
   @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'invalid project id' })
   @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'project not found' })
   @ApiResponse({ status: HttpStatus.INTERNAL_SERVER_ERROR, description: 'internal server error' })
-  update(@Param('id') id: string, @Body() updateProjectDto: UpdateProjectDto) {
-    return this.projectService.update(id, updateProjectDto);
+  async update(@Param('id') id: string, @Body() updateProjectDto: UpdateProjectDto) {
+    return await this.projectService.update(id, updateProjectDto);
   }
 
   @Delete(':id')
@@ -137,7 +137,7 @@ export class ProjectController {
   @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'invalid project id' })
   @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'project not found' })
   @ApiResponse({ status: HttpStatus.INTERNAL_SERVER_ERROR, description: 'internal server error' })
-  remove(@Param('id') id: string) {
-    return this.projectService.remove(id);
+  async remove(@Param('id') id: string) {
+    return await this.projectService.remove(id);
   }
 }

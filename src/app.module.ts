@@ -14,6 +14,8 @@ import { SeedService } from './services/seed/seed.service';
 import { User } from './resources/user/entities/user.entity';
 import { Project } from './resources/project/entities/project.entity';
 import { UserProjectRole } from './resources/project/entities/user-project-role.entity';
+import { LoggerModule } from './logger/logger.module';
+import { Log } from './logger/entities/log.entity';
 
 @Module({
   imports: [
@@ -24,6 +26,7 @@ import { UserProjectRole } from './resources/project/entities/user-project-role.
     AuthModule,
     UserModule,
     ProjectModule,
+    LoggerModule,
     TypeOrmModule.forRoot({
       type: process.env.DB_TYPE as any,
       host: process.env.PG_HOST,
@@ -34,7 +37,7 @@ import { UserProjectRole } from './resources/project/entities/user-project-role.
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
       synchronize: true,
     }),
-    TypeOrmModule.forFeature([User, Project, UserProjectRole])
+    TypeOrmModule.forFeature([User, Project, UserProjectRole, Log]),
   ],
   controllers: [AppController],
   providers: [AppService, EmailService, TokenService, JwtService, SeedService],

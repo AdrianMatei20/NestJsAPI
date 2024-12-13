@@ -10,6 +10,7 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { User } from '../user/entities/user.entity';
 import { UpdateProjectDto } from './dto/update-project.dto';
 import { CreateProjectDto } from './dto/create-project.dto';
+import { LoggerService } from 'src/logger/logger.service';
 
 describe('ProjectService', () => {
   let projectService: ProjectService;
@@ -17,6 +18,7 @@ describe('ProjectService', () => {
   let projectRepositoryMock: any;
   let userProjectRoleRepositoryMock: any;
   let objectValidationServiceMock: any;
+  let loggerServiceMock: any;
 
   beforeEach(async () => {
     projectRepositoryMock = {
@@ -41,6 +43,12 @@ describe('ProjectService', () => {
       validate: jest.fn().mockResolvedValue(true),
     };
 
+    loggerServiceMock = {
+      error: jest.fn().mockResolvedValue({}),
+      warn: jest.fn().mockResolvedValue({}),
+      info: jest.fn().mockResolvedValue({}),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ProjectService,
@@ -57,10 +65,19 @@ describe('ProjectService', () => {
           provide: UserService,
           useValue: userServiceMock,
         },
+        {
+          provide: LoggerService,
+          useValue: loggerServiceMock,
+        },
       ],
     }).compile();
 
     projectService = module.get<ProjectService>(ProjectService);
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks(); // Clears mock calls, instances, and results
+    jest.resetModules(); // Clears module imports (if needed)
   });
 
   it('should be defined', () => {
@@ -69,29 +86,18 @@ describe('ProjectService', () => {
 
   describe('create', () => {
 
-    it('should throw BadRequestException for missing parameter \'name\'', async () => {
-      const createProjectDto: Partial<CreateProjectDto> = {
-        description: 'This is a test project.',
-      }
-      await expect(projectService.create(createProjectDto as CreateProjectDto, 'af7c1fe6-d669-414e-b066-e9733f0de7a8')).rejects.toThrow(
-        BadRequestException,
-      );
-    });
-
-    it('should throw BadRequestException for missing parameter \'description\'', async () => {
-      const createProjectDto: any = {
+    it('should throw InternalServerErrorException if userService.findOneById fails', async () => {
+      const createProjectDto: CreateProjectDto = {
         name: 'Test',
-      }
-      await expect(projectService.create(createProjectDto, 'af7c1fe6-d669-414e-b066-e9733f0de7a8')).rejects.toThrow(
-        BadRequestException,
-      );
-    });
+        description: 'This is a test project.',
+      };
 
-    it('should throw BadRequestException for missing parameters', async () => {
-      const createProjectDto: any = {}
+      (userServiceMock.findOneById as jest.Mock).mockRejectedValue(new Error('Database error'));
+      
       await expect(projectService.create(createProjectDto, 'af7c1fe6-d669-414e-b066-e9733f0de7a8')).rejects.toThrow(
-        BadRequestException,
+        InternalServerErrorException,
       );
+      expect(loggerServiceMock.error).toHaveBeenCalled();
     });
 
     it('should throw NotFoundException for unknown user', async () => {
@@ -105,6 +111,65 @@ describe('ProjectService', () => {
       await expect(projectService.create(createProjectDto, 'af7c1fe6-d669-414e-b066-e9733f0de7a8')).rejects.toThrow(
         NotFoundException,
       );
+      expect(loggerServiceMock.warn).toHaveBeenCalled();
+    });
+
+    it('should throw BadRequestException for missing parameter \'name\'', async () => {
+      const createProjectDto: Partial<CreateProjectDto> = {
+        description: 'This is a test project.',
+      };
+
+      const userJamesSmith = {
+        id: 'af7c1fe6-d669-414e-b066-e9733f0de7a8',
+        firstname: "James",
+        lastname: "Smith",
+        email: "jamessmith@fakemail.com",
+      };
+
+      (userServiceMock.findOneById as jest.Mock).mockResolvedValue(userJamesSmith);
+
+      await expect(projectService.create(createProjectDto as CreateProjectDto, 'af7c1fe6-d669-414e-b066-e9733f0de7a8')).rejects.toThrow(
+        BadRequestException,
+      );
+      expect(loggerServiceMock.warn).toHaveBeenCalled();
+    });
+
+    it('should throw BadRequestException for missing parameter \'description\'', async () => {
+      const createProjectDto: any = {
+        name: 'Test',
+      }
+
+      const userJamesSmith = {
+        id: 'af7c1fe6-d669-414e-b066-e9733f0de7a8',
+        firstname: "James",
+        lastname: "Smith",
+        email: "jamessmith@fakemail.com",
+      };
+
+      (userServiceMock.findOneById as jest.Mock).mockResolvedValue(userJamesSmith);
+
+      await expect(projectService.create(createProjectDto, 'af7c1fe6-d669-414e-b066-e9733f0de7a8')).rejects.toThrow(
+        BadRequestException,
+      );
+      expect(loggerServiceMock.warn).toHaveBeenCalled();
+    });
+
+    it('should throw BadRequestException for missing parameters', async () => {
+      const createProjectDto: any = {}
+
+      const userJamesSmith = {
+        id: 'af7c1fe6-d669-414e-b066-e9733f0de7a8',
+        firstname: "James",
+        lastname: "Smith",
+        email: "jamessmith@fakemail.com",
+      };
+
+      (userServiceMock.findOneById as jest.Mock).mockResolvedValue(userJamesSmith);
+      
+      await expect(projectService.create(createProjectDto, 'af7c1fe6-d669-414e-b066-e9733f0de7a8')).rejects.toThrow(
+        BadRequestException,
+      );
+      expect(loggerServiceMock.warn).toHaveBeenCalled();
     });
 
     it('should throw InternalServerErrorException if projectRepository.create fails', async () => {
@@ -139,14 +204,15 @@ describe('ProjectService', () => {
       project.userProjectRole = [userProjectRole];
 
       (userServiceMock.findOneById as jest.Mock).mockResolvedValue(userJamesSmith);
-      (projectRepositoryMock.findOne as jest.Mock).mockResolvedValue(project);
-      (projectRepositoryMock.create as jest.Mock).mockRejectedValue(new Error('Database error'));
+      (projectRepositoryMock.create as jest.Mock).mockImplementation(() => { throw new Error('Database error'); });
       (projectRepositoryMock.save as jest.Mock).mockResolvedValue(project);
+      (projectRepositoryMock.findOne as jest.Mock).mockResolvedValue(project);
       (userProjectRoleRepositoryMock.save as jest.Mock).mockResolvedValue(userProjectRole);
       
       await expect(projectService.create(createProjectDto, 'af7c1fe6-d669-414e-b066-e9733f0de7a8')).rejects.toThrow(
         InternalServerErrorException,
       );
+      expect(loggerServiceMock.error).toHaveBeenCalled();
     });
 
     it('should throw InternalServerErrorException if projectRepository.save fails', async () => {
@@ -189,6 +255,7 @@ describe('ProjectService', () => {
       await expect(projectService.create(createProjectDto, 'af7c1fe6-d669-414e-b066-e9733f0de7a8')).rejects.toThrow(
         InternalServerErrorException,
       );
+      expect(loggerServiceMock.error).toHaveBeenCalled();
     });
 
     it('should throw InternalServerErrorException if userProjectRoleRepository.save fails', async () => {
@@ -238,6 +305,7 @@ describe('ProjectService', () => {
       await expect(projectService.create(createProjectDto, 'af7c1fe6-d669-414e-b066-e9733f0de7a8')).rejects.toThrow(
         InternalServerErrorException,
       );
+      expect(loggerServiceMock.error).toHaveBeenCalled();
     });
 
     it('should return created project if all goes well', async () => {
@@ -251,13 +319,6 @@ describe('ProjectService', () => {
         firstname: "James",
         lastname: "Smith",
         email: "jamessmith@fakemail.com",
-      };
-
-      const userChristopherAnderson = {
-        id: '08c71152-c552-42e7-b094-f510ff44e9cb',
-        firstname: "Christopher",
-        lastname: "Anderson",
-        email: "christopheranderson@fakemail.com",
       };
 
       const project: Project = {
@@ -286,6 +347,7 @@ describe('ProjectService', () => {
 
       const result = await projectService.create(createProjectDto, 'af7c1fe6-d669-414e-b066-e9733f0de7a8');
 
+      expect(loggerServiceMock.info).toHaveBeenCalled();
       expect(result.statusCode).toBe(HttpStatus.OK);
       expect(result.message).toBe('project created');
       expect(result.data.id).toBe(project.id);
@@ -384,6 +446,16 @@ describe('ProjectService', () => {
       await expect(projectService.findAllByUserId('1')).rejects.toThrow(
         BadRequestException,
       );
+      expect(loggerServiceMock.warn).toHaveBeenCalled();
+    });
+
+    it('should throw InternalServerErrorException if userService.findOneById fails', async () => {
+      (userServiceMock.findOneById as jest.Mock).mockRejectedValue(new Error('Database error'));
+
+      await expect(projectService.findAllByUserId('af7c1fe6-d669-414e-b066-e9733f0de7a8')).rejects.toThrow(
+        InternalServerErrorException,
+      );
+      expect(loggerServiceMock.error).toHaveBeenCalled();
     });
 
     it('should throw NotFoundException for non-existing user', async () => {
@@ -392,6 +464,24 @@ describe('ProjectService', () => {
       await expect(projectService.findAllByUserId('af7c1fe6-d669-414e-b066-e9733f0de7a8')).rejects.toThrow(
         NotFoundException,
       );
+      expect(loggerServiceMock.warn).toHaveBeenCalled();
+    });
+
+    it('should throw InternalServerErrorException if userProjectRoleRepository.find fails', async () => {
+      const userJamesSmith = {
+        id: 'af7c1fe6-d669-414e-b066-e9733f0de7a8',
+        firstname: "James",
+        lastname: "Smith",
+        email: "jamessmith@fakemail.com",
+      };
+
+      (userServiceMock.findOneById as jest.Mock).mockResolvedValue(userJamesSmith);
+      (userProjectRoleRepositoryMock.find as jest.Mock).mockRejectedValue(new Error('Database error'));
+
+      await expect(projectService.findAllByUserId('af7c1fe6-d669-414e-b066-e9733f0de7a8')).rejects.toThrow(
+        InternalServerErrorException,
+      );
+      expect(loggerServiceMock.error).toHaveBeenCalled();
     });
 
     it('should return projects with the owner when user exists and has projects', async () => {
@@ -613,6 +703,16 @@ describe('ProjectService', () => {
       await expect(projectService.findOneById('1')).rejects.toThrow(
         BadRequestException,
       );
+      expect(loggerServiceMock.warn).toHaveBeenCalled();
+    });
+
+    it('should throw InternalServerErrorException if projectRepository.findOne fails', async () => {
+      (projectRepositoryMock.findOne as jest.Mock).mockRejectedValue(new Error('Database error'));
+
+      await expect(projectService.findOneById('5108babc-bf35-44d5-a9ba-de08badfa80a')).rejects.toThrow(
+        InternalServerErrorException,
+      );
+      expect(loggerServiceMock.error).toHaveBeenCalled();
     });
 
     it('should throw NotFoundException for non-existing project', async () => {
@@ -621,6 +721,7 @@ describe('ProjectService', () => {
       await expect(projectService.findOneById('5108babc-bf35-44d5-a9ba-de08badfa80a')).rejects.toThrow(
         NotFoundException,
       );
+      expect(loggerServiceMock.warn).toHaveBeenCalled();
     });
 
     it('should return the project with the owner when project exists', async () => {
@@ -771,6 +872,21 @@ describe('ProjectService', () => {
       await expect(projectService.update('1', updateProjectDto)).rejects.toThrow(
         BadRequestException,
       );
+      expect(loggerServiceMock.warn).toHaveBeenCalled();
+    });
+
+    it('should throw InternalServerErrorException if projectRepository.findOne fails', async () => {
+      const updateProjectDto: UpdateProjectDto = {
+        name: 'Updated Name',
+        description: 'Updated description.',
+      };
+
+      (projectRepositoryMock.findOne as jest.Mock).mockRejectedValue(new Error('Database error'));
+
+      await expect(projectService.update('5108babc-bf35-44d5-a9ba-de08badfa80a', updateProjectDto)).rejects.toThrow(
+        InternalServerErrorException,
+      );
+      expect(loggerServiceMock.error).toHaveBeenCalled();
     });
 
     it('should throw NotFoundException for non-existing project', async () => {
@@ -782,6 +898,25 @@ describe('ProjectService', () => {
       await expect(projectService.update('5108babc-bf35-44d5-a9ba-de08badfa80a', updateProjectDto)).rejects.toThrow(
         NotFoundException,
       );
+      expect(loggerServiceMock.warn).toHaveBeenCalled();
+    });
+
+    it('should throw BadRequestException for missing parameters', async () => {
+      const updateProjectDto: any = {}
+
+      const userJamesSmith = {
+        id: 'af7c1fe6-d669-414e-b066-e9733f0de7a8',
+        firstname: "James",
+        lastname: "Smith",
+        email: "jamessmith@fakemail.com",
+      };
+
+      (userServiceMock.findOneById as jest.Mock).mockResolvedValue(userJamesSmith);
+      
+      await expect(projectService.update('5108babc-bf35-44d5-a9ba-de08badfa80a', updateProjectDto)).rejects.toThrow(
+        BadRequestException,
+      );
+      expect(loggerServiceMock.warn).toHaveBeenCalled();
     });
 
     it('should throw InternalServerErrorException if update fails', async () => {
@@ -803,6 +938,151 @@ describe('ProjectService', () => {
       await expect(projectService.update('5108babc-bf35-44d5-a9ba-de08badfa80a', updateProjectDto)).rejects.toThrow(
         InternalServerErrorException,
       );
+      expect(loggerServiceMock.error).toHaveBeenCalled();
+    });
+
+    it('should return updated project if only name changes', async () => {
+
+      const userJamesSmith: Partial<User> = {
+        id: 'af7c1fe6-d669-414e-b066-e9733f0de7a8',
+        firstname: "James",
+        lastname: "Smith",
+        email: "jamessmith@fakemail.com",
+      };
+
+      const userChristopherAnderson: Partial<User> = {
+        id: '08c71152-c552-42e7-b094-f510ff44e9cb',
+        firstname: "Christopher",
+        lastname: "Anderson",
+        email: "christopheranderson@fakemail.com",
+      };
+
+      const updateProjectDto: Partial<UpdateProjectDto> = {
+        name: 'Updated Name',
+      };
+
+      const project: Project = {
+        id: '5108babc-bf35-44d5-a9ba-de08badfa80a',
+        name: 'Project Name',
+        description: 'Project description.',
+        createdAt: new Date('2024-01-01T12:00:00Z'),
+        userProjectRole: [],
+      };
+
+      const updatedProject: Project = {
+        id: '5108babc-bf35-44d5-a9ba-de08badfa80a',
+        name: updateProjectDto.name,
+        description: 'Project description.',
+        createdAt: new Date('2024-01-01T12:00:00Z'),
+        userProjectRole: [],
+      };
+
+      const userProjectRoles: UserProjectRole[] = [
+        {
+          id: 'fd4a096f-93f5-4f2a-86c6-69a2d20365ff',
+          user: userJamesSmith as User,
+          project: project,
+          projectRole: ProjectRole.OWNER,
+          createdAt: new Date(),
+        },
+        {
+          id: '96fdc209-0551-4d67-b9ad-0e9067a44bc4',
+          user: userChristopherAnderson as User,
+          project: project,
+          projectRole: ProjectRole.MEMBER,
+          createdAt: new Date(),
+        },
+      ];
+
+      project.userProjectRole = userProjectRoles;
+      updatedProject.userProjectRole = userProjectRoles;
+
+      (projectRepositoryMock.findOne as jest.Mock)
+        .mockResolvedValueOnce(project)
+        .mockResolvedValueOnce(updatedProject);
+      (projectRepositoryMock.update as jest.Mock).mockResolvedValue(updatedProject);
+
+      const result = await projectService.update('5108babc-bf35-44d5-a9ba-de08badfa80a', updateProjectDto as UpdateProjectDto);
+
+      expect(loggerServiceMock.info).toHaveBeenCalled();
+      expect(result.statusCode).toBe(HttpStatus.OK);
+      expect(result.message).toBe('project updated');
+      expect(result.data.id).toBe(updatedProject.id);
+      expect(result.data.name).toBe(updatedProject.name);
+      expect(result.data.description).toBe(updatedProject.description);
+      expect(result.data.createdAt).toBe(updatedProject.createdAt);
+    });
+
+    it('should return updated project if only description changes', async () => {
+
+      const userJamesSmith: Partial<User> = {
+        id: 'af7c1fe6-d669-414e-b066-e9733f0de7a8',
+        firstname: "James",
+        lastname: "Smith",
+        email: "jamessmith@fakemail.com",
+      };
+
+      const userChristopherAnderson: Partial<User> = {
+        id: '08c71152-c552-42e7-b094-f510ff44e9cb',
+        firstname: "Christopher",
+        lastname: "Anderson",
+        email: "christopheranderson@fakemail.com",
+      };
+
+      const updateProjectDto: Partial<UpdateProjectDto> = {
+        description: 'Updated description.',
+      };
+
+      const project: Project = {
+        id: '5108babc-bf35-44d5-a9ba-de08badfa80a',
+        name: 'Project Name',
+        description: updateProjectDto.description,
+        createdAt: new Date('2024-01-01T12:00:00Z'),
+        userProjectRole: [],
+      };
+
+      const updatedProject: Project = {
+        id: '5108babc-bf35-44d5-a9ba-de08badfa80a',
+        name: updateProjectDto.name,
+        description: '',
+        createdAt: new Date('2024-01-01T12:00:00Z'),
+        userProjectRole: [],
+      };
+
+      const userProjectRoles: UserProjectRole[] = [
+        {
+          id: 'fd4a096f-93f5-4f2a-86c6-69a2d20365ff',
+          user: userJamesSmith as User,
+          project: project,
+          projectRole: ProjectRole.OWNER,
+          createdAt: new Date(),
+        },
+        {
+          id: '96fdc209-0551-4d67-b9ad-0e9067a44bc4',
+          user: userChristopherAnderson as User,
+          project: project,
+          projectRole: ProjectRole.MEMBER,
+          createdAt: new Date(),
+        },
+      ];
+
+      project.userProjectRole = userProjectRoles;
+      updatedProject.userProjectRole = userProjectRoles;
+
+      (projectRepositoryMock.findOne as jest.Mock)
+        .mockResolvedValueOnce(project)
+        .mockResolvedValueOnce(updatedProject);
+      (projectRepositoryMock.update as jest.Mock).mockResolvedValue(updatedProject);
+
+      const result = await projectService.update('5108babc-bf35-44d5-a9ba-de08badfa80a', updateProjectDto as UpdateProjectDto);
+
+      expect(loggerServiceMock.info).toHaveBeenCalled();
+      expect(result.statusCode).toBe(HttpStatus.OK);
+      expect(result.message).toBe('project updated');
+      expect(result.data.id).toBe(updatedProject.id);
+      expect(result.data.name).toBe(updatedProject.name);
+      expect(result.data.description).toBe(updatedProject.description);
+      expect(result.data.createdAt).toBe(updatedProject.createdAt);
     });
 
     it('should return updated project if update succeeds', async () => {
@@ -869,6 +1149,7 @@ describe('ProjectService', () => {
 
       const result = await projectService.update('5108babc-bf35-44d5-a9ba-de08badfa80a', updateProjectDto);
 
+      expect(loggerServiceMock.info).toHaveBeenCalled();
       expect(result.statusCode).toBe(HttpStatus.OK);
       expect(result.message).toBe('project updated');
       expect(result.data.id).toBe(updatedProject.id);
@@ -885,6 +1166,21 @@ describe('ProjectService', () => {
       await expect(projectService.remove('1')).rejects.toThrow(
         BadRequestException,
       );
+      expect(loggerServiceMock.warn).toHaveBeenCalled();
+    });
+
+    it('should throw InternalServerErrorException if projectRepository.findOne fails', async () => {
+      const updateProjectDto: UpdateProjectDto = {
+        name: 'Updated Name',
+        description: 'Updated description.',
+      };
+
+      (projectRepositoryMock.findOne as jest.Mock).mockRejectedValue(new Error('Database error'));
+
+      await expect(projectService.remove('5108babc-bf35-44d5-a9ba-de08badfa80a')).rejects.toThrow(
+        InternalServerErrorException,
+      );
+      expect(loggerServiceMock.error).toHaveBeenCalled();
     });
 
     it('should throw NotFoundException for non-existing project', async () => {

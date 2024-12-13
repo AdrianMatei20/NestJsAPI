@@ -57,6 +57,7 @@ describe('ProjectController', () => {
       expect(guards).toBeDefined();
       expect(guards.length).toBe(1);
       expect(guards[0]).toBe(AuthenticatedGuard);
+      expect(guards.length).toBe(1);
     });
 
     it('should call ProjectService.create with the correct arguments', async () => {
