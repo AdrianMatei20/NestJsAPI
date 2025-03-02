@@ -67,19 +67,30 @@
     "typescript": "^5.1.3"
   },
   "jest": {
+    "roots": [
+      "<rootDir>/src",
+      "<rootDir>/test"
+    ],
     "moduleFileExtensions": [
       "js",
       "json",
       "ts"
     ],
     "rootDir": "./",
-    "testRegex": ".*\\.spec\\.ts$",
     "transform": {
       "^.+\\.(t|j)s$": "ts-jest"
     },
     "collectCoverageFrom": [
-      "**/*.(t|j)s",
-      "!test/**/*.ts"
+      "src/**/*.ts",
+      "!src/**/*.spec.ts",
+      "!src/main.ts",
+      "!src/**/index.ts",
+      "src/**/*.{js,jsx,ts,tsx}",
+      "!src/**/*.d.ts",
+      "!**/*.module.ts"
+    ],
+    "testMatch": [
+      "<rootDir>/src/**/*.spec.ts"
     ],
     "coverageDirectory": "./coverage/",
     "testEnvironment": "node",

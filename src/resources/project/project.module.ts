@@ -14,5 +14,6 @@ import { LoggerService } from 'src/logger/logger.service';
   imports: [UserModule, LoggerModule, TypeOrmModule.forFeature([Project, UserProjectRole, Log])],
   controllers: [ProjectController],
   providers: [ProjectService, ObjectValidationService, LoggerService],
+  exports: [ProjectService],
 })
 export class ProjectModule {}

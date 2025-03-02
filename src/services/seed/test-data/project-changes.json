@@ -1,0 +1,30 @@
+[
+    {
+        "name": "MindMesh",
+        "description": "A collaborative mind-mapping platform crafted for creative teams and brainstorming sessions."
+    },
+    {
+        "name": "HealthPro Analytics",
+        "description": "A data visualization tool that helps hospitals track patient outcomes and operational efficiency."
+    },
+    {
+        "name": "SoundWave Studio",
+        "description": "An online music production tool featuring real-time collaboration for creators."
+    },
+    {
+        "name": "SnapFix",
+        "description": "A mobile app for quickly requesting home repair and maintenance services."
+    },
+    {
+        "name": "EnergySaver",
+        "description": "A tool to track and minimize household energy consumption effectively."
+    },
+    {
+        "name": "PlanItOut",
+        "description": "A personal productivity planner designed to help achieve long-term goals."
+    },
+    {
+        "name": "TechTutor",
+        "description": "An online platform connecting technology learners with industry mentors."
+    }
+]

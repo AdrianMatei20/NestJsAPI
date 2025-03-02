@@ -1,21 +1,29 @@
-import { Module, Session } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { UserModule } from './resources/user/user.module';
+
 import { ConfigModule } from '@nestjs/config';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { AuthModule } from './auth/auth.module';
 import { PassportModule } from '@nestjs/passport';
-import { EmailService } from './services/email/email.service';
-import { TokenService } from './services/token/token.service';
-import { JwtService } from '@nestjs/jwt';
+import { AuthModule } from './auth/auth.module';
 import { ProjectModule } from './resources/project/project.module';
-import { SeedService } from './services/seed/seed.service';
+import { UserModule } from './resources/user/user.module';
+import { LoggerModule } from './logger/logger.module';
+import { TypeOrmModule } from '@nestjs/typeorm';
+
 import { User } from './resources/user/entities/user.entity';
 import { Project } from './resources/project/entities/project.entity';
 import { UserProjectRole } from './resources/project/entities/user-project-role.entity';
-import { LoggerModule } from './logger/logger.module';
 import { Log } from './logger/entities/log.entity';
+import { ResetPassword } from './auth/reset-password/reset-password.entity';
+
+import { EmailService } from './services/email/email.service';
+import { TokenService } from './services/token/token.service';
+import { JwtService } from '@nestjs/jwt';
+import { SeedService } from './services/seed/seed.service';
+import { ObjectValidationService } from './services/object-validation.service';
+import { LoggerService } from './logger/logger.service';
+import { AuthService } from './auth/auth.service';
+import { ResetPasswordService } from './auth/reset-password/reset-password.service';
 
 @Module({
   imports: [
@@ -24,8 +32,8 @@ import { Log } from './logger/entities/log.entity';
       session: true,
     }),
     AuthModule,
-    UserModule,
     ProjectModule,
+    UserModule,
     LoggerModule,
     TypeOrmModule.forRoot({
       type: process.env.DB_TYPE as any,
@@ -37,14 +45,14 @@ import { Log } from './logger/entities/log.entity';
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
       synchronize: true,
     }),
-    TypeOrmModule.forFeature([User, Project, UserProjectRole, Log]),
+    TypeOrmModule.forFeature([User, Project, UserProjectRole, Log, ResetPassword]),
   ],
   controllers: [AppController],
-  providers: [AppService, EmailService, TokenService, JwtService, SeedService],
+  providers: [AppService, EmailService, TokenService, JwtService, SeedService, ObjectValidationService, LoggerService, AuthService, ResetPasswordService],
 })
 export class AppModule {
 
-  constructor(private readonly seedService: SeedService) {}
+  constructor(private readonly seedService: SeedService) { }
 
   async onModuleInit() {
     await this.seedService.seed();

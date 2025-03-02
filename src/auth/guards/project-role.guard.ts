@@ -1,10 +1,8 @@
 import { CanActivate, ExecutionContext, ForbiddenException, Injectable } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Observable } from "rxjs";
 import { Project } from "src/resources/project/entities/project.entity";
 import { ProjectRole } from "src/resources/project/enums/project-role";
-import { ProjectService } from "src/resources/project/project.service";
 import { GlobalRole } from "src/resources/user/enums/global-role";
 import { Repository } from "typeorm";
 
@@ -40,7 +38,7 @@ export class ProjectRoleGuard implements CanActivate {
         // Fetch project details to check roles
         const project = await this.projectRepository.findOne({
             where: { id: projectId },
-            relations: ['userProjectRole', 'userProjectRole.user']
+            relations: ['userProjectRoles', 'userProjectRoles.user']
         });
 
         if (!project) {
@@ -48,7 +46,7 @@ export class ProjectRoleGuard implements CanActivate {
         }
 
         // Check if the user has one of the required roles
-        const hasAccess = project.userProjectRole.some((userProjectRole) => {
+        const hasAccess = project.userProjectRoles.some((userProjectRole) => {
             return (
                 userProjectRole.user.id === user.id &&
                 requiredRoles.includes(userProjectRole.projectRole)

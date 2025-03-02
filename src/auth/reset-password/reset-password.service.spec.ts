@@ -6,10 +6,10 @@ import { UserService } from 'src/resources/user/user.service';
 import { TokenService } from 'src/services/token/token.service';
 
 describe('ResetPasswordService', () => {
-  let service: ResetPasswordService;
-  let projectRepositoryMock: any;
-  let userServiceMock: any;
-  let tokenServiceMock: any;
+  let resetPasswordService: ResetPasswordService;
+  let mockProjectRepository: any;
+  let mockUserService: any;
+  let mockTokenService: any;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -17,23 +17,23 @@ describe('ResetPasswordService', () => {
         ResetPasswordService,
         {
           provide: getRepositoryToken(ResetPassword),
-          useValue: projectRepositoryMock,
+          useValue: mockProjectRepository,
         },
         {
           provide: UserService,
-          useValue: userServiceMock,
+          useValue: mockUserService,
         },
         {
           provide: TokenService,
-          useValue: tokenServiceMock,
+          useValue: mockTokenService,
         },
       ],
     }).compile();
 
-    service = module.get<ResetPasswordService>(ResetPasswordService);
+    resetPasswordService = module.get<ResetPasswordService>(ResetPasswordService);
   });
 
   it('should be defined', () => {
-    expect(service).toBeDefined();
+    expect(resetPasswordService).toBeDefined();
   });
 });

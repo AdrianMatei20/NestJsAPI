@@ -17,6 +17,6 @@ export class Project {
     createdAt: Date;
 
     @OneToMany(() => UserProjectRole, (userProjectRole) => userProjectRole.project, { cascade: true })
-    userProjectRole: UserProjectRole[];
+    userProjectRoles: UserProjectRole[];
 
 }

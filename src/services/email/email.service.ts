@@ -30,8 +30,8 @@ export class EmailService {
                 params,
             );
             console.log(response);
-        } catch (err) {
-            console.log(err);
+        } catch (error) {
+            console.log(error);
             return false;
         }
 
@@ -54,8 +54,8 @@ export class EmailService {
                 params,
             );
             console.log(response);
-        } catch(err) {
-            console.log(err);
+        } catch(error) {
+            console.log(error);
             return false;
         }
 

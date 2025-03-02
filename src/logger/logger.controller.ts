@@ -1,13 +1,17 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
+import { Controller, Get, UseGuards } from '@nestjs/common';
 import { LoggerService } from './logger.service';
-import { CreateLoggerDto } from './dto/create-logger.dto';
-import { UpdateLoggerDto } from './dto/update-logger.dto';
+import { AuthenticatedGuard } from 'src/auth/guards/authenticated.guard';
+import { GlobalAdminGuard } from 'src/auth/guards/global-admin.guard';
 
+@ApiTags('logger')
 @Controller('logger')
 export class LoggerController {
-  constructor(private readonly loggerService: LoggerService) {}
+  constructor(private readonly loggerService: LoggerService) { }
 
   @Get()
+  @UseGuards(AuthenticatedGuard)
+  @UseGuards(GlobalAdminGuard)
   findAll() {
     return this.loggerService.getLogs();
   }

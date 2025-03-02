@@ -13,13 +13,11 @@ export class ResetPasswordService {
         private readonly resetPasswordRepository: Repository<ResetPassword>,
         private readonly userService: UserService,
         private readonly tokenService: TokenService,
-    ) {
-        
-    }
+    ) { }
 
     async createResetToken(userId: string): Promise<string> {
         const user = await this.userService.findOneById(userId);
-        const payload = {id: user.id, email: user.email};
+        const payload = { id: user.id, email: user.email };
         const token = this.tokenService.createToken(payload);
         const expiresAt = new Date();
         expiresAt.setHours(expiresAt.getHours() + 1) // 1 hour expiry
@@ -48,11 +46,11 @@ export class ResetPasswordService {
     async validateResetToken(token: string): Promise<boolean> {
         const resetPassword = await this.findByToken(token);
 
-        if(!resetPassword) {
+        if (!resetPassword) {
             return false;
         }
 
-        if(resetPassword.expiresAt < new Date()) {
+        if (resetPassword.expiresAt < new Date()) {
             return false;
         }
 

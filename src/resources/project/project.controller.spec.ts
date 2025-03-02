@@ -3,22 +3,23 @@ import { ProjectController } from './project.controller';
 import { ProjectService } from './project.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Project } from './entities/project.entity';
-import { CreateProjectDto } from './dto/create-project.dto';
 import { AuthenticatedGuard } from 'src/auth/guards/authenticated.guard';
-import { ProjectDto } from './dto/project.dto';
-import { UpdateProjectDto } from './dto/update-project.dto';
-import { CustomMessageDto } from 'src/shared/utils/custom-message.dto';
+import { PublicProjectDto } from './dto/project.dto';
 import { ProjectRoleGuard } from 'src/auth/guards/project-role.guard';
 import { SimpleMessageDto } from 'src/shared/utils/simple-message.dto';
+import { HttpStatus } from '@nestjs/common';
+import { createProjectDto, JamesOwnerAndChristopherMember, project, projects, updateProjectDto } from 'test/data/projects';
+import { adminRequest, regularUserRequest, unknownRoleRequest } from 'test/data/requests';
 
 describe('ProjectController', () => {
   let projectController: ProjectController;
-  let projectServiceMock: any;
-  let projectRepositoryMock: any;
+  let mockProjectService: any;
+  let mockProjectRepository: any;
 
   beforeEach(async () => {
-    projectServiceMock = {
+    mockProjectService = {
       create: jest.fn().mockResolvedValue({}),
+      findAll: jest.fn().mockResolvedValue([]),
       findAllByUserId: jest.fn().mockResolvedValue({}),
       findOneById: jest.fn().mockResolvedValue({}),
       update: jest.fn().mockResolvedValue({}),
@@ -30,11 +31,11 @@ describe('ProjectController', () => {
       providers: [
         {
           provide: ProjectService,
-          useValue: projectServiceMock,
+          useValue: mockProjectService,
         },
         {
           provide: getRepositoryToken(Project),
-          useValue: projectRepositoryMock,
+          useValue: mockProjectRepository,
         },
       ],
     }).compile();
@@ -60,23 +61,46 @@ describe('ProjectController', () => {
       expect(guards.length).toBe(1);
     });
 
-    it('should call ProjectService.create with the correct arguments', async () => {
-      const req = { user: { id: 'af7c1fe6-d669-414e-b066-e9733f0de7a8' } };
-      const createProjectDto: CreateProjectDto = {
-        name: 'New Project',
-        description: 'Project description.',
-      };
-      const mockResponse = { id: '5108babc-bf35-44d5-a9ba-de08badfa80a', ...createProjectDto };
+    it('should return ProjectDto for admin requests', async () => {
+      (mockProjectService.create as jest.Mock).mockResolvedValue(project);
 
-      (projectServiceMock.create as jest.Mock).mockResolvedValue(mockResponse);
+      const result = await projectController.create(adminRequest, createProjectDto);
 
-      const result = await projectController.create(req, createProjectDto);
-
-      expect(projectServiceMock.create).toHaveBeenCalledWith(
+      expect(mockProjectService.create).toHaveBeenCalledWith(
         createProjectDto,
-        req.user.id,
+        adminRequest.user.id,
       );
-      expect(result).toEqual(mockResponse);
+      expect(result.statusCode).toEqual(HttpStatus.CREATED);
+      expect(result.message).toEqual('project created');
+      expect(result.data).toEqual(project);
+    });
+
+    it('should return PublicProjectDto array for regular user requests', async () => {
+      (mockProjectService.create as jest.Mock).mockResolvedValue(project);
+
+      const result = await projectController.create(regularUserRequest, createProjectDto);
+
+      expect(mockProjectService.create).toHaveBeenCalledWith(
+        createProjectDto,
+        regularUserRequest.user.id,
+      );
+      expect(result.statusCode).toEqual(HttpStatus.CREATED);
+      expect(result.message).toEqual('project created');
+      expect(result.data).toEqual(new PublicProjectDto(project));
+    });
+
+    it('should return PublicProjectDto array for unknown role requests', async () => {
+      (mockProjectService.create as jest.Mock).mockResolvedValue(project);
+
+      const result = await projectController.create(unknownRoleRequest, createProjectDto);
+
+      expect(mockProjectService.create).toHaveBeenCalledWith(
+        createProjectDto,
+        unknownRoleRequest.user.id,
+      );
+      expect(result.statusCode).toEqual(HttpStatus.CREATED);
+      expect(result.message).toEqual('project created');
+      expect(result.data).toEqual(new PublicProjectDto(project));
     });
 
   });
@@ -90,71 +114,112 @@ describe('ProjectController', () => {
       expect(guards[0]).toBe(AuthenticatedGuard);
     });
 
-    it('should call ProjectService.findAll with the correct arguments', async () => {
-      const userJamesSmith = {
-        id: 'af7c1fe6-d669-414e-b066-e9733f0de7a8',
-        firstname: "James",
-        lastname: "Smith",
-        email: "jamessmith@fakemail.com",
-      };
+    it('should call projectService.findAll and return empty Project array for admin requests if no projects are found', async () => {
+      (mockProjectService.findAll as jest.Mock).mockResolvedValue([]);
 
-      const userChristopherAnderson = {
-        id: '08c71152-c552-42e7-b094-f510ff44e9cb',
-        firstname: "Christopher",
-        lastname: "Anderson",
-        email: "christopheranderson@fakemail.com",
-      };
+      const result = await projectController.findAll(adminRequest);
 
-      const userRonaldClark = {
-        id: 'c558a80a-f319-4c10-95d4-4282ef745b4b',
-        firstname: "Ronald",
-        lastname: "Clark",
-        email: "ronaldclark@fakemail.com",
-      };
+      expect(mockProjectService.findAll).toHaveBeenCalled();
+      expect(mockProjectService.findAllByUserId).not.toHaveBeenCalled();
+      expect(result.statusCode).toEqual(HttpStatus.OK);
+      expect(result.message).toEqual('0 projects found');
+      expect(result.data).toEqual([]);
+    });
 
-      const projectOne: ProjectDto = {
-        id: '5108babc-bf35-44d5-a9ba-de08badfa80a',
-        name: 'Project One',
-        description: 'First project description.',
-        createdAt: new Date('2024-01-01T12:00:00Z'),
-        owner: userJamesSmith,
-      };
+    it('should call projectService.findAll and return Project array for admin requests if only one project is found', async () => {
+      (mockProjectService.findAll as jest.Mock).mockResolvedValue([project]);
 
-      const projectTwo: ProjectDto = {
-        id: '2d790a4d-7c9c-4e23-9c9c-5749c5fa7fdb',
-        name: 'Project Two',
-        description: 'Second project description.',
-        createdAt: new Date('2024-02-01T12:00:00Z'),
-        owner: userChristopherAnderson,
-      };
+      const result = await projectController.findAll(adminRequest);
 
-      const projectThree: ProjectDto = {
-        id: '8304e5ff-6324-4863-ac51-8fcbc6812b13',
-        name: 'Project Three',
-        description: 'Third project description.',
-        createdAt: new Date('2024-03-01T12:00:00Z'),
-        owner: userRonaldClark,
-      };
+      expect(mockProjectService.findAll).toHaveBeenCalled();
+      expect(mockProjectService.findAllByUserId).not.toHaveBeenCalled();
+      expect(result.statusCode).toEqual(HttpStatus.OK);
+      expect(result.message).toEqual('1 project found');
+      expect(result.data).toEqual([project]);
+    });
 
-      const projectFour: ProjectDto = {
-        id: '8304e5ff-6324-4863-ac51-8fcbc6812b13',
-        name: 'Project Four',
-        description: 'Fourth project description.',
-        createdAt: new Date('2024-04-01T12:00:00Z'),
-        owner: userRonaldClark,
-      };
+    it('should call projectService.findAll and return Project array for admin requests if multiple projects are found', async () => {
+      (mockProjectService.findAll as jest.Mock).mockResolvedValue(projects);
 
-      const req = { user: { id: 'af7c1fe6-d669-414e-b066-e9733f0de7a8' } };
-      const projects = [projectOne, projectTwo, projectThree, projectFour];
+      const result = await projectController.findAll(adminRequest);
 
-      (projectServiceMock.findAllByUserId as jest.Mock).mockResolvedValue(projects);
+      expect(mockProjectService.findAll).toHaveBeenCalled();
+      expect(mockProjectService.findAllByUserId).not.toHaveBeenCalled();
+      expect(result.statusCode).toEqual(HttpStatus.OK);
+      expect(result.message).toEqual(`${projects.length} projects found`);
+      expect(result.data).toEqual(projects);
+    });
 
-      const result = await projectController.findAll(req);
+    it('should call projectService.findAll and return empty Project array for regular user requests if no projects are found', async () => {
+      (mockProjectService.findAllByUserId as jest.Mock).mockResolvedValue([]);
 
-      expect(projectServiceMock.findAllByUserId).toHaveBeenCalledWith(
-        req.user.id,
-      );
-      expect(result).toEqual(projects);
+      const result = await projectController.findAll(regularUserRequest);
+
+      expect(mockProjectService.findAll).not.toHaveBeenCalled();
+      expect(mockProjectService.findAllByUserId).toHaveBeenCalled();
+      expect(result.statusCode).toEqual(HttpStatus.OK);
+      expect(result.message).toEqual('0 projects found');
+      expect(result.data).toEqual([]);
+    });
+
+    it('should call projectService.findAll and return Project array for regular user requests if only one project is found', async () => {
+      (mockProjectService.findAllByUserId as jest.Mock).mockResolvedValue([project]);
+
+      const result = await projectController.findAll(regularUserRequest);
+
+      expect(mockProjectService.findAll).not.toHaveBeenCalled();
+      expect(mockProjectService.findAllByUserId).toHaveBeenCalled();
+      expect(result.statusCode).toEqual(HttpStatus.OK);
+      expect(result.message).toEqual('1 project found');
+      expect(result.data).toEqual([new PublicProjectDto(project)]);
+    });
+
+    it('should call projectService.findAll and return Project array for regular user requests if multiple projects are found', async () => {
+      (mockProjectService.findAllByUserId as jest.Mock).mockResolvedValue(projects);
+
+      const result = await projectController.findAll(regularUserRequest);
+
+      expect(mockProjectService.findAll).not.toHaveBeenCalled();
+      expect(mockProjectService.findAllByUserId).toHaveBeenCalled();
+      expect(result.statusCode).toEqual(HttpStatus.OK);
+      expect(result.message).toEqual(`${projects.length} projects found`);
+      expect(result.data).toEqual(projects.map(project => new PublicProjectDto(project)));
+    });
+
+    it('should call projectService.findAll and return empty Project array for unknown role requests if no projects are found', async () => {
+      (mockProjectService.findAllByUserId as jest.Mock).mockResolvedValue([]);
+
+      const result = await projectController.findAll(unknownRoleRequest);
+
+      expect(mockProjectService.findAll).not.toHaveBeenCalled();
+      expect(mockProjectService.findAllByUserId).toHaveBeenCalled();
+      expect(result.statusCode).toEqual(HttpStatus.OK);
+      expect(result.message).toEqual('0 projects found');
+      expect(result.data).toEqual([]);
+    });
+
+    it('should call projectService.findAll and return Project array for unknown role requests if only one project is found', async () => {
+      (mockProjectService.findAllByUserId as jest.Mock).mockResolvedValue([project]);
+
+      const result = await projectController.findAll(unknownRoleRequest);
+
+      expect(mockProjectService.findAll).not.toHaveBeenCalled();
+      expect(mockProjectService.findAllByUserId).toHaveBeenCalled();
+      expect(result.statusCode).toEqual(HttpStatus.OK);
+      expect(result.message).toEqual('1 project found');
+      expect(result.data).toEqual([new PublicProjectDto(project)]);
+    });
+
+    it('should call projectService.findAll and return Project array for unknown role requests if multiple projects are found', async () => {
+      (mockProjectService.findAllByUserId as jest.Mock).mockResolvedValue(projects);
+
+      const result = await projectController.findAll(unknownRoleRequest);
+
+      expect(mockProjectService.findAll).not.toHaveBeenCalled();
+      expect(mockProjectService.findAllByUserId).toHaveBeenCalled();
+      expect(result.statusCode).toEqual(HttpStatus.OK);
+      expect(result.message).toEqual(`${projects.length} projects found`);
+      expect(result.data).toEqual(projects.map(project => new PublicProjectDto(project)));
     });
 
   });
@@ -168,32 +233,37 @@ describe('ProjectController', () => {
       expect(guards[0]).toBe(AuthenticatedGuard);
     });
 
-    it('should call ProjectService.findOne with the correct arguments', async () => {
-      const userJamesSmith = {
-        id: 'af7c1fe6-d669-414e-b066-e9733f0de7a8',
-        firstname: "James",
-        lastname: "Smith",
-        email: "jamessmith@fakemail.com",
-      };
+    it('should call projectService.findOneById and return Project for admin requests if project is found', async () => {
+      (mockProjectService.findOneById as jest.Mock).mockResolvedValue(project);
 
-      const project: ProjectDto = {
-        id: '5108babc-bf35-44d5-a9ba-de08badfa80a',
-        name: 'Project One',
-        description: 'First project description.',
-        createdAt: new Date('2024-01-01T12:00:00Z'),
-        owner: userJamesSmith,
-      };
+      const result = await projectController.findOne(adminRequest, project.id);
 
-      const req = { user: { id: 'af7c1fe6-d669-414e-b066-e9733f0de7a8' } };
+      expect(mockProjectService.findOneById).toHaveBeenCalled();
+      expect(result.statusCode).toEqual(HttpStatus.OK);
+      expect(result.message).toEqual('project found');
+      expect(result.data).toEqual(project);
+    });
 
-      (projectServiceMock.findOneById as jest.Mock).mockResolvedValue(project);
+    it('should call projectService.findOneById and return Project for regular user requests if project is found', async () => {
+      (mockProjectService.findOneById as jest.Mock).mockResolvedValue(project);
 
-      const result = await projectController.findOne(project.id);
+      const result = await projectController.findOne(regularUserRequest, project.id);
 
-      expect(projectServiceMock.findOneById).toHaveBeenCalledWith(
-        project.id,
-      );
-      expect(result).toEqual(project);
+      expect(mockProjectService.findOneById).toHaveBeenCalled();
+      expect(result.statusCode).toEqual(HttpStatus.OK);
+      expect(result.message).toEqual('project found');
+      expect(result.data).toEqual(new PublicProjectDto(project));
+    });
+
+    it('should call projectService.findOneById and return Project for unknown role requests if project is found', async () => {
+      (mockProjectService.findOneById as jest.Mock).mockResolvedValue(project);
+
+      const result = await projectController.findOne(unknownRoleRequest, project.id);
+
+      expect(mockProjectService.findOneById).toHaveBeenCalled();
+      expect(result.statusCode).toEqual(HttpStatus.OK);
+      expect(result.message).toEqual('project found');
+      expect(result.data).toEqual(new PublicProjectDto(project));
     });
 
   });
@@ -208,52 +278,123 @@ describe('ProjectController', () => {
       expect(guards[1]).toBe(AuthenticatedGuard);
     });
 
-    it('should call ProjectService.update with the correct arguments', async () => {
-      const userJamesSmith = {
-        id: 'af7c1fe6-d669-414e-b066-e9733f0de7a8',
-        firstname: "James",
-        lastname: "Smith",
-        email: "jamessmith@fakemail.com",
-      };
+    it('should return Project array for admin requests', async () => {
+      (mockProjectService.create as jest.Mock).mockResolvedValue(project);
 
-      const project: ProjectDto = {
-        id: '5108babc-bf35-44d5-a9ba-de08badfa80a',
-        name: 'Project One',
-        description: 'First project description.',
-        createdAt: new Date('2024-01-01T12:00:00Z'),
-        owner: userJamesSmith,
-      };
+      const result = await projectController.create(adminRequest, createProjectDto);
 
-      const updateProjectDto: UpdateProjectDto = {
-        name: 'Updated Project One',
-        description: 'Updated first project description.',
-      };
+      expect(mockProjectService.create).toHaveBeenCalledWith(
+        createProjectDto,
+        adminRequest.user.id,
+      );
+      expect(result.statusCode).toEqual(HttpStatus.CREATED);
+      expect(result.message).toEqual('project created');
+      expect(result.data).toEqual(project);
+    });
 
-      const updatedProject: ProjectDto = {
+    it('should return PublicProjectDto array for regular user requests', async () => {
+      (mockProjectService.create as jest.Mock).mockResolvedValue(project);
+
+      const result = await projectController.create(regularUserRequest, createProjectDto);
+
+      expect(mockProjectService.create).toHaveBeenCalledWith(
+        createProjectDto,
+        regularUserRequest.user.id,
+      );
+      expect(result.statusCode).toEqual(HttpStatus.CREATED);
+      expect(result.message).toEqual('project created');
+      expect(result.data).toEqual(new PublicProjectDto(project));
+    });
+
+    it('should return PublicProjectDto array for unknown role requests', async () => {
+      (mockProjectService.create as jest.Mock).mockResolvedValue(project);
+
+      const result = await projectController.create(unknownRoleRequest, createProjectDto);
+
+      expect(mockProjectService.create).toHaveBeenCalledWith(
+        createProjectDto,
+        unknownRoleRequest.user.id,
+      );
+      expect(result.statusCode).toEqual(HttpStatus.CREATED);
+      expect(result.message).toEqual('project created');
+      expect(result.data).toEqual(new PublicProjectDto(project));
+    });
+
+  });
+
+  describe('GET /projects (findAll)', () => {
+
+    it('should have AuthenticatedGuard applied to the create endpoint', () => {
+      const guards = Reflect.getMetadata('__guards__', projectController.findAll);
+      expect(guards).toBeDefined();
+      expect(guards.length).toBe(1);
+      expect(guards[0]).toBe(AuthenticatedGuard);
+    });
+
+    it('should call projectService.update and return updated project for admin requests', async () => {
+      const updatedProject: Project = {
         id: project.id,
         name: updateProjectDto.name,
         description: updateProjectDto.description,
         createdAt: project.createdAt,
-        owner: userJamesSmith,
+        userProjectRoles: JamesOwnerAndChristopherMember,
       };
 
-      const mockResult: CustomMessageDto<ProjectDto> = {
-        statusCode: 200,
-        message: 'project updated',
-        data: updatedProject,
-      }
+      (mockProjectService.update as jest.Mock).mockResolvedValue(updatedProject);
 
-      const req = { user: { id: 'af7c1fe6-d669-414e-b066-e9733f0de7a8' } };
+      const result = await projectController.update(adminRequest, project.id, updateProjectDto);
 
-      (projectServiceMock.update as jest.Mock).mockResolvedValue(mockResult);
-
-      const result = await projectController.update(project.id, updateProjectDto);
-
-      expect(projectServiceMock.update).toHaveBeenCalledWith(
+      expect(mockProjectService.update).toHaveBeenCalledWith(
         project.id,
         updateProjectDto,
       );
-      expect(result).toEqual(mockResult);
+      expect(result.statusCode).toEqual(HttpStatus.OK);
+      expect(result.message).toEqual('project updated');
+      expect(result.data).toEqual(updatedProject);
+    });
+
+    it('should call projectService.update and return updated project for regular users requests', async () => {
+      const updatedProject: Project = {
+        id: project.id,
+        name: updateProjectDto.name,
+        description: updateProjectDto.description,
+        createdAt: project.createdAt,
+        userProjectRoles: JamesOwnerAndChristopherMember,
+      };
+
+      (mockProjectService.update as jest.Mock).mockResolvedValue(updatedProject);
+
+      const result = await projectController.update(regularUserRequest, project.id, updateProjectDto);
+
+      expect(mockProjectService.update).toHaveBeenCalledWith(
+        project.id,
+        updateProjectDto,
+      );
+      expect(result.statusCode).toEqual(HttpStatus.OK);
+      expect(result.message).toEqual('project updated');
+      expect(result.data).toEqual(new PublicProjectDto(updatedProject));
+    });
+
+    it('should call projectService.update and return updated project for unkown role requests', async () => {
+      const updatedProject: Project = {
+        id: project.id,
+        name: updateProjectDto.name,
+        description: updateProjectDto.description,
+        createdAt: project.createdAt,
+        userProjectRoles: JamesOwnerAndChristopherMember,
+      };
+
+      (mockProjectService.update as jest.Mock).mockResolvedValue(updatedProject);
+
+      const result = await projectController.update(unknownRoleRequest, project.id, updateProjectDto);
+
+      expect(mockProjectService.update).toHaveBeenCalledWith(
+        project.id,
+        updateProjectDto,
+      );
+      expect(result.statusCode).toEqual(HttpStatus.OK);
+      expect(result.message).toEqual('project updated');
+      expect(result.data).toEqual(new PublicProjectDto(updatedProject));
     });
 
   });
@@ -263,22 +404,23 @@ describe('ProjectController', () => {
     it('should have AuthenticatedGuard applied to the create endpoint', () => {
       const guards = Reflect.getMetadata('__guards__', projectController.remove);
       expect(guards).toBeDefined();
-      expect(guards.length).toBe(1);
-      expect(guards[0]).toBe(AuthenticatedGuard);
+      expect(guards.length).toBe(2);
+      expect(guards[0]).toBe(ProjectRoleGuard);
+      expect(guards[1]).toBe(AuthenticatedGuard);
     });
 
     it('should call ProjectService.remove with the correct arguments', async () => {
       const mockResult: SimpleMessageDto = {
-        statusCode: 200,
+        statusCode: HttpStatus.OK,
         message: 'project deleted',
       };
 
-      (projectServiceMock.remove as jest.Mock).mockResolvedValue(mockResult);
+      (mockProjectService.remove as jest.Mock).mockResolvedValue(true);
 
-      const result = await projectController.remove('5108babc-bf35-44d5-a9ba-de08badfa80a');
+      const result = await projectController.remove(project.id);
 
-      expect(projectServiceMock.remove).toHaveBeenCalledWith(
-        '5108babc-bf35-44d5-a9ba-de08badfa80a',
+      expect(mockProjectService.remove).toHaveBeenCalledWith(
+        project.id,
       );
       expect(result).toEqual(mockResult);
     });

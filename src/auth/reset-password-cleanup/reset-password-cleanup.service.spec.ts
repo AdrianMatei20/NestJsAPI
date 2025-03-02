@@ -4,8 +4,8 @@ import { ResetPassword } from '../reset-password/reset-password.entity';
 import { getRepositoryToken } from '@nestjs/typeorm';
 
 describe('ResetPasswordCleanupService', () => {
-  let service: ResetPasswordCleanupService;
-  let projectRepositoryMock: any;
+  let resetPasswordCleanupService: ResetPasswordCleanupService;
+  let mockProjectRepository: any;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -13,15 +13,15 @@ describe('ResetPasswordCleanupService', () => {
         ResetPasswordCleanupService,
         {
           provide: getRepositoryToken(ResetPassword),
-          useValue: projectRepositoryMock,
+          useValue: mockProjectRepository,
         },
       ],
     }).compile();
 
-    service = module.get<ResetPasswordCleanupService>(ResetPasswordCleanupService);
+    resetPasswordCleanupService = module.get<ResetPasswordCleanupService>(ResetPasswordCleanupService);
   });
 
   it('should be defined', () => {
-    expect(service).toBeDefined();
+    expect(resetPasswordCleanupService).toBeDefined();
   });
 });

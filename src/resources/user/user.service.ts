@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { RegisterUserDto } from './dto/register-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { RegisterUserDto } from './dto/register-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
 
 @Injectable()
@@ -10,35 +10,40 @@ export class UserService {
 
   constructor(
     @InjectRepository(User) private userRepository: Repository<User>,
-  ) {
+  ) { }
 
-  }
-
-  // create user
-  async create(createUserDto: RegisterUserDto): Promise<User> {
+  async create(registerUserDto: RegisterUserDto): Promise<User> {
     const newUser = this.userRepository.create({
-      ...createUserDto,
+      ...registerUserDto,
       createdAt: new Date(),
     });
-    return await this.userRepository.save(newUser);
+
+    await this.userRepository.save(newUser);
+
+    const createdUser: User = await this.userRepository.findOne({
+      where: { id: newUser.id },
+    });
+
+    return createdUser;
   }
 
-  // get all users
   async findAll(): Promise<User[]> {
-    return await this.userRepository.find();
+    const users = await this.userRepository.find();
+    return Array.isArray(users) ? users : [];
   }
 
-  // get one user by id
-  async findOneById(id: string): Promise<User> {
-    return await this.userRepository.findOne({ where: { id } });
+  async findOneById(userId: string): Promise<User> {
+    return await this.userRepository.findOne({
+      where: { id: userId },
+    });
   }
 
-  // get one user by email
   async findOneByEmail(email: string): Promise<User> {
-    return await this.userRepository.findOne({ where: { email } });
+    return await this.userRepository.findOne({
+      where: { email }
+    });
   }
 
-  // update user
   async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
     await this.userRepository.update(id, updateUserDto);
     return await this.userRepository.findOne({ where: { id } });
@@ -49,9 +54,10 @@ export class UserService {
     return await this.userRepository.save(user);
   }
 
-  // delete user
-  async delete(id: string): Promise<void> {
-    await this.userRepository.delete(id);
+  async remove(userId: string): Promise<Boolean> {
+    var user: User = await this.userRepository.findOne({ where: { id: userId } });
+    await this.userRepository.delete(userId);
+    return true;
   }
 
 }

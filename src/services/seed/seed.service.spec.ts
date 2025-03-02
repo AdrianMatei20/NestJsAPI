@@ -4,14 +4,20 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { User } from 'src/resources/user/entities/user.entity';
 import { Project } from 'src/resources/project/entities/project.entity';
 import { UserProjectRole } from 'src/resources/project/entities/user-project-role.entity';
-import { Log } from 'src/logger/entities/log.entity';
+import { ProjectService } from 'src/resources/project/project.service';
+import { LoggerService } from 'src/logger/logger.service';
+import { UserService } from 'src/resources/user/user.service';
+import { AuthService } from 'src/auth/auth.service';
 
 describe('SeedService', () => {
-  let service: SeedService;
-  let userRepositoryMock: any;
-  let projectRepositoryMock: any;
-  let userProjectRoleRepositoryMock: any;
-  let loggerRepositoryMock: any;
+  let seedService: SeedService;
+  let mockUserRepository: any;
+  let mockProjectRepository: any;
+  let mockUserProjectRoleRepository: any;
+  let mockLoggerService: LoggerService;
+  let mockProjectService: any;
+  let mockUserService: any;
+  let mockAuthService: any;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -19,27 +25,39 @@ describe('SeedService', () => {
         SeedService,
         {
           provide: getRepositoryToken(User),
-          useValue: userRepositoryMock,
+          useValue: mockUserRepository,
         },
         {
           provide: getRepositoryToken(Project),
-          useValue: projectRepositoryMock,
+          useValue: mockProjectRepository,
         },
         {
           provide: getRepositoryToken(UserProjectRole),
-          useValue: userProjectRoleRepositoryMock,
+          useValue: mockUserProjectRoleRepository,
         },
         {
-          provide: getRepositoryToken(Log),
-          useValue: loggerRepositoryMock,
+          provide: LoggerService,
+          useValue: mockLoggerService,
+        },
+        {
+          provide: ProjectService,
+          useValue: mockProjectService,
+        },
+        {
+          provide: UserService,
+          useValue: mockUserService,
+        },
+        {
+          provide: AuthService,
+          useValue: mockAuthService,
         },
       ],
     }).compile();
 
-    service = module.get<SeedService>(SeedService);
+    seedService = module.get<SeedService>(SeedService);
   });
 
   it('should be defined', () => {
-    expect(service).toBeDefined();
+    expect(seedService).toBeDefined();
   });
 });

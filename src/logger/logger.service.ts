@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Log } from './entities/log.entity';
 import { Repository } from 'typeorm';
+import { Log } from './entities/log.entity';
 
 @Injectable()
 export class LoggerService {
@@ -46,7 +46,7 @@ export class LoggerService {
     try {
       return await this.logRepository.find({ order: { timestamp: 'DESC' } });
     } catch (error) {
-      console.error(`Failed to save log: ${error.message}`);
+      console.error(`Failed to fetch logs: ${error.message}`);
     }
   }
 }
