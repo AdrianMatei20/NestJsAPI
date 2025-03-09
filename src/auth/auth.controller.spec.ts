@@ -8,9 +8,9 @@ import { TokenService } from 'src/services/token/token.service';
 import { ResetPasswordService } from './reset-password/reset-password.service';
 import { JwtService } from '@nestjs/jwt';
 import { LoggerService } from 'src/logger/logger.service';
-import { forgotPasswordDto, getResetPasswordDto, userJamesSmith } from 'test/data/users';
+import { forgotPasswordDto, getResetPasswordDto, user, userJamesSmith } from 'test/data/users';
 import { SimpleMessageDto } from 'src/shared/utils/simple-message.dto';
-import { registerUserDto } from 'test/data/register-user';
+import { loginUserDto, registerUserDto } from 'test/data/register-user';
 import { HttpStatus } from '@nestjs/common';
 import { regularUserRequest } from 'test/data/requests';
 import { RETURN_MESSAGES } from 'src/constants/return-messages';
@@ -27,6 +27,7 @@ describe('AuthController', () => {
     mockAuthService = {
       registerUser: jest.fn().mockResolvedValue({}),
       verifyUser: jest.fn().mockResolvedValue({}),
+      findByEmail: jest.fn().mockResolvedValue({}),
       sendResetPasswordEmail: jest.fn().mockResolvedValue({}),
       sendForgotPasswordEmail: jest.fn().mockResolvedValue({}),
       resetPassword: jest.fn().mockResolvedValue({}),
@@ -102,6 +103,24 @@ describe('AuthController', () => {
       expect(mockAuthService.verifyUser).toHaveBeenCalled();
     });
     
+  });
+
+  describe('POST /login', () => {
+
+    it('should call AuthService.findByEmail and return a login message', async () => {
+      const expectedResult: SimpleMessageDto = {
+        statusCode: HttpStatus.CREATED,
+        message: RETURN_MESSAGES.CREATED.SUCCESSFUL_REGISTRATION(user.firstname, user.lastname),
+      };
+
+      (mockAuthService.findByEmail as jest.Mock).mockResolvedValue(user);
+
+      const actualResult: SimpleMessageDto = await authController.loginUser(loginUserDto);
+
+      expect(actualResult).toEqual(expectedResult);
+      expect(mockAuthService.findByEmail).toHaveBeenCalled();
+    });
+
   });
 
   describe('GET /reset-password', () => {

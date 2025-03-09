@@ -49,7 +49,7 @@ export class AuthController {
   async loginUser(@Body() loginUserDto: LogInUserDto): Promise<SimpleMessageDto> {
     const user = await this.authService.findByEmail(loginUserDto.email);
     return {
-      statusCode: 201,
+      statusCode: HttpStatus.CREATED,
       message: RETURN_MESSAGES.CREATED.SUCCESSFUL_REGISTRATION(user.firstname, user.lastname),
     }
   }

@@ -1,5 +1,6 @@
 import { RegisterUserDto } from "src/resources/user/dto/register-user.dto"
-import { userJamesSmith } from "./users"
+import { user, userJamesSmith } from "./users"
+import { LogInUserDto } from "src/auth/dto/log-in-user.dto";
 
 const password = 'P@ssword123';
 const badPassword = 'Password';
@@ -67,4 +68,9 @@ export const registerUserDtoPasswordsNotMatching: RegisterUserDto = {
     email: userJamesSmith.email,
     password: password,
     passwordConfirmation: badPassword,
+};
+
+export const loginUserDto: LogInUserDto = {
+    email: user.email,
+    password: user.password,
 };

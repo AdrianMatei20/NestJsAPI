@@ -42,9 +42,27 @@ export class LoggerService {
     }
   }
 
-  async getLogs(): Promise<Log[]> {
+  async getLogs(filters: { level?: string; fromDate?: string; toDate?: string; sortBy?: string; order: 'ASC' | 'DESC' }): Promise<Log[]> {
     try {
-      return await this.logRepository.find({ order: { timestamp: 'DESC' } });
+
+      const query = await this.logRepository.createQueryBuilder('log');
+
+      if (filters.level) {
+        query.andWhere('log.level = :level', { level: filters.level });
+      }
+
+      if (filters.fromDate && filters.toDate) {
+        query.andWhere('log.timestamp BETWEEN :fromDate AND :toDate', { fromDate: filters.fromDate, toDate: filters.toDate });
+      }
+
+      if (filters.sortBy) {
+        query.orderBy(`log.${filters.sortBy}`, filters.order);
+      } else {
+        query.orderBy('log.timestamp', filters.order);
+      }
+
+      return await query.getMany();
+
     } catch (error) {
       console.error(`Failed to fetch logs: ${error.message}`);
     }

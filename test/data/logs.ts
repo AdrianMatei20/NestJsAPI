@@ -10,7 +10,7 @@ export const errorLog: Log = {
     context: 'ProjectService.update',
     trace: 'Cannot read properties of undefined (reading \'find\')',
     metadata: { projectId: project.id, project, updateProjectDto },
-    timestamp: new Date(),
+    timestamp: new Date("2020/01/18 18:32:03"),
 }
 
 export const warnLog: Log = {
@@ -20,7 +20,7 @@ export const warnLog: Log = {
     context: 'ProjectService.update',
     trace: null,
     metadata: { projectId: project.id, project, updateProjectDto },
-    timestamp: new Date(),
+    timestamp: new Date("2021/01/01 17:39:53"),
 }
 
 export const infoLog: Log = {
@@ -30,7 +30,7 @@ export const infoLog: Log = {
     context: 'ProjectService.create',
     trace: null,
     metadata: { project, userId: userJamesSmith.id },
-    timestamp: new Date(),
+    timestamp: new Date("2022/01/04 08:49:09"),
 };
 
 export const debugLog: Log = {
@@ -40,7 +40,7 @@ export const debugLog: Log = {
     context: 'ProjectService.create',
     trace: null,
     metadata: { project, userId: userJamesSmith.id },
-    timestamp: new Date(),
+    timestamp: new Date("2023/02/02 13:51:21"),
 };
 
-export const logs = [errorLog, warnLog, infoLog, debugLog];
+export const logs: Log[] = [errorLog, warnLog, infoLog, debugLog];

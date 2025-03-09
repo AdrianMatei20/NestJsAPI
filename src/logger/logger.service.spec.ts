@@ -14,6 +14,11 @@ describe('LoggerService', () => {
     mockLogRepository = {
       save: jest.fn().mockResolvedValue({}),
       find: jest.fn().mockResolvedValue([]),
+      createQueryBuilder: jest.fn(() => ({
+        andWhere: jest.fn().mockReturnThis(),
+        orderBy: jest.fn().mockReturnThis(),
+        getMany: jest.fn().mockResolvedValue([]),
+      })),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -231,31 +236,58 @@ describe('LoggerService', () => {
 
   describe('getLogs', () => {
 
-    it('should call logRepository.find and return a list of logs', async () => {
-      (mockLogRepository.find as jest.Mock).mockResolvedValue(logs);
+    it('should return a list of all logs', async () => {
+      (mockLogRepository.createQueryBuilder as jest.Mock).mockReturnValue({
+        andWhere: jest.fn().mockReturnThis(),
+        orderBy: jest.fn().mockReturnThis(),
+        getMany: jest.fn().mockResolvedValue(logs),
+      });
 
-      const result = await loggerService.getLogs();
+      const result = await loggerService.getLogs({order: 'DESC'});
 
-      expect(mockLogRepository.find).toHaveBeenCalled();
       expect(result).toEqual(logs);
     });
 
-    it('should call logRepository.find and return empty list if no logs are found', async () => {
-      (mockLogRepository.find as jest.Mock).mockResolvedValue([]);
+    it('should return empty list if no logs are found', async () => {
+      (mockLogRepository.createQueryBuilder as jest.Mock).mockReturnValue({
+        andWhere: jest.fn().mockReturnThis(),
+        orderBy: jest.fn().mockReturnThis(),
+        getMany: jest.fn().mockResolvedValue([]),
+      });
 
-      const result = await loggerService.getLogs();
+      const result = await loggerService.getLogs({order: 'DESC'});
 
-      expect(mockLogRepository.find).toHaveBeenCalled();
       expect(result).toEqual([]);
     });
 
-    it('should log to console if logRepository.find fails', async () => {
-      (mockLogRepository.find as jest.Mock).mockRejectedValue(new Error('Database error'));
+    it('should return a list of filtered logs', async () => {
+      (mockLogRepository.createQueryBuilder as jest.Mock).mockReturnValue({
+        andWhere: jest.fn().mockReturnThis(),
+        orderBy: jest.fn().mockReturnThis(),
+        getMany: jest.fn().mockResolvedValue(logs),
+      });
+
+      const result = await loggerService.getLogs({
+        level: 'error',
+        fromDate: '2021-01-01 00:00:00.000',
+        toDate: '2022-12-31 23:59:59.999',
+        sortBy: 'timestamp',
+        order: 'DESC'}
+      );
+
+      expect(result).toEqual(logs);
+    });
+
+    it('should log to console if logRepository.createQueryBuilder().getMany() fails', async () => {
+      (mockLogRepository.createQueryBuilder as jest.Mock).mockReturnValue({
+        andWhere: jest.fn().mockReturnThis(),
+        orderBy: jest.fn().mockReturnThis(),
+        getMany: jest.fn().mockRejectedValue(new Error('Database error')),
+      });
       const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => { });
 
-      await loggerService.getLogs();
+      await loggerService.getLogs({order: 'DESC'});
 
-      expect(mockLogRepository.find).toHaveBeenCalled();
       expect(consoleErrorSpy).toHaveBeenCalledWith(
         'Failed to fetch logs: Database error',
       );
