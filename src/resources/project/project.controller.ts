@@ -3,13 +3,13 @@ import { ProjectService } from './project.service';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 import { ApiExtraModels, ApiOperation, ApiResponse, ApiTags, getSchemaPath } from '@nestjs/swagger';
-import { AuthenticatedGuard } from '../../../src/auth/guards/authenticated.guard';
-import { CustomMessageDto } from '../../../src/shared/utils/custom-message.dto';
+import { AuthenticatedGuard } from 'src/auth/guards/authenticated.guard';
+import { CustomMessageDto } from 'src/shared/utils/custom-message.dto';
 import { PublicProjectDto } from './dto/project.dto';
-import { ProjectRoleGuard } from '../../../src/auth/guards/project-role.guard';
+import { ProjectRoleGuard } from 'src/auth/guards/project-role.guard';
 import { ProjectRole } from './enums/project-role';
 import { Project } from './entities/project.entity';
-import { SimpleMessageDto } from '../../../src/shared/utils/simple-message.dto';
+import { SimpleMessageDto } from 'src/shared/utils/simple-message.dto';
 import { GlobalRole } from '../user/enums/global-role';
 
 @ApiTags('project')

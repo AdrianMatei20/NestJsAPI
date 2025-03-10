@@ -1,7 +1,7 @@
-import { ResetPassword } from "../../../../src/auth/reset-password/reset-password.entity";
+import { ResetPassword } from "src/auth/reset-password/reset-password.entity";
 import { Entity, Column, PrimaryGeneratedColumn, OneToMany } from "typeorm";
 import { GlobalRole } from "../enums/global-role";
-import { UserProjectRole } from "../../../../src/resources/project/entities/user-project-role.entity";
+import { UserProjectRole } from "src/resources/project/entities/user-project-role.entity";
 
 @Entity()
 export class User {

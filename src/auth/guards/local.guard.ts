@@ -1,7 +1,7 @@
 import { ExecutionContext, HttpStatus, Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
 import { AuthGuard } from "@nestjs/passport";
-import { UserService } from "../../../src/resources/user/user.service";
-import { RETURN_MESSAGES } from "../../../src/constants/return-messages";
+import { UserService } from "src/resources/user/user.service";
+import { RETURN_MESSAGES } from "src/constants/return-messages";
 
 @Injectable()
 export class LocalAuthGuard extends AuthGuard('local') {

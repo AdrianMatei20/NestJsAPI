@@ -2,8 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ResetPassword } from './reset-password.entity';
 import { Repository } from 'typeorm';
-import { UserService } from '../../../src/resources/user/user.service';
-import { TokenService } from '../../../src/services/token/token.service';
+import { UserService } from 'src/resources/user/user.service';
+import { TokenService } from 'src/services/token/token.service';
 
 @Injectable()
 export class ResetPasswordService {

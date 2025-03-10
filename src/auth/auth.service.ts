@@ -2,25 +2,25 @@ import { BadRequestException, ConflictException, HttpStatus, Injectable, Interna
 import { validate as isValidUUID } from 'uuid';
 import { compare, hash } from 'bcrypt';
 
-import { UserService } from '../../src/resources/user/user.service';
-import { ObjectValidationService } from '../../src/services/object-validation.service';
-import { EmailService } from '../../src/services/email/email.service';
-import { TokenService } from '../../src/services/token/token.service';
+import { UserService } from 'src/resources/user/user.service';
+import { ObjectValidationService } from 'src/services/object-validation.service';
+import { EmailService } from 'src/services/email/email.service';
+import { TokenService } from 'src/services/token/token.service';
 import { ResetPasswordService } from './reset-password/reset-password.service';
-import { LoggerService } from '../../src/logger/logger.service';
+import { LoggerService } from 'src/logger/logger.service';
 
 import { SimpleMessageDto } from 'src/shared/utils/simple-message.dto';
 import { LogInUserDto } from './dto/log-in-user.dto';
-import { RegisterUserDto } from '../../src/resources/user/dto/register-user.dto';
+import { RegisterUserDto } from 'src/resources/user/dto/register-user.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 
-import { User } from '../../src/resources/user/entities/user.entity';
+import { User } from 'src/resources/user/entities/user.entity';
 import { ResetPassword } from './reset-password/reset-password.entity';
 
-import { LOG_MESSAGES } from '../../src/constants/log-messages';
-import { LOG_CONTEXTS } from '../../src/constants/log-contexts';
-import { RETURN_MESSAGES } from '../../src/constants/return-messages';
+import { LOG_MESSAGES } from 'src/constants/log-messages';
+import { LOG_CONTEXTS } from 'src/constants/log-contexts';
+import { RETURN_MESSAGES } from 'src/constants/return-messages';
 
 @Injectable()
 export class AuthService {

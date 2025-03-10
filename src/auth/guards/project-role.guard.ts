@@ -2,10 +2,10 @@ import { CanActivate, ExecutionContext, ForbiddenException, HttpStatus, Injectab
 import { Reflector } from "@nestjs/core";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
-import { Project } from "../../../src/resources/project/entities/project.entity";
-import { ProjectRole } from "../../../src/resources/project/enums/project-role";
-import { GlobalRole } from "../../../src/resources/user/enums/global-role";
-import { RETURN_MESSAGES } from "../../../src/constants/return-messages";
+import { Project } from "src/resources/project/entities/project.entity";
+import { ProjectRole } from "src/resources/project/enums/project-role";
+import { GlobalRole } from "src/resources/user/enums/global-role";
+import { RETURN_MESSAGES } from "src/constants/return-messages";
 
 @Injectable()
 export class ProjectRoleGuard implements CanActivate {

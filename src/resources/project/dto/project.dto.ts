@@ -1,8 +1,8 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { PublicUserDto } from "../../../../src/resources/user/dto/public-user.dto";
+import { PublicUserDto } from "src/resources/user/dto/public-user.dto";
 import { Project } from "../entities/project.entity";
 import { ProjectRole } from "../enums/project-role";
-import { User } from "../../../../src/resources/user/entities/user.entity";
+import { User } from "src/resources/user/entities/user.entity";
 
 export class ProjectMember {
     @ApiProperty({ type: String, description: 'User\'s id.', example: 'af7c1fe6-d669-414e-b066-e9733f0de7a8' })

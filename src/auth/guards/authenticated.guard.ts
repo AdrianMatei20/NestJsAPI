@@ -1,6 +1,6 @@
 import { CanActivate, ExecutionContext, HttpStatus, Injectable, UnauthorizedException } from "@nestjs/common";
 import { Observable } from "rxjs";
-import { RETURN_MESSAGES } from "../../../src/constants/return-messages";
+import { RETURN_MESSAGES } from "src/constants/return-messages";
 
 @Injectable()
 export class AuthenticatedGuard implements CanActivate {

@@ -1,7 +1,7 @@
 import { CanActivate, ExecutionContext, ForbiddenException, HttpStatus, Injectable, UnauthorizedException } from "@nestjs/common";
 import { Observable } from "rxjs";
-import { GlobalRole } from "../../../src/resources/user/enums/global-role";
-import { RETURN_MESSAGES } from "../../../src/constants/return-messages";
+import { GlobalRole } from "src/resources/user/enums/global-role";
+import { RETURN_MESSAGES } from "src/constants/return-messages";
 
 @Injectable()
 export class GlobalAdminGuard implements CanActivate {

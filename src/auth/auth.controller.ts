@@ -1,14 +1,14 @@
 import { Controller, Get, Post, Body, Delete, UseGuards, Req, Res, Param, HttpStatus } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
-import { RegisterUserDto } from '../../src/resources/user/dto/register-user.dto';
+import { RegisterUserDto } from 'src/resources/user/dto/register-user.dto';
 import { LogInUserDto } from './dto/log-in-user.dto';
 import { LocalAuthGuard } from './guards/local.guard';
 import { AuthenticatedGuard } from './guards/authenticated.guard';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
-import { SimpleMessageDto } from '../../src/shared/utils/simple-message.dto';
-import { RETURN_MESSAGES } from '../../src/constants/return-messages';
+import { SimpleMessageDto } from 'src/shared/utils/simple-message.dto';
+import { RETURN_MESSAGES } from 'src/constants/return-messages';
 
 @ApiTags('auth')
 @Controller('auth')
