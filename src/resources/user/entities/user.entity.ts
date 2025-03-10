@@ -1,7 +1,7 @@
-import { ResetPassword } from "src/auth/reset-password/reset-password.entity";
+import { ResetPassword } from "../../../../src/auth/reset-password/reset-password.entity";
 import { Entity, Column, PrimaryGeneratedColumn, OneToMany } from "typeorm";
 import { GlobalRole } from "../enums/global-role";
-import { UserProjectRole } from "src/resources/project/entities/user-project-role.entity";
+import { UserProjectRole } from "../../../../src/resources/project/entities/user-project-role.entity";
 
 @Entity()
 export class User {
@@ -24,10 +24,10 @@ export class User {
     @Column('boolean', {default: false})
     emailVerified: boolean;
 
-    @Column({type: 'enum', enum: GlobalRole, default: GlobalRole.REGULAR_USER})
+    @Column({type: process.env.NODE_ENV === 'test' ? 'varchar' : 'enum', enum: GlobalRole, default: GlobalRole.REGULAR_USER})
     globalRole: GlobalRole;
 
-    @Column({ type: 'timestamptz' })
+    @Column({ type: process.env.NODE_ENV === 'test' ? 'datetime' : 'timestamptz' })
     createdAt: Date;
 
     @OneToMany(() => ResetPassword, (resetPassword) => resetPassword.user)

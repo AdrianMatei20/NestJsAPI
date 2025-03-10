@@ -1,13 +1,13 @@
 import { Controller, Get, Param, Delete, NotFoundException, UseGuards, HttpStatus, Req } from '@nestjs/common';
 import { UserService } from './user.service';
 import { ApiExcludeController, ApiTags } from '@nestjs/swagger';
-import { AuthenticatedGuard } from 'src/auth/guards/authenticated.guard';
-import { CustomMessageDto } from 'src/shared/utils/custom-message.dto';
+import { AuthenticatedGuard } from '../../../src/auth/guards/authenticated.guard';
+import { CustomMessageDto } from '../../../src/shared/utils/custom-message.dto';
 import { User } from './entities/user.entity';
 import { PublicUserDto } from './dto/public-user.dto';
 import { AdminUserDto } from './dto/admin-user.dto';
 import { GlobalRole } from './enums/global-role';
-import { GlobalAdminGuard } from 'src/auth/guards/global-admin.guard';
+import { GlobalAdminGuard } from '../../../src/auth/guards/global-admin.guard';
 
 @ApiTags('user')
 @Controller('user')

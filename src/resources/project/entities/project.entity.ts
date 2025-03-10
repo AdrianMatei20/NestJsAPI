@@ -13,7 +13,7 @@ export class Project {
     @Column({ length: 500 })
     description: string;
 
-    @Column({ type: 'timestamptz' })
+    @Column({ type: process.env.NODE_ENV === 'test' ? 'datetime' : 'timestamptz' })
     createdAt: Date;
 
     @OneToMany(() => UserProjectRole, (userProjectRole) => userProjectRole.project, { cascade: true })

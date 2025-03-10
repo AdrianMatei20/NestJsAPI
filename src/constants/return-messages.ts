@@ -22,6 +22,10 @@ export const RETURN_MESSAGES = {
         INVALID_PROJECT_ID: 'Invalid project id!',
     },
 
+    UNAUTHORIZED: 'Invalid credentials.',
+
+    FORBIDDEN: 'Forbidden.',
+
     NOT_FOUND: {
         USER: 'User not found!',
         PROJECT: 'Project not found!',

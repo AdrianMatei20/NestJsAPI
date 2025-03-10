@@ -27,7 +27,10 @@ import { ResetPasswordService } from './auth/reset-password/reset-password.servi
 
 @Module({
   imports: [
-    ConfigModule.forRoot(),
+    ConfigModule.forRoot({
+      envFilePath: process.env.NODE_ENV === 'test' ? '.env.test' : '.env',
+      isGlobal: true,
+    }),
     PassportModule.register({
       session: true,
     }),

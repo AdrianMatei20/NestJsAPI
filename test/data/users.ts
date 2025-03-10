@@ -1,11 +1,11 @@
-import { ForgotPasswordDto } from "src/auth/dto/forgot-password.dto";
-import { LogInUserDto } from "src/auth/dto/log-in-user.dto";
-import { ResetPasswordDto } from "src/auth/dto/reset-password.dto";
-import { ResetPassword } from "src/auth/reset-password/reset-password.entity";
-import { PublicUserDto } from "src/resources/user/dto/public-user.dto";
-import { User } from "src/resources/user/entities/user.entity";
-import { GlobalRole } from "src/resources/user/enums/global-role";
-import { userUUIDs, UUIDs } from "test/data/UUIDs";
+import { ForgotPasswordDto } from "../../src/auth/dto/forgot-password.dto";
+import { LogInUserDto } from "../../src/auth/dto/log-in-user.dto";
+import { ResetPasswordDto } from "../../src/auth/dto/reset-password.dto";
+import { ResetPassword } from "../../src/auth/reset-password/reset-password.entity";
+import { PublicUserDto } from "../../src/resources/user/dto/public-user.dto";
+import { User } from "../../src/resources/user/entities/user.entity";
+import { GlobalRole } from "../../src/resources/user/enums/global-role";
+import { userUUIDs, UUIDs } from "../../test/data/UUIDs";
 
 export const userJamesSmith: PublicUserDto = {
     id: userUUIDs[0],

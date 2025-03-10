@@ -1,10 +1,10 @@
-import { CreateProjectDto } from "src/resources/project/dto/create-project.dto";
-import { UpdateProjectDto } from "src/resources/project/dto/update-project.dto";
-import { Project } from "src/resources/project/entities/project.entity";
-import { User } from "src/resources/user/entities/user.entity";
-import { ProjectRole } from "src/resources/project/enums/project-role";
-import { UserProjectRole } from "src/resources/project/entities/user-project-role.entity";
-import { userJamesSmith, userChristopherAnderson, userRonaldClark, userMaryWright } from "test/data/users";
+import { CreateProjectDto } from "../../src/resources/project/dto/create-project.dto";
+import { UpdateProjectDto } from "../../src/resources/project/dto/update-project.dto";
+import { Project } from "../../src/resources/project/entities/project.entity";
+import { User } from "../../src/resources/user/entities/user.entity";
+import { ProjectRole } from "../../src/resources/project/enums/project-role";
+import { UserProjectRole } from "../../src/resources/project/entities/user-project-role.entity";
+import { userJamesSmith, userChristopherAnderson, userRonaldClark, userMaryWright } from "../../test/data/users";
 import { projectUUIDs, userProjectRoleUUIDs } from "./UUIDs";
 
 // 01. A way to create projects.

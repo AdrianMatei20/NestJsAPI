@@ -44,3 +44,33 @@ export const debugLog: Log = {
 };
 
 export const logs: Log[] = [errorLog, warnLog, infoLog, debugLog];
+
+export function getLogs() {
+    let logs = [
+        { level: 'error', message: 'message', context: 'context', metadata: 'metadata', trace: 'trace', timestamp: new Date('2000-03-10T18:10:24.878Z') },
+        { level: 'error', message: 'message', context: 'context', metadata: 'metadata', trace: 'trace', timestamp: new Date('2001-03-10T18:10:24.878Z') },
+        { level: 'error', message: 'message', context: 'context', metadata: 'metadata', trace: 'trace', timestamp: new Date('2002-03-10T18:10:24.878Z') },
+        { level: 'error', message: 'message', context: 'context', metadata: 'metadata', trace: 'trace', timestamp: new Date('2003-03-10T18:10:24.878Z') },
+        { level: 'warn', message: 'message', context: 'context', metadata: 'metadata', trace: 'trace', timestamp: new Date('2004-03-10T18:10:24.878Z') },
+        { level: 'warn', message: 'message', context: 'context', metadata: 'metadata', trace: 'trace', timestamp: new Date('2005-03-10T18:10:24.878Z') },
+        { level: 'warn', message: 'message', context: 'context', metadata: 'metadata', trace: 'trace', timestamp: new Date('2006-03-10T18:10:24.878Z') },
+        { level: 'warn', message: 'message', context: 'context', metadata: 'metadata', trace: 'trace', timestamp: new Date('2007-03-10T18:10:24.878Z') },
+        { level: 'warn', message: 'message', context: 'context', metadata: 'metadata', trace: 'trace', timestamp: new Date('2008-03-10T18:10:24.878Z') },
+        { level: 'info', message: 'message', context: 'context', metadata: 'metadata', trace: 'trace', timestamp: new Date('2009-03-10T18:10:24.878Z') },
+        { level: 'info', message: 'message', context: 'context', metadata: 'metadata', trace: 'trace', timestamp: new Date('2010-03-10T18:10:24.878Z') },
+        { level: 'info', message: 'message', context: 'context', metadata: 'metadata', trace: 'trace', timestamp: new Date('2011-03-10T18:10:24.878Z') },
+        { level: 'info', message: 'message', context: 'context', metadata: 'metadata', trace: 'trace', timestamp: new Date('2012-03-10T18:10:24.878Z') },
+        { level: 'info', message: 'message', context: 'context', metadata: 'metadata', trace: 'trace', timestamp: new Date('2013-03-10T18:10:24.878Z') },
+        { level: 'info', message: 'message', context: 'context', metadata: 'metadata', trace: 'trace', timestamp: new Date('2014-03-10T18:10:24.878Z') },
+        { level: 'info', message: 'message', context: 'context', metadata: 'metadata', trace: 'trace', timestamp: new Date('2015-03-10T18:10:24.878Z') },
+        { level: 'info', message: 'message', context: 'context', metadata: 'metadata', trace: 'trace', timestamp: new Date('2016-03-10T18:10:24.878Z') },
+        { level: 'debug', message: 'message', context: 'context', metadata: 'metadata', trace: 'trace', timestamp: new Date('2017-03-10T18:10:24.878Z') },
+        { level: 'debug', message: 'message', context: 'context', metadata: 'metadata', trace: 'trace', timestamp: new Date('2018-03-10T18:10:24.878Z') },
+        { level: 'debug', message: 'message', context: 'context', metadata: 'metadata', trace: 'trace', timestamp: new Date('2019-03-10T18:10:24.878Z') },
+    ];
+
+    return logs
+        .map(value => ({ value, sort: Math.random() }))
+        .sort((a, b) => a.sort - b.sort)
+        .map(({ value }) => value);
+};
