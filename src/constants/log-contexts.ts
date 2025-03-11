@@ -30,4 +30,9 @@ export const LOG_CONTEXTS = {
         remove: 'ProjectService.remove',
     },
 
+    UserController: {
+        findOne: 'UserController.findOne',
+        remove: 'UserController.remove',
+    },
+
   };

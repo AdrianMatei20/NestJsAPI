@@ -93,4 +93,8 @@ export const LOG_MESSAGES = {
         },
     },
 
+    USER: {
+        INVALID_UUID: 'Could not find user. The provided user id was not a valid UUID.',
+    },
+
 };

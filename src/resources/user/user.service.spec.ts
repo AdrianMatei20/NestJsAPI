@@ -3,10 +3,8 @@ import { UserService } from './user.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
 import { LoggerService } from 'src/logger/logger.service';
-import { invalidUUID } from 'test/data/UUIDs';
-import { BadRequestException, InternalServerErrorException, NotFoundException } from '@nestjs/common';
-import { registerUserDto } from 'test/data/register-user';
-import { user, userJamesSmith, users } from 'test/data/users';
+import { registerUserDto, updateUserDto } from 'test/data/register-user';
+import { getUser, user, userJamesSmith, users } from 'test/data/users';
 
 describe('UserService', () => {
   let userService: UserService;
@@ -108,7 +106,36 @@ describe('UserService', () => {
     });
 
   });
-  
+
+  describe('update', () => {
+    it('should update user and return updated user', async () => {
+      const user = getUser();
+      const updatedUser = {...user, firstname: updateUserDto.firstname, lastname: updateUserDto.lastname, email: updateUserDto.email};
+
+      (mockUserRepository.update as jest.Mock).mockResolvedValue(undefined);
+      (mockUserRepository.findOne as jest.Mock).mockResolvedValue(updatedUser);
+
+      const result = await userService.update(user.id, updateUserDto);
+      expect(mockUserRepository.update).toHaveBeenCalledWith(user.id, updateUserDto);
+      expect(mockUserRepository.findOne).toHaveBeenCalledWith({ where: { id: user.id } });
+      expect(result).toEqual(updatedUser);
+    });
+  });
+
+  describe('markUserAccountAsVerified', () => {
+    it('should mark user as verified and save', async () => {
+      const user: User = getUser(false);
+      const updatedUser: User = { ...user, emailVerified: true };
+
+      mockUserRepository.save.mockResolvedValue(updatedUser);
+
+      const result = await userService.markUserAccountAsVerified(user);
+      expect(user.emailVerified).toBe(true);
+      expect(mockUserRepository.save).toHaveBeenCalledWith(user);
+      expect(result).toEqual(updatedUser);
+    });
+  });
+
   describe('remove', () => {
 
     it('should return true if delete succeeds', async () => {

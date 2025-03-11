@@ -96,3 +96,20 @@ export const users: User[] = [
     user,
     user,
 ];
+
+export function getUser(emailVerified: boolean = true): User {
+    const user: User = {
+        id: userUUIDs[0],
+        firstname: 'James',
+        lastname: 'Smith',
+        email: 'jamessmith@fakemail.com',
+        createdAt: new Date('2020/01/18 18:32:03'),
+        password: '$2b$12$kfy.GWm4v4DmXGlaSbCXMO/mEJgEdKQuWl8Fy/UFLf0K678wFsA1q',
+        emailVerified: emailVerified,
+        globalRole: GlobalRole.REGULAR_USER,
+        resetPassword: [],
+        userProjectRole: [],
+    };
+
+    return user;
+};

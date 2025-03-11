@@ -14,7 +14,7 @@ import { User } from '../user/entities/user.entity';
 import { ProjectRole } from './enums/project-role';
 
 import { UserService } from '../user/user.service';
-import { ObjectValidationService } from 'src/services/object-validation.service';
+import { ObjectValidationService } from 'src/services/object-validation/object-validation.service';
 import { LoggerService } from 'src/logger/logger.service';
 
 import { LOG_CONTEXTS } from 'src/constants/log-contexts';

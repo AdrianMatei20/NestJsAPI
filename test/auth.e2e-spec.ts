@@ -17,7 +17,7 @@ import { ResetPassword } from "../src/auth/reset-password/reset-password.entity"
 import { Log } from "../src/logger/entities/log.entity";
 
 import { UserService } from "../src/resources/user/user.service";
-import { ObjectValidationService } from "../src/services/object-validation.service";
+import { ObjectValidationService } from "../src/services/object-validation/object-validation.service";
 import { LoggerService } from "../src/logger/logger.service";
 import { EmailService } from "../src/services/email/email.service";
 import { ResetPasswordService } from "../src/auth/reset-password/reset-password.service";

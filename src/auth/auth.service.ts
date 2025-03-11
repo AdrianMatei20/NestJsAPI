@@ -3,7 +3,7 @@ import { validate as isValidUUID } from 'uuid';
 import { compare, hash } from 'bcrypt';
 
 import { UserService } from 'src/resources/user/user.service';
-import { ObjectValidationService } from 'src/services/object-validation.service';
+import { ObjectValidationService } from 'src/services/object-validation/object-validation.service';
 import { EmailService } from 'src/services/email/email.service';
 import { TokenService } from 'src/services/token/token.service';
 import { ResetPasswordService } from './reset-password/reset-password.service';
@@ -21,6 +21,7 @@ import { ResetPassword } from './reset-password/reset-password.entity';
 import { LOG_MESSAGES } from 'src/constants/log-messages';
 import { LOG_CONTEXTS } from 'src/constants/log-contexts';
 import { RETURN_MESSAGES } from 'src/constants/return-messages';
+import { AdminUserDto } from 'src/resources/user/dto/admin-user.dto';
 
 @Injectable()
 export class AuthService {
@@ -56,13 +57,20 @@ export class AuthService {
   }
 
   async registerUser(registerUserDto: RegisterUserDto, sendConfirmationEmail: boolean = true): Promise<SimpleMessageDto> {
+    const { password, passwordConfirmation, ...rest } = registerUserDto;
+    const sanitizedRegisterUserDto = {
+      ...rest,
+      password: password ? '[REDACTED]' : undefined,
+      passwordConfirmation: passwordConfirmation ? '[REDACTED]' : undefined,
+    };
+
     // Check if request body is valid
     const missingProperties = this.objectValidationService.getMissingPropertiesForRegisterUserDto(registerUserDto);
     if (missingProperties.length > 0) {
       await this.loggerService.warn(
         LOG_MESSAGES.AUTH.REGISTER_USER.MISSING_PROPS(missingProperties),
         LOG_CONTEXTS.AuthService.registerUser,
-        { registerUserDto },
+        { registerUserDto: sanitizedRegisterUserDto },
       );
       throw new BadRequestException({
         statusCode: HttpStatus.BAD_REQUEST,
@@ -75,7 +83,7 @@ export class AuthService {
       await this.loggerService.warn(
         LOG_MESSAGES.AUTH.REGISTER_USER.EMAIL_ALREADY_REGISTERED,
         LOG_CONTEXTS.AuthService.registerUser,
-        { registerUserDto },
+        { registerUserDto: sanitizedRegisterUserDto },
       );
       throw new ConflictException({
         statusCode: HttpStatus.CONFLICT,
@@ -88,7 +96,7 @@ export class AuthService {
       await this.loggerService.warn(
         LOG_MESSAGES.AUTH.REGISTER_USER.PASSWORD_MISMATCH,
         LOG_CONTEXTS.AuthService.registerUser,
-        { registerUserDto },
+        { registerUserDto: sanitizedRegisterUserDto },
       );
       throw new BadRequestException({
         statusCode: HttpStatus.BAD_REQUEST,
@@ -103,7 +111,7 @@ export class AuthService {
       await this.loggerService.info(
         LOG_MESSAGES.AUTH.REGISTER_USER.SUCCESS(user.firstname, user.lastname, user.email),
         LOG_CONTEXTS.AuthService.registerUser,
-        { registerUserDto, user },
+        { registerUserDto: sanitizedRegisterUserDto, user: new AdminUserDto(user) },
       );
 
       try {
@@ -114,7 +122,7 @@ export class AuthService {
           await this.loggerService.info(
             LOG_MESSAGES.AUTH.REGISTER_USER.CONFIRMATION_EMAIL(user.email),
             LOG_CONTEXTS.AuthService.registerUser,
-            { registerUserDto, user },
+            { registerUserDto: sanitizedRegisterUserDto, user: new AdminUserDto(user) },
           );
           return {
             statusCode: HttpStatus.OK,
@@ -131,7 +139,7 @@ export class AuthService {
           LOG_MESSAGES.AUTH.REGISTER_USER.FAILED_TO_SEND_EMAIL(registerUserDto.email, error.message),
           LOG_CONTEXTS.AuthService.registerUser,
           error.message,
-          { registerUserDto },
+          { registerUserDto: sanitizedRegisterUserDto },
         );
         throw new ServiceUnavailableException({
           statusCode: HttpStatus.SERVICE_UNAVAILABLE,
@@ -142,7 +150,7 @@ export class AuthService {
           LOG_MESSAGES.AUTH.REGISTER_USER.FAILED_TO_REGISTER_USER(registerUserDto.email, error.message),
           LOG_CONTEXTS.AuthService.registerUser,
           error.message,
-          { registerUserDto },
+          { registerUserDto: sanitizedRegisterUserDto },
         );
         throw new InternalServerErrorException({
           statusCode: HttpStatus.INTERNAL_SERVER_ERROR,

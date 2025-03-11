@@ -185,7 +185,7 @@ export const updateProjectDto: UpdateProjectDto = {
 
 export const updateProjectDtoEmpty: Partial<UpdateProjectDto> = {};
 
-export const updateProjectDtNoDescription: Partial<UpdateProjectDto> = {
+export const updateProjectDtoNoDescription: Partial<UpdateProjectDto> = {
     name: 'Updated Name',
 };
 

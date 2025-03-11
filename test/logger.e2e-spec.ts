@@ -18,7 +18,7 @@ import { GlobalRole } from "../src/resources/user/enums/global-role";
 
 import { LoggerService } from "../src/logger/logger.service";
 import { UserService } from "../src/resources/user/user.service";
-import { ObjectValidationService } from "../src/services/object-validation.service";
+import { ObjectValidationService } from "../src/services/object-validation/object-validation.service";
 import { ResetPasswordService } from "../src/auth/reset-password/reset-password.service";
 import { TokenService } from "../src/services/token/token.service";
 

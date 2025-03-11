@@ -1,12 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AuthService } from './auth.service';
 import { UserService } from '../resources/user/user.service';
-import { ObjectValidationService } from 'src/services/object-validation.service';
+import { ObjectValidationService } from 'src/services/object-validation/object-validation.service';
 import { EmailService } from 'src/services/email/email.service';
 import { TokenService } from 'src/services/token/token.service';
 import { LoggerService } from 'src/logger/logger.service';
 import { BadRequestException, ConflictException, HttpStatus, InternalServerErrorException, NotFoundException, ServiceUnavailableException } from '@nestjs/common';
-import { getRegisterUserDto as getResetPasswordDto, emptyRegisterUserDto, registerUserDtoNoEmail, registerUserDtoNoFirstname, registerUserDtoNoLastname, registerUserDtoNoPassword, registerUserDtoNoPasswordConfirmation, registerUserDtoPasswordsNotMatching, getRegisterUserDto } from 'test/data/register-user';
+import { getRegisterUserDto as getResetPasswordDto, emptyRegisterUserDto, registerUserDtoNoEmail, registerUserDtoNoFirstname, registerUserDtoNoLastname, registerUserDtoNoPassword, registerUserDtoNoPasswordConfirmation, registerUserDtoPasswordsNotMatching, getRegisterUserDto, getSanitizedRegisterUserDto } from 'test/data/register-user';
 import { RegisterUserDto } from 'src/resources/user/dto/register-user.dto';
 import { ResetPasswordService } from './reset-password/reset-password.service';
 import { badResetPasswordDto, forgotPasswordDto, logInUserDto, resetPassword, user, userJamesSmith } from 'test/data/users';
@@ -154,7 +154,7 @@ describe('AuthService', () => {
       expect(mockLoggerService.warn).toHaveBeenCalledWith(
         LOG_MESSAGES.AUTH.REGISTER_USER.MISSING_PROPS(['firstname']),
         LOG_CONTEXTS.AuthService.registerUser,
-        { registerUserDto: registerUserDtoNoFirstname },
+        { registerUserDto: getSanitizedRegisterUserDto(registerUserDtoNoFirstname as RegisterUserDto) },
       );
 
       try {
@@ -176,7 +176,7 @@ describe('AuthService', () => {
       expect(mockLoggerService.warn).toHaveBeenCalledWith(
         LOG_MESSAGES.AUTH.REGISTER_USER.MISSING_PROPS(['lastname']),
         LOG_CONTEXTS.AuthService.registerUser,
-        { registerUserDto: registerUserDtoNoLastname },
+        { registerUserDto: getSanitizedRegisterUserDto(registerUserDtoNoLastname as RegisterUserDto) },
       );
 
       try {
@@ -198,7 +198,7 @@ describe('AuthService', () => {
       expect(mockLoggerService.warn).toHaveBeenCalledWith(
         LOG_MESSAGES.AUTH.REGISTER_USER.MISSING_PROPS(['email']),
         LOG_CONTEXTS.AuthService.registerUser,
-        { registerUserDto: registerUserDtoNoEmail },
+        { registerUserDto: getSanitizedRegisterUserDto(registerUserDtoNoEmail as RegisterUserDto) },
       );
 
       try {
@@ -220,7 +220,7 @@ describe('AuthService', () => {
       expect(mockLoggerService.warn).toHaveBeenCalledWith(
         LOG_MESSAGES.AUTH.REGISTER_USER.MISSING_PROPS(['password']),
         LOG_CONTEXTS.AuthService.registerUser,
-        { registerUserDto: registerUserDtoNoPassword },
+        { registerUserDto: getSanitizedRegisterUserDto(registerUserDtoNoPassword as RegisterUserDto) },
       );
 
       try {
@@ -242,7 +242,7 @@ describe('AuthService', () => {
       expect(mockLoggerService.warn).toHaveBeenCalledWith(
         LOG_MESSAGES.AUTH.REGISTER_USER.MISSING_PROPS(['passwordConfirmation']),
         LOG_CONTEXTS.AuthService.registerUser,
-        { registerUserDto: registerUserDtoNoPasswordConfirmation },
+        { registerUserDto: getSanitizedRegisterUserDto(registerUserDtoNoPasswordConfirmation as RegisterUserDto) },
       );
 
       try {
@@ -267,7 +267,7 @@ describe('AuthService', () => {
       expect(mockLoggerService.warn).toHaveBeenCalledWith(
         LOG_MESSAGES.AUTH.REGISTER_USER.EMAIL_ALREADY_REGISTERED,
         LOG_CONTEXTS.AuthService.registerUser,
-        { registerUserDto: registerUserDto },
+        { registerUserDto: getSanitizedRegisterUserDto(registerUserDto as RegisterUserDto) },
       );
 
       try {
@@ -291,7 +291,7 @@ describe('AuthService', () => {
       expect(mockLoggerService.warn).toHaveBeenCalledWith(
         LOG_MESSAGES.AUTH.REGISTER_USER.PASSWORD_MISMATCH,
         LOG_CONTEXTS.AuthService.registerUser,
-        { registerUserDto: registerUserDtoPasswordsNotMatching },
+        { registerUserDto: getSanitizedRegisterUserDto(registerUserDtoPasswordsNotMatching as RegisterUserDto) },
       );
 
       try {
@@ -319,7 +319,7 @@ describe('AuthService', () => {
         LOG_MESSAGES.AUTH.REGISTER_USER.FAILED_TO_REGISTER_USER(registerUserDto.email, 'Database error'),
         LOG_CONTEXTS.AuthService.registerUser,
         'Database error',
-        { registerUserDto: registerUserDto },
+        { registerUserDto: getSanitizedRegisterUserDto(registerUserDto as RegisterUserDto) },
       );
 
       try {
@@ -349,7 +349,7 @@ describe('AuthService', () => {
         LOG_MESSAGES.AUTH.REGISTER_USER.FAILED_TO_SEND_EMAIL(registerUserDto.email, 'Email error'),
         LOG_CONTEXTS.AuthService.registerUser,
         'Email error',
-        { registerUserDto: registerUserDto },
+        { registerUserDto: getSanitizedRegisterUserDto(registerUserDto as RegisterUserDto) },
       );
 
       try {
@@ -390,12 +390,12 @@ describe('AuthService', () => {
       expect(mockLoggerService.info).toHaveBeenCalledWith(
         LOG_MESSAGES.AUTH.REGISTER_USER.CONFIRMATION_EMAIL(user.email),
         LOG_CONTEXTS.AuthService.registerUser,
-        { registerUserDto: registerUserDto, user: userJamesSmith, },
+        { registerUserDto: getSanitizedRegisterUserDto(registerUserDto as RegisterUserDto), user: userJamesSmith, },
       );
       expect(mockLoggerService.info).toHaveBeenCalledWith(
         LOG_MESSAGES.AUTH.REGISTER_USER.SUCCESS(userJamesSmith.firstname, userJamesSmith.lastname, userJamesSmith.email),
         LOG_CONTEXTS.AuthService.registerUser,
-        { registerUserDto: registerUserDto, user: userJamesSmith, },
+        { registerUserDto: getSanitizedRegisterUserDto(registerUserDto as RegisterUserDto), user: userJamesSmith, },
       );
       expect(actualResult).toEqual(expectedResult);
     });

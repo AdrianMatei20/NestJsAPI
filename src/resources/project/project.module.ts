@@ -7,7 +7,7 @@ import { UserProjectRole } from './entities/user-project-role.entity';
 import { Log } from 'src/logger/entities/log.entity';
 import { ProjectController } from './project.controller';
 import { ProjectService } from './project.service';
-import { ObjectValidationService } from 'src/services/object-validation.service';
+import { ObjectValidationService } from 'src/services/object-validation/object-validation.service';
 import { LoggerService } from 'src/logger/logger.service';
 
 @Module({

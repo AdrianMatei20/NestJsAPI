@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ProjectService } from './project.service';
 import { UserService } from '../user/user.service';
 import { BadRequestException, HttpStatus, InternalServerErrorException, NotFoundException } from '@nestjs/common';
-import { ObjectValidationService } from 'src/services/object-validation.service';
+import { ObjectValidationService } from 'src/services/object-validation/object-validation.service';
 import { Project } from './entities/project.entity';
 import { UserProjectRole } from './entities/user-project-role.entity';
 import { getRepositoryToken } from '@nestjs/typeorm';

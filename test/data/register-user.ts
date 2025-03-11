@@ -1,6 +1,7 @@
 import { RegisterUserDto } from "src/resources/user/dto/register-user.dto"
-import { user, userJamesSmith } from "./users"
+import { user, userChristopherAnderson, userJamesSmith } from "./users"
 import { LogInUserDto } from "src/auth/dto/log-in-user.dto";
+import { UpdateUserDto } from "src/resources/user/dto/update-user.dto";
 
 const password = 'P@ssword123';
 const badPassword = 'Password';
@@ -74,3 +75,21 @@ export const loginUserDto: LogInUserDto = {
     email: user.email,
     password: user.password,
 };
+
+export const updateUserDto: UpdateUserDto = {
+    firstname: userChristopherAnderson.firstname,
+    lastname: userChristopherAnderson.lastname,
+    email: userChristopherAnderson.email,
+};
+
+export function getSanitizedRegisterUserDto(registerUserDto: RegisterUserDto) {
+    const { password, passwordConfirmation, ...rest } = registerUserDto;
+
+    const sanitizedRegisterUserDto = {
+        ...rest,
+        password: password ? '[REDACTED]' : undefined,
+        passwordConfirmation: passwordConfirmation ? '[REDACTED]' : undefined,
+    };
+
+    return sanitizedRegisterUserDto;
+}
