@@ -31,6 +31,7 @@ describe('AuthController', () => {
       sendResetPasswordEmail: jest.fn().mockResolvedValue({}),
       sendForgotPasswordEmail: jest.fn().mockResolvedValue({}),
       resetPassword: jest.fn().mockResolvedValue({}),
+      deleteUser: jest.fn().mockResolvedValue({}),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -82,7 +83,7 @@ describe('AuthController', () => {
       const actualResult: SimpleMessageDto = await authController.registerUser(registerUserDto);
 
       expect(actualResult).toEqual(expectedResult);
-      expect(mockAuthService.registerUser).toHaveBeenCalled();
+      expect(mockAuthService.registerUser).toHaveBeenCalledWith(registerUserDto);
     });
 
   });
@@ -100,14 +101,14 @@ describe('AuthController', () => {
       const actualResult: SimpleMessageDto = await authController.verifyUser(userJamesSmith.id, 'token');
 
       expect(actualResult).toEqual(expectedResult);
-      expect(mockAuthService.verifyUser).toHaveBeenCalled();
+      expect(mockAuthService.verifyUser).toHaveBeenCalledWith(userJamesSmith.id, 'token');
     });
-    
+
   });
 
   describe('POST /login', () => {
 
-    it('should call AuthService.findByEmail and return a login message', async () => {
+    it('should call AuthService.findByEmail with the correct parameters and return a login message', async () => {
       const expectedResult: SimpleMessageDto = {
         statusCode: HttpStatus.CREATED,
         message: RETURN_MESSAGES.CREATED.SUCCESSFUL_REGISTRATION(user.firstname, user.lastname),
@@ -118,7 +119,7 @@ describe('AuthController', () => {
       const actualResult: SimpleMessageDto = await authController.loginUser(loginUserDto);
 
       expect(actualResult).toEqual(expectedResult);
-      expect(mockAuthService.findByEmail).toHaveBeenCalled();
+      expect(mockAuthService.findByEmail).toHaveBeenCalledWith(loginUserDto.email);
     });
 
   });
@@ -136,10 +137,9 @@ describe('AuthController', () => {
       const actualResult: SimpleMessageDto = await authController.sendResetPasswordEmail(regularUserRequest);
 
       expect(actualResult).toEqual(expectedResult);
-      expect(mockAuthService.sendResetPasswordEmail).toHaveBeenCalled();
       expect(mockAuthService.sendResetPasswordEmail).toHaveBeenCalledWith(userJamesSmith.id);
     });
-    
+
   });
 
   describe('GET /forgot-password', () => {
@@ -155,15 +155,14 @@ describe('AuthController', () => {
       const actualResult: SimpleMessageDto = await authController.sendForgotPasswordEmail(forgotPasswordDto);
 
       expect(actualResult).toEqual(expectedResult);
-      expect(mockAuthService.sendForgotPasswordEmail).toHaveBeenCalled();
       expect(mockAuthService.sendForgotPasswordEmail).toHaveBeenCalledWith(forgotPasswordDto);
     });
-    
+
   });
 
   describe('GET /reset-password/:id/:token', () => {
 
-    it('should call AuthService.sendForgotPasswordEmail with the correct parameters', async () => {
+    it('should call AuthService.resetPassword with the correct parameters', async () => {
       const expectedResult: SimpleMessageDto = {
         statusCode: HttpStatus.OK,
         message: RETURN_MESSAGES.OK.PASSWORD_RESET,
@@ -174,10 +173,65 @@ describe('AuthController', () => {
       const actualResult: SimpleMessageDto = await authController.resetPassword(userJamesSmith.id, 'token', getResetPasswordDto());
 
       expect(actualResult).toEqual(expectedResult);
-      expect(mockAuthService.resetPassword).toHaveBeenCalled();
       expect(mockAuthService.resetPassword).toHaveBeenCalledWith(userJamesSmith.id, 'token', getResetPasswordDto());
     });
+
+  });
+
+  describe('DELETE', () => {
+
+    it('should call destroy session and delete user', async () => {
+      const mockReq = {
+        session: {
+          destroy: jest.fn(),
+        },
+        user: { id: 'some-user-id' },
+      };
+
+      const mockRes = {
+        clearCookie: jest.fn(),
+      };
+
+      const expectedResult: SimpleMessageDto = {
+        statusCode: HttpStatus.OK,
+        message: RETURN_MESSAGES.OK.ACCOUNT_DELETED,
+      };
+
+      (mockAuthService.deleteUser as jest.Mock).mockResolvedValue(expectedResult);
+
+      const actualResult = await authController.deleteUser(mockReq as any, mockRes as any);
+
+      expect(mockReq.session.destroy).toHaveBeenCalled();
+      expect(mockRes.clearCookie).toHaveBeenCalledWith('SESSION_ID');
+      expect(mockAuthService.deleteUser).toHaveBeenCalledWith('some-user-id');
+      expect(actualResult).toEqual(expectedResult);
+    });
+
+  });
+
+  describe('GET /logout', () => {
+
+    it('should destroy session and clear cookie on logout', async () => {
+      const mockReq = {
+        session: {
+          destroy: jest.fn(),
+        },
+      };
     
+      const mockRes = {
+        clearCookie: jest.fn(),
+      };
+    
+      const result = await authController.logoutUser(mockReq as any, mockRes as any);
+    
+      expect(mockReq.session.destroy).toHaveBeenCalled();
+      expect(mockRes.clearCookie).toHaveBeenCalledWith('SESSION_ID');
+      expect(result).toEqual({
+        statusCode: HttpStatus.OK,
+        message: RETURN_MESSAGES.OK.SESSION_ENDED,
+      });
+    });    
+
   });
 
 });

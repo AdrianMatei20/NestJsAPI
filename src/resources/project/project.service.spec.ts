@@ -85,7 +85,7 @@ describe('ProjectService', () => {
 
   describe('create', () => {
 
-    it('should throw BadRequestException for invalid user id', async () => {
+    it('should return 400 BadRequest for invalid user id', async () => {
       await expect(projectService.create(createProjectDto as CreateProjectDto, invalidUUID))
         .rejects.toThrow(BadRequestException);
       expect(mockLoggerService.warn).toHaveBeenCalled();
@@ -107,7 +107,7 @@ describe('ProjectService', () => {
       }
     });
 
-    it('should throw InternalServerErrorException if userService.findOneById fails', async () => {
+    it('should return 500 InternalServerError if userService.findOneById fails', async () => {
       (mockUserService.findOneById as jest.Mock).mockRejectedValue(new Error('Database error'));
 
       await expect(projectService.create(createProjectDto, userJamesSmith.id))
@@ -132,7 +132,7 @@ describe('ProjectService', () => {
       }
     });
 
-    it('should throw NotFoundException for non-existing user', async () => {
+    it('should return 404 NotFound for non-existing user', async () => {
       (mockUserService.findOneById as jest.Mock).mockResolvedValue(null);
 
       await expect(projectService.create(createProjectDto, nonExistingUserId))
@@ -156,7 +156,7 @@ describe('ProjectService', () => {
       }
     });
 
-    it('should throw BadRequestException for missing parameters', async () => {
+    it('should return 400 BadRequest for missing parameters', async () => {
       (mockUserService.findOneById as jest.Mock).mockResolvedValue(userJamesSmith);
 
       await expect(projectService.create(createProjectDtoEmpty as CreateProjectDto, userJamesSmith.id))
@@ -180,7 +180,7 @@ describe('ProjectService', () => {
       }
     });
 
-    it('should throw BadRequestException for missing parameter \'name\'', async () => {
+    it('should return 400 BadRequest for missing parameter \'name\'', async () => {
       (mockUserService.findOneById as jest.Mock).mockResolvedValue(userJamesSmith);
 
       await expect(projectService.create(createProjectDtoNoName as CreateProjectDto, userJamesSmith.id))
@@ -204,7 +204,7 @@ describe('ProjectService', () => {
       }
     });
 
-    it('should throw BadRequestException for missing parameter \'description\'', async () => {
+    it('should return 400 BadRequest for missing parameter \'description\'', async () => {
       (mockUserService.findOneById as jest.Mock).mockResolvedValue(userJamesSmith);
 
       await expect(projectService.create(createProjectDtoNoDescription as CreateProjectDto, userJamesSmith.id))
@@ -228,7 +228,7 @@ describe('ProjectService', () => {
       }
     });
 
-    it('should throw InternalServerErrorException if projectRepository.create fails', async () => {
+    it('should return 500 InternalServerError if projectRepository.create fails', async () => {
       (mockUserService.findOneById as jest.Mock).mockResolvedValue(userJamesSmith);
       (mockProjectRepository.create as jest.Mock).mockImplementation(() => { throw new Error('Database error'); });
 
@@ -254,7 +254,7 @@ describe('ProjectService', () => {
       }
     });
 
-    it('should throw InternalServerErrorException if projectRepository.save fails', async () => {
+    it('should return 500 InternalServerError if projectRepository.save fails', async () => {
       project.userProjectRoles = [userProjectRole];
 
       (mockUserService.findOneById as jest.Mock).mockResolvedValue(userJamesSmith);
@@ -283,7 +283,7 @@ describe('ProjectService', () => {
       }
     });
 
-    it('should throw InternalServerErrorException if userProjectRoleRepository.save fails', async () => {
+    it('should return 500 InternalServerError if userProjectRoleRepository.save fails', async () => {
       project.userProjectRoles = [userProjectRole];
 
       (mockUserService.findOneById as jest.Mock).mockResolvedValue(userJamesSmith);
@@ -313,7 +313,7 @@ describe('ProjectService', () => {
       }
     });
 
-    it('should throw InternalServerErrorException if projectRepository.findOne fails', async () => {
+    it('should return 500 InternalServerError if projectRepository.findOne fails', async () => {
       project.userProjectRoles = [userProjectRole];
 
       (mockUserService.findOneById as jest.Mock).mockResolvedValue(userJamesSmith);
@@ -390,7 +390,7 @@ describe('ProjectService', () => {
 
   describe('findAllByUserId', () => {
 
-    it('should throw BadRequestException for invalid user id', async () => {
+    it('should return 400 BadRequest for invalid user id', async () => {
       await expect(projectService.findAllByUserId(invalidUUID))
         .rejects.toThrow(BadRequestException);
       expect(mockLoggerService.warn).toHaveBeenCalled();
@@ -412,7 +412,7 @@ describe('ProjectService', () => {
       }
     });
 
-    it('should throw InternalServerErrorException if userService.findOneById fails', async () => {
+    it('should return 500 InternalServerError if userService.findOneById fails', async () => {
       (mockUserService.findOneById as jest.Mock).mockRejectedValue(new Error('Database error'));
 
       await expect(projectService.findAllByUserId(userJamesSmith.id))
@@ -437,7 +437,7 @@ describe('ProjectService', () => {
       }
     });
 
-    it('should throw NotFoundException for non-existing user', async () => {
+    it('should return 404 NotFound for non-existing user', async () => {
       (mockUserService.findOneById as jest.Mock).mockResolvedValue(null);
 
       await expect(projectService.findAllByUserId(nonExistingUserId))
@@ -461,7 +461,7 @@ describe('ProjectService', () => {
       }
     });
 
-    it('should throw InternalServerErrorException if userProjectRoleRepository.find fails', async () => {
+    it('should return 500 InternalServerError if userProjectRoleRepository.find fails', async () => {
       (mockUserService.findOneById as jest.Mock).mockResolvedValue(userJamesSmith);
       (mockUserProjectRoleRepository.find as jest.Mock).mockRejectedValue(new Error('Database error'));
 
@@ -518,7 +518,7 @@ describe('ProjectService', () => {
 
   describe('findOneById', () => {
 
-    it('should throw BadRequestException for invalid project id', async () => {
+    it('should return 400 BadRequest for invalid project id', async () => {
       await expect(projectService.findOneById(invalidUUID))
         .rejects.toThrow(BadRequestException);
       expect(mockLoggerService.warn).toHaveBeenCalled();
@@ -540,7 +540,7 @@ describe('ProjectService', () => {
       }
     });
 
-    it('should throw InternalServerErrorException if projectRepository.findOne fails', async () => {
+    it('should return 500 InternalServerError if projectRepository.findOne fails', async () => {
       (mockProjectRepository.findOne as jest.Mock).mockRejectedValue(new Error('Database error'));
 
       await expect(projectService.findOneById(project.id))
@@ -565,7 +565,7 @@ describe('ProjectService', () => {
       }
     });
 
-    it('should throw NotFoundException for non-existing project', async () => {
+    it('should return 404 NotFound for non-existing project', async () => {
       (mockProjectRepository.findOne as jest.Mock).mockResolvedValue(null);
 
       await expect(projectService.findOneById(project.id))
@@ -601,7 +601,7 @@ describe('ProjectService', () => {
 
   describe('update', () => {
 
-    it('should throw BadRequestException for invalid project id', async () => {
+    it('should return 400 BadRequest for invalid project id', async () => {
       await expect(projectService.update(invalidUUID, updateProjectDto))
         .rejects.toThrow(BadRequestException);
       expect(mockLoggerService.warn).toHaveBeenCalled();
@@ -623,7 +623,7 @@ describe('ProjectService', () => {
       }
     });
 
-    it('should throw InternalServerErrorException if projectRepository.findOne fails', async () => {
+    it('should return 500 InternalServerError if projectRepository.findOne fails', async () => {
       (mockProjectRepository.findOne as jest.Mock).mockRejectedValue(new Error('Database error'));
 
       await expect(projectService.update(project.id, updateProjectDto))
@@ -648,7 +648,7 @@ describe('ProjectService', () => {
       }
     });
 
-    it('should throw NotFoundException for non-existing project', async () => {
+    it('should return 404 NotFound for non-existing project', async () => {
       (mockProjectRepository.findOne as jest.Mock).mockResolvedValue(null);
 
       await expect(projectService.update(project.id, updateProjectDto))
@@ -672,7 +672,7 @@ describe('ProjectService', () => {
       }
     });
 
-    it('should throw BadRequestException for missing parameters', async () => {
+    it('should return 400 BadRequest for missing parameters', async () => {
       (mockProjectRepository.findOne as jest.Mock).mockResolvedValue(project);
 
       await expect(projectService.update(project.id, updateProjectDtoEmpty as UpdateProjectDto))
@@ -696,7 +696,7 @@ describe('ProjectService', () => {
       }
     });
 
-    it('should throw InternalServerErrorException if projectRepository.update fails', async () => {
+    it('should return 500 InternalServerError if projectRepository.update fails', async () => {
       (mockProjectRepository.findOne as jest.Mock).mockResolvedValue(project);
       (mockProjectRepository.update as jest.Mock).mockRejectedValue(new Error('Database error'));
 
@@ -810,7 +810,7 @@ describe('ProjectService', () => {
 
   describe('remove', () => {
 
-    it('should throw BadRequestException for invalid project id', async () => {
+    it('should return 400 BadRequest for invalid project id', async () => {
       await expect(projectService.remove(invalidUUID))
         .rejects.toThrow(BadRequestException);
       expect(mockLoggerService.warn).toHaveBeenCalled();
@@ -832,7 +832,7 @@ describe('ProjectService', () => {
       }
     });
 
-    it('should throw InternalServerErrorException if projectRepository.findOne fails', async () => {
+    it('should return 500 InternalServerError if projectRepository.findOne fails', async () => {
       (mockProjectRepository.findOne as jest.Mock).mockRejectedValue(new Error('Database error'));
 
       await expect(projectService.remove(project.id))
@@ -857,7 +857,7 @@ describe('ProjectService', () => {
       }
     });
 
-    it('should throw NotFoundException for non-existing project', async () => {
+    it('should return 404 NotFound for non-existing project', async () => {
       (mockProjectRepository.findOne as jest.Mock).mockResolvedValue(null);
 
       await expect(projectService.remove(project.id))
@@ -881,7 +881,7 @@ describe('ProjectService', () => {
       }
     });
 
-    it('should throw InternalServerErrorException if delete fails', async () => {
+    it('should return 500 InternalServerError if delete fails', async () => {
       (mockProjectRepository.findOne as jest.Mock).mockResolvedValue(project);
       (mockProjectRepository.delete as jest.Mock).mockRejectedValue(new Error('Database error'));
 

@@ -48,7 +48,7 @@ export class ProjectRoleGuard implements CanActivate {
         if (!project) {
             throw new ForbiddenException({
                 statusCode: HttpStatus.FORBIDDEN,
-                message: 'Project not found or you lack permissions.',
+                message: RETURN_MESSAGES.FORBIDDEN.PROJECT_NOT_FOUND_OR_LACKING_PERMISSIONS,
             });
         }
 
@@ -62,8 +62,8 @@ export class ProjectRoleGuard implements CanActivate {
 
         if (!hasAccess) {
             throw new ForbiddenException({
-                statusCode: HttpStatus.UNAUTHORIZED,
-                message: 'You do not have the required role to perform this action.',
+                statusCode: HttpStatus.FORBIDDEN,
+                message: RETURN_MESSAGES.FORBIDDEN.INCORRECT_ROLE,
             });
         }
 

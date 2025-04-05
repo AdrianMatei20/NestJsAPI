@@ -8,10 +8,18 @@ export const RETURN_MESSAGES = {
         PASSWORD_RESET: 'If you are registered, your password has been reset successfully.',
         ACCOUNT_DELETED: 'Account deleted.',
         SESSION_ENDED: 'User session ended!',
+
+        USER_FOUND: 'User found!',
+        USER_DELETED: 'User deleted!',
+
+        PROJECT_FOUND: 'Project found!',
+        PROJECT_UPDATED: 'Project updated!',
+        PROJECT_DELETED: 'Project deleted!',
     },
 
     CREATED: {
         SUCCESSFUL_REGISTRATION: (firstname: string, lastname: string) => `Successfully logged in. Welcome ${firstname} ${lastname}!`,
+        PROJECT: 'Project created!',
     },
 
     BAD_REQUEST: {
@@ -24,7 +32,10 @@ export const RETURN_MESSAGES = {
 
     UNAUTHORIZED: 'Invalid credentials.',
 
-    FORBIDDEN: 'Forbidden.',
+    FORBIDDEN: {
+        PROJECT_NOT_FOUND_OR_LACKING_PERMISSIONS: 'Project not found or you lack permissions.',
+        INCORRECT_ROLE: 'You do not have the required role to perform this action.',
+    },
 
     NOT_FOUND: {
         USER: 'User not found!',

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Req, UseGuards, HttpStatus, SetMetadata } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Req, UseGuards, HttpStatus, SetMetadata, ForbiddenException } from '@nestjs/common';
 import { ProjectService } from './project.service';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
@@ -11,6 +11,7 @@ import { ProjectRole } from './enums/project-role';
 import { Project } from './entities/project.entity';
 import { SimpleMessageDto } from 'src/shared/utils/simple-message.dto';
 import { GlobalRole } from '../user/enums/global-role';
+import { RETURN_MESSAGES } from 'src/constants/return-messages';
 
 @ApiTags('project')
 @Controller('project')
@@ -28,7 +29,7 @@ export class ProjectController {
   async create(
     @Req() req,
     @Body() createProjectDto: CreateProjectDto
-  ): Promise<CustomMessageDto<Project | PublicProjectDto>> {
+  ): Promise<CustomMessageDto<Project | PublicProjectDto> | SimpleMessageDto> {
     const project: Project = await this.projectService.create(createProjectDto, req.user.id);
 
     switch (req.user.globalRole) {
@@ -36,27 +37,26 @@ export class ProjectController {
       case (GlobalRole.ADMIN): {
         return {
           statusCode: HttpStatus.CREATED,
-          message: 'project created',
-          data: project,
+          message: RETURN_MESSAGES.CREATED.PROJECT,
+          data: new PublicProjectDto(project),
         }
       }
 
       case (GlobalRole.REGULAR_USER): {
         return {
           statusCode: HttpStatus.CREATED,
-          message: 'project created',
+          message: RETURN_MESSAGES.CREATED.PROJECT,
           data: new PublicProjectDto(project),
         }
       }
 
       default: {
-        return {
-          statusCode: HttpStatus.CREATED,
-          message: 'project created',
-          data: new PublicProjectDto(project),
-        }
+        throw new ForbiddenException({
+          statusCode: HttpStatus.FORBIDDEN,
+          message: RETURN_MESSAGES.FORBIDDEN.INCORRECT_ROLE,
+        });
       }
-    
+
     }
   }
 
@@ -123,14 +123,12 @@ export class ProjectController {
       }
 
       default: {
-        const projects: Project[] = await this.projectService.findAllByUserId(req.user.id);
-        return {
-          statusCode: HttpStatus.OK,
-          message: `${projects.length} project${projects.length == 1 ? '' : 's'} found`,
-          data: projects.map(project => new PublicProjectDto(project)),
-        }
+        throw new ForbiddenException({
+          statusCode: HttpStatus.FORBIDDEN,
+          message: RETURN_MESSAGES.FORBIDDEN.INCORRECT_ROLE,
+        });
       }
-      
+
     }
   }
 
@@ -167,7 +165,7 @@ export class ProjectController {
       case (GlobalRole.ADMIN): {
         return {
           statusCode: HttpStatus.OK,
-          message: 'project found',
+          message: RETURN_MESSAGES.OK.PROJECT_FOUND,
           data: project,
         }
       }
@@ -175,19 +173,18 @@ export class ProjectController {
       case (GlobalRole.REGULAR_USER): {
         return {
           statusCode: HttpStatus.OK,
-          message: 'project found',
+          message: RETURN_MESSAGES.OK.PROJECT_FOUND,
           data: new PublicProjectDto(project),
         }
       }
 
       default: {
-        return {
-          statusCode: HttpStatus.OK,
-          message: 'project found',
-          data: new PublicProjectDto(project),
-        }
+        throw new ForbiddenException({
+          statusCode: HttpStatus.FORBIDDEN,
+          message: RETURN_MESSAGES.FORBIDDEN.INCORRECT_ROLE,
+        });
       }
-      
+
     }
   }
 
@@ -220,17 +217,17 @@ export class ProjectController {
   @ApiResponse({ status: HttpStatus.INTERNAL_SERVER_ERROR, description: 'internal server error' })
   async update(
     @Req() req,
-    @Param('id') id: string,
+    @Param('id') projectId: string,
     @Body() updateProjectDto: UpdateProjectDto
   ): Promise<CustomMessageDto<Project | PublicProjectDto>> {
-    const updatedProject: Project = await this.projectService.update(id, updateProjectDto);
+    const updatedProject: Project = await this.projectService.update(projectId, updateProjectDto);
 
     switch (req.user.globalRole) {
 
       case (GlobalRole.ADMIN): {
         return {
           statusCode: HttpStatus.OK,
-          message: 'project updated',
+          message: RETURN_MESSAGES.OK.PROJECT_UPDATED,
           data: updatedProject,
         }
       }
@@ -238,19 +235,18 @@ export class ProjectController {
       case (GlobalRole.REGULAR_USER): {
         return {
           statusCode: HttpStatus.OK,
-          message: 'project updated',
+          message: RETURN_MESSAGES.OK.PROJECT_UPDATED,
           data: new PublicProjectDto(updatedProject),
         }
       }
 
       default: {
-        return {
-          statusCode: HttpStatus.OK,
-          message: 'project updated',
-          data: new PublicProjectDto(updatedProject),
-        }
+        throw new ForbiddenException({
+          statusCode: HttpStatus.FORBIDDEN,
+          message: RETURN_MESSAGES.FORBIDDEN.INCORRECT_ROLE,
+        });
       }
-      
+
     }
   }
 
@@ -267,7 +263,7 @@ export class ProjectController {
     if (await this.projectService.remove(id)) {
       return {
         statusCode: HttpStatus.OK,
-        message: 'project deleted',
+        message: RETURN_MESSAGES.OK.PROJECT_DELETED,
       }
     }
   }

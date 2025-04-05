@@ -29,9 +29,7 @@ export class EmailService {
                 process.env.EMAIL_JS_TEMPLATE_ID,
                 params,
             );
-            console.log(response);
         } catch (error) {
-            console.log(error);
             return false;
         }
 
@@ -53,9 +51,7 @@ export class EmailService {
                 process.env.EMAIL_JS_TEMPLATE_ID,
                 params,
             );
-            console.log(response);
         } catch(error) {
-            console.log(error);
             return false;
         }
 

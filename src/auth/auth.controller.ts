@@ -98,7 +98,13 @@ export class AuthController {
     if (req.session) {
       req.session.destroy();
       res.clearCookie('SESSION_ID');
-      return await this.authService.deleteUser(req.user.id);
+
+      if (await this.authService.deleteUser(req.user.id)) {
+        return {
+          statusCode: HttpStatus.OK,
+          message: RETURN_MESSAGES.OK.ACCOUNT_DELETED,
+        }
+      }
     }
   }
 

@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { BadRequestException, HttpStatus, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, HttpStatus, InternalServerErrorException, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { UserController } from './user.controller';
 import { UserService } from './user.service';
 import { LoggerService } from 'src/logger/logger.service';
@@ -49,7 +49,7 @@ describe('UserController', () => {
 
   describe('/user (GET)', () => {
 
-    it('should return AdminUserDto[] with users when user is ADMIN', async () => {
+    it('should return AdminUserDto for admin requests', async () => {
       const mockUsers: User[] = users;
       (mockUserService.findAll as jest.Mock).mockResolvedValue(mockUsers);
 
@@ -65,7 +65,7 @@ describe('UserController', () => {
       });
     });
 
-    it('should return AdminUserDto[] with one user when user is ADMIN', async () => {
+    it('should return AdminUserDto array with one user for admin requests', async () => {
       (mockUserService.findAll as jest.Mock).mockResolvedValue([user]);
 
       const mockReq = { user: { globalRole: GlobalRole.ADMIN } };
@@ -80,7 +80,7 @@ describe('UserController', () => {
       });
     });
 
-    it('should return PublicUserDto[] when user is REGULAR_USER', async () => {
+    it('should return PublicUserDto array for regular user requests', async () => {
       const mockUsers: User[] = users;
       (mockUserService.findAll as jest.Mock).mockResolvedValue(mockUsers);
 
@@ -96,7 +96,7 @@ describe('UserController', () => {
       });
     });
 
-    it('should return PublicUserDto[] with one user when user is REGULAR_USER', async () => {
+    it('should return PublicUserDto array with one user for regular user requests', async () => {
       (mockUserService.findAll as jest.Mock).mockResolvedValue([user]);
 
       const mockReq = { user: { globalRole: GlobalRole.REGULAR_USER } };
@@ -111,42 +111,32 @@ describe('UserController', () => {
       });
     });
 
-    it('should return PublicUserDto[] when user has other role', async () => {
+    it('should return 403 Forbidden for unknown role requests', async () => {
       const mockUsers: User[] = users;
       (mockUserService.findAll as jest.Mock).mockResolvedValue(mockUsers);
 
       const mockReq = { user: { globalRole: 'UNKNOWN_ROLE' } };
 
-      const result = await userController.findAll(mockReq);
+      await expect(userController.findAll(mockReq))
+        .rejects.toThrow(ForbiddenException);
 
-      expect(mockUserService.findAll).toHaveBeenCalled();
-      expect(result).toEqual({
-        statusCode: HttpStatus.OK,
-        message: `${users.length} users found`,
-        data: mockUsers.map(user => new PublicUserDto(user)),
-      });
+      try {
+        await userController.findAll(mockReq);
+      } catch (error) {
+        expect(error).toBeInstanceOf(ForbiddenException);
+        expect(error.getStatus()).toBe(HttpStatus.FORBIDDEN);
+        expect(error.getResponse()).toEqual({
+          statusCode: HttpStatus.FORBIDDEN,
+          message: RETURN_MESSAGES.FORBIDDEN.INCORRECT_ROLE,
+        });
+      }
     });
-
-    it('should return PublicUserDto[] with one user when user has other role', async () => {
-      (mockUserService.findAll as jest.Mock).mockResolvedValue([user]);
-
-      const mockReq = { user: { globalRole: 'UNKNOWN_ROLE' } };
-
-      const result = await userController.findAll(mockReq);
-
-      expect(mockUserService.findAll).toHaveBeenCalled();
-      expect(result).toEqual({
-        statusCode: HttpStatus.OK,
-        message: '1 user found',
-        data: [new PublicUserDto(user)],
-      });
-    });
-
+    
   });
 
   describe('/user/:id (GET)', () => {
 
-    it('should throw BadRequestException for invalid user id', async () => {
+    it('should return 400 BadRequest for invalid user id', async () => {
       const mockReq = { user: { globalRole: GlobalRole.REGULAR_USER } };
 
       await expect(userController.findOne(mockReq, invalidUUID))
@@ -164,7 +154,7 @@ describe('UserController', () => {
       }
     });
 
-    it('should throw NotFoundException if user is not found', async () => {
+    it('should return 404 NotFound if user is not found', async () => {
       (mockUserService.findOneById as jest.Mock).mockResolvedValue(null);
 
       const mockReq = { user: { globalRole: GlobalRole.REGULAR_USER } };
@@ -196,7 +186,7 @@ describe('UserController', () => {
       expect(mockUserService.findOneById).toHaveBeenCalled();
       expect(result).toEqual({
         statusCode: HttpStatus.OK,
-        message: 'user found',
+        message: RETURN_MESSAGES.OK.USER_FOUND,
         data: new AdminUserDto(user),
       });
     });
@@ -211,31 +201,36 @@ describe('UserController', () => {
       expect(mockUserService.findOneById).toHaveBeenCalled();
       expect(result).toEqual({
         statusCode: HttpStatus.OK,
-        message: 'user found',
+        message: RETURN_MESSAGES.OK.USER_FOUND,
         data: new PublicUserDto(user),
       });
     });
 
-    it('should return PublicUserDto when user has other role', async () => {
+    it('should return 403 Forbidden if user has other role', async () => {
       (mockUserService.findOneById as jest.Mock).mockResolvedValue(user);
 
       const mockReq = { user: { globalRole: 'UNKNOWN_ROLE' } };
 
-      const result = await userController.findOne(mockReq, userJamesSmith.id);
+      await expect(userController.findOne(mockReq, userJamesSmith.id))
+        .rejects.toThrow(ForbiddenException);
 
-      expect(mockUserService.findOneById).toHaveBeenCalled();
-      expect(result).toEqual({
-        statusCode: HttpStatus.OK,
-        message: 'user found',
-        data: new PublicUserDto(user),
-      });
+      try {
+        await userController.findOne(mockReq, userJamesSmith.id);
+      } catch (error) {
+        expect(error).toBeInstanceOf(ForbiddenException);
+        expect(error.getStatus()).toBe(HttpStatus.FORBIDDEN);
+        expect(error.getResponse()).toEqual({
+          statusCode: HttpStatus.FORBIDDEN,
+          message: RETURN_MESSAGES.FORBIDDEN.INCORRECT_ROLE,
+        });
+      }
     });
 
   });
 
   describe('/user/:id (DELETE)', () => {
 
-    it('should throw BadRequestException for invalid user id', async () => {
+    it('should return 400 BadRequest for invalid user id', async () => {
       await expect(userController.remove(invalidUUID))
         .rejects.toThrow(BadRequestException);
 
@@ -251,14 +246,14 @@ describe('UserController', () => {
       }
     });
 
-    it('should throw NotFoundException when user does not exist', async () => {
+    it('should return 404 NotFound when user does not exist', async () => {
       (mockUserService.findOneById as jest.Mock).mockResolvedValue(null);
       (mockUserService.remove as jest.Mock).mockResolvedValue(false);
 
       await expect(userController.remove(nonExistingUserId)).rejects.toThrow(NotFoundException);
     });
 
-    it('should throw InternalServerErrorException when UserService.remove fails', async () => {
+    it('should return 500 InternalServerError when UserService.remove fails', async () => {
       (mockUserService.findOneById as jest.Mock).mockResolvedValue(user);
       (mockUserService.remove as jest.Mock).mockResolvedValue(false);
 
@@ -288,7 +283,7 @@ describe('UserController', () => {
       expect(mockUserService.remove).toHaveBeenCalledWith(userJamesSmith.id);
       expect(result).toEqual({
         statusCode: HttpStatus.OK,
-        message: 'user deleted',
+        message: RETURN_MESSAGES.OK.USER_DELETED,
       });
     });
 

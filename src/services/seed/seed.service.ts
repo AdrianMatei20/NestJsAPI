@@ -43,7 +43,7 @@ export class SeedService {
             return;
         }
 
-        if (await this.userService.findOneByEmail(process.env.ADMIN_USER_EMAIL.toLocaleLowerCase())) {
+        if (await this.userService.findOneByEmail(process.env.ADMIN_USER_EMAIL)) {
             return;
         }
 

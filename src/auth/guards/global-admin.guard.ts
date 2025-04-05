@@ -22,7 +22,7 @@ export class GlobalAdminGuard implements CanActivate {
         if (user.globalRole !== GlobalRole.ADMIN) {
             throw new ForbiddenException({
                 statusCode: HttpStatus.FORBIDDEN,
-                message: 'You do not have the required role to perform this action.',
+                message: RETURN_MESSAGES.FORBIDDEN.INCORRECT_ROLE,
             });
         }
 

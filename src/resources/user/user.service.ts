@@ -40,7 +40,7 @@ export class UserService {
 
   async findOneByEmail(email: string): Promise<User> {
     return await this.userRepository.findOne({
-      where: { email }
+      where: { email: email.toLocaleLowerCase() }
     });
   }
 

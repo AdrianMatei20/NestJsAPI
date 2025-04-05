@@ -6,24 +6,24 @@ import { PassportModule } from "@nestjs/passport";
 import { Repository } from "typeorm";
 import { getRepositoryToken, TypeOrmModule } from "@nestjs/typeorm";
 
-import { AppModule } from "../src/app.module";
-import { LoggerController } from "../src/logger/logger.controller";
+import { AppModule } from "../../src/app.module";
+import { LoggerController } from "../../src/logger/logger.controller";
 
-import { User } from "../src/resources/user/entities/user.entity";
-import { UserProjectRole } from "../src/resources/project/entities/user-project-role.entity";
-import { Project } from "../src/resources/project/entities/project.entity";
-import { ResetPassword } from "../src/auth/reset-password/reset-password.entity";
-import { Log } from "../src/logger/entities/log.entity";
-import { GlobalRole } from "../src/resources/user/enums/global-role";
+import { User } from "../../src/resources/user/entities/user.entity";
+import { UserProjectRole } from "../../src/resources/project/entities/user-project-role.entity";
+import { Project } from "../../src/resources/project/entities/project.entity";
+import { ResetPassword } from "../../src/auth/reset-password/reset-password.entity";
+import { Log } from "../../src/logger/entities/log.entity";
+import { GlobalRole } from "../../src/resources/user/enums/global-role";
 
-import { LoggerService } from "../src/logger/logger.service";
-import { UserService } from "../src/resources/user/user.service";
-import { ObjectValidationService } from "../src/services/object-validation/object-validation.service";
-import { ResetPasswordService } from "../src/auth/reset-password/reset-password.service";
-import { TokenService } from "../src/services/token/token.service";
+import { LoggerService } from "../../src/logger/logger.service";
+import { UserService } from "../../src/resources/user/user.service";
+import { ObjectValidationService } from "../../src/services/object-validation/object-validation.service";
+import { ResetPasswordService } from "../../src/auth/reset-password/reset-password.service";
+import { TokenService } from "../../src/services/token/token.service";
 
-import { RETURN_MESSAGES } from "../src/constants/return-messages";
-import { getRegisterUserDto } from "./data/register-user";
+import { RETURN_MESSAGES } from "../../src/constants/return-messages";
+import { getRegisterUserDto } from "../data/register-user";
 
 import * as dotenv from 'dotenv';
 import request from 'supertest';
@@ -31,7 +31,7 @@ import session from "express-session";
 import { hash } from 'bcrypt';
 import { JwtService } from "@nestjs/jwt";
 import { LogInUserDto } from "src/auth/dto/log-in-user.dto";
-import { getLogs } from "./data/logs";
+import { getLogs } from "../data/logs";
 
 describe('LoggerController (e2e)', () => {
     let app: INestApplication;
@@ -128,7 +128,6 @@ describe('LoggerController (e2e)', () => {
     afterAll(async () => {
         await app.close();
     });
-
 
     afterEach(async () => {
         await request(app.getHttpServer())

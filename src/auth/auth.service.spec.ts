@@ -95,6 +95,7 @@ describe('AuthService', () => {
       (mockUserService.findOneByEmail as jest.Mock).mockRejectedValue(new Error('Database error'));
 
       const result = await authService.validateUser(logInUserDto);
+
       expect(result).toBe(null);
     });
 
@@ -102,6 +103,7 @@ describe('AuthService', () => {
       (mockUserService.findOneByEmail as jest.Mock).mockResolvedValue(null);
 
       const result = await authService.validateUser(logInUserDto);
+
       expect(result).toBe(null);
     });
 
@@ -110,14 +112,16 @@ describe('AuthService', () => {
       (bcrypt.compare as jest.Mock).mockResolvedValue(false);
 
       const result = await authService.validateUser(logInUserDto);
+
       expect(result).toBe(null);
     });
 
-    it('should return the user if all is well', async () => {
+    it('should return the user if all goes well', async () => {
       (mockUserService.findOneByEmail as jest.Mock).mockResolvedValue(user);
       (bcrypt.compare as jest.Mock).mockResolvedValue(true);
 
       const result = await authService.validateUser(logInUserDto);
+
       expect(result).toBe(user);
     });
 
@@ -125,10 +129,9 @@ describe('AuthService', () => {
 
   describe('registerUser', () => {
 
-    it('should throw BadRequestException for missing parameters', async () => {
+    it('should return 400 BadRequest for missing parameters', async () => {
       await expect(authService.registerUser(emptyRegisterUserDto as RegisterUserDto))
         .rejects.toThrow(BadRequestException);
-      expect(mockLoggerService.warn).toHaveBeenCalled();
       expect(mockLoggerService.warn).toHaveBeenCalledWith(
         LOG_MESSAGES.AUTH.REGISTER_USER.MISSING_PROPS(['firstname', 'lastname', 'email', 'password', 'passwordConfirmation']),
         LOG_CONTEXTS.AuthService.registerUser,
@@ -147,10 +150,9 @@ describe('AuthService', () => {
       }
     });
 
-    it('should throw BadRequestException for missing firstname', async () => {
+    it('should return 400 BadRequest for missing firstname', async () => {
       await expect(authService.registerUser(registerUserDtoNoFirstname as RegisterUserDto))
         .rejects.toThrow(BadRequestException);
-      expect(mockLoggerService.warn).toHaveBeenCalled();
       expect(mockLoggerService.warn).toHaveBeenCalledWith(
         LOG_MESSAGES.AUTH.REGISTER_USER.MISSING_PROPS(['firstname']),
         LOG_CONTEXTS.AuthService.registerUser,
@@ -169,10 +171,9 @@ describe('AuthService', () => {
       }
     });
 
-    it('should throw BadRequestException for missing lastname', async () => {
+    it('should return 400 BadRequest for missing lastname', async () => {
       await expect(authService.registerUser(registerUserDtoNoLastname as RegisterUserDto))
         .rejects.toThrow(BadRequestException);
-      expect(mockLoggerService.warn).toHaveBeenCalled();
       expect(mockLoggerService.warn).toHaveBeenCalledWith(
         LOG_MESSAGES.AUTH.REGISTER_USER.MISSING_PROPS(['lastname']),
         LOG_CONTEXTS.AuthService.registerUser,
@@ -191,10 +192,9 @@ describe('AuthService', () => {
       }
     });
 
-    it('should throw BadRequestException for missing email', async () => {
+    it('should return 400 BadRequest for missing email', async () => {
       await expect(authService.registerUser(registerUserDtoNoEmail as RegisterUserDto))
         .rejects.toThrow(BadRequestException);
-      expect(mockLoggerService.warn).toHaveBeenCalled();
       expect(mockLoggerService.warn).toHaveBeenCalledWith(
         LOG_MESSAGES.AUTH.REGISTER_USER.MISSING_PROPS(['email']),
         LOG_CONTEXTS.AuthService.registerUser,
@@ -213,10 +213,9 @@ describe('AuthService', () => {
       }
     });
 
-    it('should throw BadRequestException for missing password', async () => {
+    it('should return 400 BadRequest for missing password', async () => {
       await expect(authService.registerUser(registerUserDtoNoPassword as RegisterUserDto))
         .rejects.toThrow(BadRequestException);
-      expect(mockLoggerService.warn).toHaveBeenCalled();
       expect(mockLoggerService.warn).toHaveBeenCalledWith(
         LOG_MESSAGES.AUTH.REGISTER_USER.MISSING_PROPS(['password']),
         LOG_CONTEXTS.AuthService.registerUser,
@@ -235,10 +234,9 @@ describe('AuthService', () => {
       }
     });
 
-    it('should throw BadRequestException for missing password confirmation', async () => {
+    it('should return 400 BadRequest for missing password confirmation', async () => {
       await expect(authService.registerUser(registerUserDtoNoPasswordConfirmation as RegisterUserDto))
         .rejects.toThrow(BadRequestException);
-      expect(mockLoggerService.warn).toHaveBeenCalled();
       expect(mockLoggerService.warn).toHaveBeenCalledWith(
         LOG_MESSAGES.AUTH.REGISTER_USER.MISSING_PROPS(['passwordConfirmation']),
         LOG_CONTEXTS.AuthService.registerUser,
@@ -257,13 +255,12 @@ describe('AuthService', () => {
       }
     });
 
-    it('should throw ConflictException for email already registered', async () => {
+    it('should return 409 Conflict for email already registered', async () => {
       const registerUserDto: RegisterUserDto = getRegisterUserDto();
       (mockUserService.findOneByEmail as jest.Mock).mockResolvedValue(userJamesSmith);
 
       await expect(authService.registerUser(registerUserDto))
         .rejects.toThrow(ConflictException);
-      expect(mockLoggerService.warn).toHaveBeenCalled();
       expect(mockLoggerService.warn).toHaveBeenCalledWith(
         LOG_MESSAGES.AUTH.REGISTER_USER.EMAIL_ALREADY_REGISTERED,
         LOG_CONTEXTS.AuthService.registerUser,
@@ -282,12 +279,11 @@ describe('AuthService', () => {
       }
     });
 
-    it('should throw BadRequestException if passwords don\'t match', async () => {
+    it('should return 400 BadRequest if passwords don\'t match', async () => {
       (mockUserService.findOneByEmail as jest.Mock).mockResolvedValue(null);
 
       await expect(authService.registerUser(registerUserDtoPasswordsNotMatching as RegisterUserDto))
         .rejects.toThrow(BadRequestException);
-      expect(mockLoggerService.warn).toHaveBeenCalled();
       expect(mockLoggerService.warn).toHaveBeenCalledWith(
         LOG_MESSAGES.AUTH.REGISTER_USER.PASSWORD_MISMATCH,
         LOG_CONTEXTS.AuthService.registerUser,
@@ -306,7 +302,7 @@ describe('AuthService', () => {
       }
     });
 
-    it('should throw InternalServerErrorException if userService.create fails', async () => {
+    it('should return 500 InternalServerError if userService.create fails', async () => {
       const registerUserDto: RegisterUserDto = getRegisterUserDto();
       (mockUserService.findOneByEmail as jest.Mock).mockResolvedValue(null);
       (bcrypt.hash as jest.Mock).mockResolvedValue('hashedPassword');
@@ -314,7 +310,6 @@ describe('AuthService', () => {
 
       await expect(authService.registerUser(registerUserDto))
         .rejects.toThrow(InternalServerErrorException);
-      expect(mockLoggerService.error).toHaveBeenCalled();
       expect(mockLoggerService.error).toHaveBeenCalledWith(
         LOG_MESSAGES.AUTH.REGISTER_USER.FAILED_TO_REGISTER_USER(registerUserDto.email, 'Database error'),
         LOG_CONTEXTS.AuthService.registerUser,
@@ -334,7 +329,7 @@ describe('AuthService', () => {
       }
     });
 
-    it('should throw ServiceUnavailableException if emailService.sendRegistrationEmail fails', async () => {
+    it('should return 503 ServiceUnavailable if emailService.sendRegistrationEmail fails', async () => {
       const registerUserDto: RegisterUserDto = getRegisterUserDto();
       (mockUserService.findOneByEmail as jest.Mock).mockResolvedValue(null);
       (bcrypt.hash as jest.Mock).mockResolvedValue('hashedPassword');
@@ -344,7 +339,6 @@ describe('AuthService', () => {
 
       await expect(authService.registerUser(registerUserDto))
         .rejects.toThrow(ServiceUnavailableException);
-      expect(mockLoggerService.error).toHaveBeenCalled();
       expect(mockLoggerService.error).toHaveBeenCalledWith(
         LOG_MESSAGES.AUTH.REGISTER_USER.FAILED_TO_SEND_EMAIL(registerUserDto.email, 'Email error'),
         LOG_CONTEXTS.AuthService.registerUser,
@@ -364,7 +358,7 @@ describe('AuthService', () => {
       }
     });
 
-    it('should call emailService.sendRegistrationEmail with correct parameters', async () => {
+    it('should call emailService.sendRegistrationEmail with the correct parameters', async () => {
       const registerUserDto: RegisterUserDto = getRegisterUserDto();
       (mockUserService.findOneByEmail as jest.Mock).mockResolvedValue(null);
       (bcrypt.hash as jest.Mock).mockResolvedValue('hashedPassword');
@@ -379,13 +373,11 @@ describe('AuthService', () => {
 
       const actualResult = await authService.registerUser(registerUserDto);
 
-      expect(mockEmailService.sendRegistrationEmail).toHaveBeenCalled();
       expect(mockEmailService.sendRegistrationEmail).toHaveBeenCalledWith(
         userJamesSmith.email,
         `${userJamesSmith.firstname} ${userJamesSmith.lastname}`,
         `http://localhost:3001/auth/verify-user/${userJamesSmith.id}/token`,
       );
-      expect(mockLoggerService.info).toHaveBeenCalled();
       expect(mockLoggerService.info).toHaveBeenCalledTimes(2);
       expect(mockLoggerService.info).toHaveBeenCalledWith(
         LOG_MESSAGES.AUTH.REGISTER_USER.CONFIRMATION_EMAIL(user.email),
@@ -404,10 +396,9 @@ describe('AuthService', () => {
 
   describe('verifyUser', () => {
 
-    it('should throw BadRequestException for invalid user id', async () => {
+    it('should return 400 BadRequest for invalid user id', async () => {
       await expect(authService.verifyUser(invalidUUID, 'token'))
         .rejects.toThrow(BadRequestException);
-      expect(mockLoggerService.warn).toHaveBeenCalled();
       expect(mockLoggerService.warn).toHaveBeenCalledWith(
         LOG_MESSAGES.AUTH.VERIFY_USER.INVALID_UUID,
         LOG_CONTEXTS.AuthService.verifyUser,
@@ -426,12 +417,11 @@ describe('AuthService', () => {
       }
     });
 
-    it('should throw InternalServerErrorException if userService.findOneById fails', async () => {
+    it('should return 500 InternalServerError if userService.findOneById fails', async () => {
       (mockUserService.findOneById as jest.Mock).mockRejectedValue(new Error('Database error'));
 
       await expect(authService.verifyUser(userJamesSmith.id, 'token'))
         .rejects.toThrow(InternalServerErrorException);
-      expect(mockLoggerService.error).toHaveBeenCalled();
       expect(mockLoggerService.error).toHaveBeenCalledWith(
         LOG_MESSAGES.AUTH.VERIFY_USER.FAILED_TO_FIND_USER(userJamesSmith.id),
         LOG_CONTEXTS.AuthService.verifyUser,
@@ -451,7 +441,7 @@ describe('AuthService', () => {
       }
     });
 
-    it('should throw NotFoundException if user is not found', async () => {
+    it('should return successful message if user is not found', async () => {
       (mockUserService.findOneById as jest.Mock).mockResolvedValue(null);
 
       const expectedResult: SimpleMessageDto = {
@@ -462,7 +452,6 @@ describe('AuthService', () => {
       const actualResult: SimpleMessageDto = await authService.verifyUser(nonExistingUserId, 'token');
 
       expect(actualResult).toEqual(expectedResult);
-      expect(mockLoggerService.warn).toHaveBeenCalled();
       expect(mockLoggerService.warn).toHaveBeenCalledWith(
         LOG_MESSAGES.AUTH.VERIFY_USER.USER_NOT_FOUND(nonExistingUserId),
         LOG_CONTEXTS.AuthService.verifyUser,
@@ -470,7 +459,7 @@ describe('AuthService', () => {
       );
     });
 
-    it('should throw ForbiddenException if token is expired or invalid', async () => {
+    it('should return 400 BadRequest if token is expired or invalid', async () => {
       (mockUserService.findOneById as jest.Mock).mockResolvedValue(userJamesSmith);
       mockTokenService.verifyToken.mockImplementationOnce(() => {
         throw new Error('Invalid token');
@@ -478,7 +467,6 @@ describe('AuthService', () => {
 
       await expect(authService.verifyUser(userJamesSmith.id, 'token'))
         .rejects.toThrow(BadRequestException);
-      expect(mockLoggerService.warn).toHaveBeenCalled();
       expect(mockLoggerService.warn).toHaveBeenCalledWith(
         LOG_MESSAGES.AUTH.VERIFY_USER.BAD_TOKEN('token'),
         LOG_CONTEXTS.AuthService.verifyUser,
@@ -497,7 +485,7 @@ describe('AuthService', () => {
       }
     });
 
-    it('should throw InternalServerErrorException if userService.markUserAccountAsVerified fails', async () => {
+    it('should return 500 InternalServerError if userService.markUserAccountAsVerified fails', async () => {
       (mockUserService.findOneById as jest.Mock).mockResolvedValue(userJamesSmith);
       mockTokenService.verifyToken.mockImplementationOnce(() => {
         return true;
@@ -506,7 +494,6 @@ describe('AuthService', () => {
 
       await expect(authService.verifyUser(userJamesSmith.id, 'token'))
         .rejects.toThrow(InternalServerErrorException);
-      expect(mockLoggerService.error).toHaveBeenCalled();
       expect(mockLoggerService.error).toHaveBeenCalledWith(
         LOG_MESSAGES.AUTH.VERIFY_USER.FAILED_TO_VERIFY_USER,
         LOG_CONTEXTS.AuthService.verifyUser,
@@ -526,7 +513,7 @@ describe('AuthService', () => {
       }
     });
 
-    it('should return 200 and a confirmation message if all goes well', async () => {
+    it('should return 200 Ok and a confirmation message if all goes well', async () => {
       (mockUserService.findOneById as jest.Mock).mockResolvedValue(userJamesSmith);
       mockTokenService.verifyToken.mockImplementationOnce(() => {
         return true;
@@ -541,7 +528,6 @@ describe('AuthService', () => {
       const actualResult: SimpleMessageDto = await authService.verifyUser(userJamesSmith.id, 'token');
 
       expect(actualResult).toEqual(expectedResult);
-      expect(mockLoggerService.info).toHaveBeenCalled();
       expect(mockLoggerService.info).toHaveBeenCalledWith(
         LOG_MESSAGES.AUTH.VERIFY_USER.SUCCESS(userJamesSmith.firstname, userJamesSmith.lastname, userJamesSmith.email),
         LOG_CONTEXTS.AuthService.verifyUser,
@@ -553,10 +539,9 @@ describe('AuthService', () => {
 
   describe('sendResetPasswordEmail', () => {
 
-    it('should throw BadRequestException for invalid user id', async () => {
+    it('should return 400 BadRequest for invalid user id', async () => {
       await expect(authService.sendResetPasswordEmail(invalidUUID))
         .rejects.toThrow(BadRequestException);
-      expect(mockLoggerService.warn).toHaveBeenCalled();
       expect(mockLoggerService.warn).toHaveBeenCalledWith(
         LOG_MESSAGES.AUTH.SEND_RESET_PASSWORD_EMAIL.INVALID_UUID,
         LOG_CONTEXTS.AuthService.sendResetPasswordEmail,
@@ -575,12 +560,11 @@ describe('AuthService', () => {
       }
     });
 
-    it('should throw InternalServerErrorException if userService.findOneById fails', async () => {
+    it('should return 500 InternalServerError if userService.findOneById fails', async () => {
       (mockUserService.findOneById as jest.Mock).mockRejectedValue(new Error('Database error'));
 
       await expect(authService.sendResetPasswordEmail(userJamesSmith.id))
         .rejects.toThrow(InternalServerErrorException);
-      expect(mockLoggerService.error).toHaveBeenCalled();
       expect(mockLoggerService.error).toHaveBeenCalledWith(
         LOG_MESSAGES.AUTH.SEND_RESET_PASSWORD_EMAIL.FAILED_TO_FIND_USER(userJamesSmith.id),
         LOG_CONTEXTS.AuthService.sendResetPasswordEmail,
@@ -600,7 +584,7 @@ describe('AuthService', () => {
       }
     });
 
-    it('should return a confirmation message if user is not found', async () => {
+    it('should return 200 Ok and a confirmation message if user is not found', async () => {
       (mockUserService.findOneById as jest.Mock).mockResolvedValue(null);
 
       const expectedResult: SimpleMessageDto = {
@@ -611,7 +595,6 @@ describe('AuthService', () => {
       const actualResult = await authService.sendResetPasswordEmail(userJamesSmith.id);
 
       expect(actualResult).toEqual(expectedResult);
-      expect(mockLoggerService.warn).toHaveBeenCalled();
       expect(mockLoggerService.warn).toHaveBeenCalledWith(
         LOG_MESSAGES.AUTH.SEND_RESET_PASSWORD_EMAIL.USER_NOT_FOUND(userJamesSmith.id),
         LOG_CONTEXTS.AuthService.sendResetPasswordEmail,
@@ -619,13 +602,12 @@ describe('AuthService', () => {
       );
     });
 
-    it('should throw InternalServerErrorException if TokenService.createResetToken fails', async () => {
+    it('should return 500 InternalServerError if TokenService.createResetToken fails', async () => {
       (mockUserService.findOneById as jest.Mock).mockResolvedValue(userJamesSmith);
       (mockResetPasswordService.createResetToken as jest.Mock).mockRejectedValue(new Error('error'));
 
       await expect(authService.sendResetPasswordEmail(userJamesSmith.id))
         .rejects.toThrow(InternalServerErrorException);
-      expect(mockLoggerService.error).toHaveBeenCalled();
       expect(mockLoggerService.error).toHaveBeenCalledWith(
         LOG_MESSAGES.AUTH.SEND_RESET_PASSWORD_EMAIL.FAILED_TO_SEND_RESET_PASSWORD_EMAIL(userJamesSmith.email, 'error'),
         LOG_CONTEXTS.AuthService.sendResetPasswordEmail,
@@ -645,14 +627,13 @@ describe('AuthService', () => {
       }
     });
 
-    it('should throw ServiceUnavailableException if EmailService.sendResetPasswordEmail fails', async () => {
+    it('should return 503 ServiceUnavailable if EmailService.sendResetPasswordEmail fails', async () => {
       (mockUserService.findOneById as jest.Mock).mockResolvedValue(userJamesSmith);
       (mockResetPasswordService.createResetToken as jest.Mock).mockResolvedValue('token');
       (mockEmailService.sendResetPasswordEmail as jest.Mock).mockRejectedValue(new Error('error'));
 
       await expect(authService.sendResetPasswordEmail(userJamesSmith.id))
         .rejects.toThrow(ServiceUnavailableException);
-      expect(mockLoggerService.error).toHaveBeenCalled();
       expect(mockLoggerService.error).toHaveBeenCalledWith(
         LOG_MESSAGES.AUTH.SEND_RESET_PASSWORD_EMAIL.FAILED_TO_SEND_RESET_PASSWORD_EMAIL(userJamesSmith.email, 'error'),
         LOG_CONTEXTS.AuthService.sendResetPasswordEmail,
@@ -672,7 +653,7 @@ describe('AuthService', () => {
       }
     });
 
-    it('should call EmailService.sendResetPasswordEmail with correct parameters if all goes well', async () => {
+    it('should call EmailService.sendResetPasswordEmail with the correct parameters if all goes well', async () => {
       (mockUserService.findOneById as jest.Mock).mockResolvedValue(userJamesSmith);
       (mockResetPasswordService.createResetToken as jest.Mock).mockResolvedValue('token');
       (mockEmailService.sendResetPasswordEmail as jest.Mock).mockResolvedValue(true);
@@ -685,13 +666,11 @@ describe('AuthService', () => {
       const actualResult = await authService.sendResetPasswordEmail(userJamesSmith.id);
 
       expect(actualResult).toEqual(expectedResult);
-      expect(mockLoggerService.info).toHaveBeenCalled();
       expect(mockLoggerService.info).toHaveBeenCalledWith(
         LOG_MESSAGES.AUTH.SEND_RESET_PASSWORD_EMAIL.SUCCESS(userJamesSmith.email),
         LOG_CONTEXTS.AuthService.sendResetPasswordEmail,
         { user: userJamesSmith },
       );
-      expect(mockEmailService.sendResetPasswordEmail).toHaveBeenCalled();
       expect(mockEmailService.sendResetPasswordEmail).toHaveBeenCalledWith(
         userJamesSmith.email,
         userJamesSmith.firstname + " " + userJamesSmith.lastname,
@@ -703,12 +682,11 @@ describe('AuthService', () => {
 
   describe('sendForgotPasswordEmail', () => {
 
-    it('should throw InternalServerErrorException if userService.findOneByEmail fails', async () => {
+    it('should return 500 InternalServerError if userService.findOneByEmail fails', async () => {
       (mockUserService.findOneByEmail as jest.Mock).mockRejectedValue(new Error('Database error'));
 
       await expect(authService.sendForgotPasswordEmail(forgotPasswordDto))
         .rejects.toThrow(InternalServerErrorException);
-      expect(mockLoggerService.error).toHaveBeenCalled();
       expect(mockLoggerService.error).toHaveBeenCalledWith(
         LOG_MESSAGES.AUTH.SEND_FORGOT_PASSWORD_EMAIL.FAILED_TO_FIND_USER(forgotPasswordDto.email),
         LOG_CONTEXTS.AuthService.sendForgotPasswordEmail,
@@ -739,7 +717,6 @@ describe('AuthService', () => {
       const actualResult = await authService.sendForgotPasswordEmail(forgotPasswordDto);
 
       expect(actualResult).toEqual(expectedResult);
-      expect(mockLoggerService.warn).toHaveBeenCalled();
       expect(mockLoggerService.warn).toHaveBeenCalledWith(
         LOG_MESSAGES.AUTH.SEND_FORGOT_PASSWORD_EMAIL.USER_NOT_FOUND(forgotPasswordDto.email),
         LOG_CONTEXTS.AuthService.sendForgotPasswordEmail,
@@ -747,13 +724,12 @@ describe('AuthService', () => {
       );
     });
 
-    it('should throw InternalServerErrorException if TokenService.createResetToken fails', async () => {
+    it('should return 500 InternalServerError if TokenService.createResetToken fails', async () => {
       (mockUserService.findOneByEmail as jest.Mock).mockResolvedValue(userJamesSmith);
       (mockResetPasswordService.createResetToken as jest.Mock).mockRejectedValue(new Error('error'));
 
       await expect(authService.sendForgotPasswordEmail(forgotPasswordDto))
         .rejects.toThrow(InternalServerErrorException);
-      expect(mockLoggerService.error).toHaveBeenCalled();
       expect(mockLoggerService.error).toHaveBeenCalledWith(
         LOG_MESSAGES.AUTH.SEND_FORGOT_PASSWORD_EMAIL.FAILED_TO_SEND_RESET_PASSWORD_EMAIL(forgotPasswordDto.email, 'error'),
         LOG_CONTEXTS.AuthService.sendForgotPasswordEmail,
@@ -773,14 +749,13 @@ describe('AuthService', () => {
       }
     });
 
-    it('should throw ServiceUnavailableException if EmailService.sendResetPasswordEmail fails', async () => {
+    it('should return 503 ServiceUnavailable if EmailService.sendResetPasswordEmail fails', async () => {
       (mockUserService.findOneByEmail as jest.Mock).mockResolvedValue(userJamesSmith);
       (mockResetPasswordService.createResetToken as jest.Mock).mockResolvedValue('token');
       (mockEmailService.sendResetPasswordEmail as jest.Mock).mockRejectedValue(new Error('error'));
 
       await expect(authService.sendForgotPasswordEmail(forgotPasswordDto))
         .rejects.toThrow(ServiceUnavailableException);
-      expect(mockLoggerService.error).toHaveBeenCalled();
       expect(mockLoggerService.error).toHaveBeenCalledWith(
         LOG_MESSAGES.AUTH.SEND_FORGOT_PASSWORD_EMAIL.FAILED_TO_SEND_RESET_PASSWORD_EMAIL(forgotPasswordDto.email, 'error'),
         LOG_CONTEXTS.AuthService.sendForgotPasswordEmail,
@@ -800,7 +775,7 @@ describe('AuthService', () => {
       }
     });
 
-    it('should call EmailService.sendResetPasswordEmail with correct parameters if all goes well', async () => {
+    it('should call EmailService.sendResetPasswordEmail with the correct parameters if all goes well', async () => {
       (mockUserService.findOneByEmail as jest.Mock).mockResolvedValue(userJamesSmith);
       (mockResetPasswordService.createResetToken as jest.Mock).mockResolvedValue('token');
       (mockEmailService.sendResetPasswordEmail as jest.Mock).mockResolvedValue(true);
@@ -813,13 +788,11 @@ describe('AuthService', () => {
       const actualResult = await authService.sendForgotPasswordEmail(forgotPasswordDto);
 
       expect(actualResult).toEqual(expectedResult);
-      expect(mockLoggerService.info).toHaveBeenCalled();
       expect(mockLoggerService.info).toHaveBeenCalledWith(
         LOG_MESSAGES.AUTH.SEND_FORGOT_PASSWORD_EMAIL.SUCCESS(userJamesSmith.email),
         LOG_CONTEXTS.AuthService.sendForgotPasswordEmail,
         { forgotPasswordDto: forgotPasswordDto, user: userJamesSmith },
       );
-      expect(mockEmailService.sendResetPasswordEmail).toHaveBeenCalled();
       expect(mockEmailService.sendResetPasswordEmail).toHaveBeenCalledWith(
         userJamesSmith.email,
         userJamesSmith.firstname + " " + userJamesSmith.lastname,
@@ -831,10 +804,9 @@ describe('AuthService', () => {
 
   describe('resetPassword', () => {
 
-    it('should throw BadRequestException for invalid user id', async () => {
+    it('should return 400 BadRequest for invalid user id', async () => {
       await expect(authService.resetPassword(invalidUUID, 'token', getResetPasswordDto()))
         .rejects.toThrow(BadRequestException);
-      expect(mockLoggerService.warn).toHaveBeenCalled();
       expect(mockLoggerService.warn).toHaveBeenCalledWith(
         LOG_MESSAGES.AUTH.RESET_PASSWORD.INVALID_UUID,
         LOG_CONTEXTS.AuthService.resetPassword,
@@ -853,12 +825,11 @@ describe('AuthService', () => {
       }
     });
 
-    it('should throw InternalServerErrorException if UserService.findOneById fails', async () => {
+    it('should return 500 InternalServerError if UserService.findOneById fails', async () => {
       (mockUserService.findOneById as jest.Mock).mockRejectedValue(new Error('Database error'));
 
       await expect(authService.resetPassword(userJamesSmith.id, 'token', getResetPasswordDto()))
         .rejects.toThrow(InternalServerErrorException);
-      expect(mockLoggerService.error).toHaveBeenCalled();
       expect(mockLoggerService.error).toHaveBeenCalledWith(
         LOG_MESSAGES.AUTH.RESET_PASSWORD.FAILED_TO_FIND_USER(userJamesSmith.id),
         LOG_CONTEXTS.AuthService.resetPassword,
@@ -889,7 +860,6 @@ describe('AuthService', () => {
       const actualResult = await authService.resetPassword(userJamesSmith.id, 'token', getResetPasswordDto());
 
       expect(actualResult).toEqual(expectedResult);
-      expect(mockLoggerService.warn).toHaveBeenCalled();
       expect(mockLoggerService.warn).toHaveBeenCalledWith(
         LOG_MESSAGES.AUTH.RESET_PASSWORD.USER_NOT_FOUND(userJamesSmith.id),
         LOG_CONTEXTS.AuthService.resetPassword,
@@ -897,13 +867,12 @@ describe('AuthService', () => {
       );
     });
 
-    it('should throw InternalServerErrorException if ResetPasswordService.validateResetToken fails', async () => {
+    it('should return 500 InternalServerError if ResetPasswordService.validateResetToken fails', async () => {
       (mockUserService.findOneById as jest.Mock).mockResolvedValue(userJamesSmith);
       (mockResetPasswordService.validateResetToken as jest.Mock).mockRejectedValue(new Error('error'));
 
       await expect(authService.resetPassword(userJamesSmith.id, 'token', getResetPasswordDto()))
         .rejects.toThrow(InternalServerErrorException);
-      expect(mockLoggerService.error).toHaveBeenCalled();
       expect(mockLoggerService.error).toHaveBeenCalledWith(
         LOG_MESSAGES.AUTH.RESET_PASSWORD.FAILED_TO_VALIDATE_TOKEN('token'),
         LOG_CONTEXTS.AuthService.resetPassword,
@@ -923,13 +892,12 @@ describe('AuthService', () => {
       }
     });
 
-    it('should throw BadRequestException for invalid or expired tokens', async () => {
+    it('should return 400 BadRequest for invalid or expired tokens', async () => {
       (mockUserService.findOneById as jest.Mock).mockResolvedValue(userJamesSmith);
       (mockResetPasswordService.validateResetToken as jest.Mock).mockResolvedValue(false);
 
       await expect(authService.resetPassword(userJamesSmith.id, 'token', getResetPasswordDto()))
         .rejects.toThrow(BadRequestException);
-      expect(mockLoggerService.warn).toHaveBeenCalled();
       expect(mockLoggerService.warn).toHaveBeenCalledWith(
         LOG_MESSAGES.AUTH.RESET_PASSWORD.BAD_TOKEN,
         LOG_CONTEXTS.AuthService.resetPassword,
@@ -948,13 +916,12 @@ describe('AuthService', () => {
       }
     });
 
-    it('should throw BadRequestException for non-matching passwords', async () => {
+    it('should return 400 BadRequest for non-matching passwords', async () => {
       (mockUserService.findOneById as jest.Mock).mockResolvedValue(userJamesSmith);
       (mockResetPasswordService.validateResetToken as jest.Mock).mockResolvedValue(true);
 
       await expect(authService.resetPassword(userJamesSmith.id, 'token', badResetPasswordDto))
         .rejects.toThrow(BadRequestException);
-      expect(mockLoggerService.warn).toHaveBeenCalled();
       expect(mockLoggerService.warn).toHaveBeenCalledWith(
         LOG_MESSAGES.AUTH.RESET_PASSWORD.PASSWORD_MISMATCH,
         LOG_CONTEXTS.AuthService.resetPassword,
@@ -973,14 +940,13 @@ describe('AuthService', () => {
       }
     });
 
-    it('should throw InternalServerErrorException if ResetPasswordService.findByToken fails', async () => {
+    it('should return 500 InternalServerError if ResetPasswordService.findByToken fails', async () => {
       (mockUserService.findOneById as jest.Mock).mockResolvedValue(userJamesSmith);
       (mockResetPasswordService.validateResetToken as jest.Mock).mockResolvedValue(true);
       (mockResetPasswordService.findByToken as jest.Mock).mockRejectedValue(new Error('Database error'));
 
       await expect(authService.resetPassword(userJamesSmith.id, 'token', getResetPasswordDto()))
         .rejects.toThrow(InternalServerErrorException);
-      expect(mockLoggerService.error).toHaveBeenCalled();
       expect(mockLoggerService.error).toHaveBeenCalledWith(
         LOG_MESSAGES.AUTH.RESET_PASSWORD.FAILED,
         LOG_CONTEXTS.AuthService.resetPassword,
@@ -1000,7 +966,7 @@ describe('AuthService', () => {
       }
     });
 
-    it('should throw InternalServerErrorException if UserService.update fails', async () => {
+    it('should return 500 InternalServerError if UserService.update fails', async () => {
       (mockUserService.findOneById as jest.Mock).mockResolvedValue(userJamesSmith);
       (mockResetPasswordService.validateResetToken as jest.Mock).mockResolvedValue(true);
       (mockResetPasswordService.findByToken as jest.Mock).mockResolvedValue(resetPassword);
@@ -1008,7 +974,6 @@ describe('AuthService', () => {
 
       await expect(authService.resetPassword(userJamesSmith.id, 'token', getResetPasswordDto()))
         .rejects.toThrow(InternalServerErrorException);
-      expect(mockLoggerService.error).toHaveBeenCalled();
       expect(mockLoggerService.error).toHaveBeenCalledWith(
         LOG_MESSAGES.AUTH.RESET_PASSWORD.FAILED,
         LOG_CONTEXTS.AuthService.resetPassword,
@@ -1028,7 +993,7 @@ describe('AuthService', () => {
       }
     });
 
-    it('should throw InternalServerErrorException if ResetPasswordService.invalidateResetToken fails', async () => {
+    it('should return 500 InternalServerError if ResetPasswordService.invalidateResetToken fails', async () => {
       (mockUserService.findOneById as jest.Mock).mockResolvedValue(userJamesSmith);
       (mockResetPasswordService.validateResetToken as jest.Mock).mockResolvedValue(true);
       (mockResetPasswordService.findByToken as jest.Mock).mockResolvedValue(resetPassword);
@@ -1037,7 +1002,6 @@ describe('AuthService', () => {
 
       await expect(authService.resetPassword(userJamesSmith.id, 'token', getResetPasswordDto()))
         .rejects.toThrow(InternalServerErrorException);
-      expect(mockLoggerService.error).toHaveBeenCalled();
       expect(mockLoggerService.error).toHaveBeenCalledWith(
         LOG_MESSAGES.AUTH.RESET_PASSWORD.FAILED,
         LOG_CONTEXTS.AuthService.resetPassword,
@@ -1075,7 +1039,6 @@ describe('AuthService', () => {
 
       expect(actualResult).toEqual(expectedResult);
       expect(oldPassword).not.toBe(user.password);
-      expect(mockLoggerService.info).toHaveBeenCalled();
       expect(mockLoggerService.info).toHaveBeenCalledWith(
         LOG_MESSAGES.AUTH.RESET_PASSWORD.SUCCESS,
         LOG_CONTEXTS.AuthService.resetPassword,
@@ -1107,12 +1070,11 @@ describe('AuthService', () => {
 
   describe('findByEmail', () => {
 
-    it('should throw InternalServerErrorException if UserService.findOneByEmail fails', async () => {
+    it('should return 500 InternalServerError if UserService.findOneByEmail fails', async () => {
       (mockUserService.findOneByEmail as jest.Mock).mockRejectedValue(new Error('Database error'));
 
       await expect(authService.findByEmail(userJamesSmith.email))
         .rejects.toThrow(InternalServerErrorException);
-      expect(mockLoggerService.error).toHaveBeenCalled();
       expect(mockLoggerService.error).toHaveBeenCalledWith(
         LOG_MESSAGES.AUTH.FIND_BY_EMAIL.FAILED_TO_FIND_USER(userJamesSmith.email),
         LOG_CONTEXTS.AuthService.findByEmail,
@@ -1132,12 +1094,11 @@ describe('AuthService', () => {
       }
     });
 
-    it('should throw NotFoundException if user is not found', async () => {
+    it('should return 404 NotFound if user is not found', async () => {
       (mockUserService.findOneByEmail as jest.Mock).mockResolvedValue(null);
 
       await expect(authService.findByEmail(userJamesSmith.email))
         .rejects.toThrow(NotFoundException);
-      expect(mockLoggerService.warn).toHaveBeenCalled();
       expect(mockLoggerService.warn).toHaveBeenCalledWith(
         LOG_MESSAGES.AUTH.FIND_BY_EMAIL.USER_NOT_FOUND(userJamesSmith.email),
         LOG_CONTEXTS.AuthService.findByEmail,
@@ -1168,10 +1129,9 @@ describe('AuthService', () => {
 
   describe('deleteUser', () => {
 
-    it('should throw BadRequestException for invalid user id', async () => {
+    it('should return 400 BadRequest for invalid user id', async () => {
       await expect(authService.deleteUser(invalidUUID))
         .rejects.toThrow(BadRequestException);
-      expect(mockLoggerService.warn).toHaveBeenCalled();
       expect(mockLoggerService.warn).toHaveBeenCalledWith(
         LOG_MESSAGES.AUTH.DELETE_USER.INVALID_UUID,
         LOG_CONTEXTS.AuthService.deleteUser,
@@ -1190,12 +1150,11 @@ describe('AuthService', () => {
       }
     });
 
-    it('should throw InternalServerErrorException if userService.findOneById fails', async () => {
+    it('should return 500 InternalServerError if userService.findOneById fails', async () => {
       (mockUserService.findOneById as jest.Mock).mockRejectedValue(new Error('Database error'));
 
       await expect(authService.deleteUser(userJamesSmith.id))
         .rejects.toThrow(InternalServerErrorException);
-      expect(mockLoggerService.error).toHaveBeenCalled();
       expect(mockLoggerService.error).toHaveBeenCalledWith(
         LOG_MESSAGES.AUTH.DELETE_USER.FAILED_TO_FIND_USER(userJamesSmith.id),
         LOG_CONTEXTS.AuthService.deleteUser,
@@ -1215,12 +1174,11 @@ describe('AuthService', () => {
       }
     });
 
-    it('should throw NotFoundException if user is not found', async () => {
+    it('should return 404 NotFound if user is not found', async () => {
       (mockUserService.findOneById as jest.Mock).mockResolvedValue(null);
 
       await expect(authService.deleteUser(nonExistingUserId))
         .rejects.toThrow(NotFoundException);
-      expect(mockLoggerService.warn).toHaveBeenCalled();
       expect(mockLoggerService.warn).toHaveBeenCalledWith(
         LOG_MESSAGES.AUTH.DELETE_USER.USER_NOT_FOUND(nonExistingUserId),
         LOG_CONTEXTS.AuthService.deleteUser,
@@ -1239,16 +1197,14 @@ describe('AuthService', () => {
       }
     });
 
-    it('should throw InternalServerErrorException if userService.remove fails', async () => {
+    it('should return 500 InternalServerError if userService.remove fails', async () => {
       (mockUserService.findOneById as jest.Mock).mockResolvedValue(userJamesSmith);
       (mockUserService.remove as jest.Mock).mockRejectedValue(new Error('Database error'));
 
       await expect(authService.deleteUser(userJamesSmith.id))
         .rejects.toThrow(InternalServerErrorException);
 
-      expect(mockUserService.remove).toHaveBeenCalled();
       expect(mockUserService.remove).toHaveBeenCalledWith(userJamesSmith.id);
-      expect(mockLoggerService.error).toHaveBeenCalled();
       expect(mockLoggerService.error).toHaveBeenCalledWith(
         LOG_MESSAGES.AUTH.DELETE_USER.FAILED_TO_DELETE_USER,
         LOG_CONTEXTS.AuthService.deleteUser,
@@ -1280,9 +1236,7 @@ describe('AuthService', () => {
       const actualResult = await authService.deleteUser(userJamesSmith.id);
 
       expect(actualResult).toEqual(expectedResult);
-      expect(mockUserService.remove).toHaveBeenCalled();
       expect(mockUserService.remove).toHaveBeenCalledWith(userJamesSmith.id);
-      expect(mockLoggerService.info).toHaveBeenCalled();
       expect(mockLoggerService.info).toHaveBeenCalledWith(
         LOG_MESSAGES.AUTH.DELETE_USER.SUCCESS(userJamesSmith.email),
         LOG_CONTEXTS.AuthService.deleteUser,

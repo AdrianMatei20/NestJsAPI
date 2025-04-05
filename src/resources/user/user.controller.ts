@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Delete, NotFoundException, UseGuards, HttpStatus, Req, InternalServerErrorException, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Param, Delete, NotFoundException, UseGuards, HttpStatus, Req, InternalServerErrorException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { ApiExcludeController, ApiTags } from '@nestjs/swagger';
 import { validate as isValidUUID } from 'uuid';
 import { UserService } from './user.service';
@@ -43,11 +43,10 @@ export class UserController {
       }
 
       default: {
-        return {
-          statusCode: HttpStatus.OK,
-          message: `${users.length} user${users.length == 1 ? '' : 's'} found`,
-          data: users.map(user => new PublicUserDto(user)),
-        }
+        throw new ForbiddenException({
+          statusCode: HttpStatus.FORBIDDEN,
+          message: RETURN_MESSAGES.FORBIDDEN.INCORRECT_ROLE,
+        });
       }
 
     }
@@ -78,7 +77,7 @@ export class UserController {
       case (GlobalRole.ADMIN): {
         return {
           statusCode: HttpStatus.OK,
-          message: 'user found',
+          message: RETURN_MESSAGES.OK.USER_FOUND,
           data: new AdminUserDto(user),
         }
       }
@@ -86,17 +85,16 @@ export class UserController {
       case (GlobalRole.REGULAR_USER): {
         return {
           statusCode: HttpStatus.OK,
-          message: 'user found',
+          message: RETURN_MESSAGES.OK.USER_FOUND,
           data: new PublicUserDto(user),
         }
       }
 
       default: {
-        return {
-          statusCode: HttpStatus.OK,
-          message: 'user found',
-          data: new PublicUserDto(user),
-        }
+        throw new ForbiddenException({
+          statusCode: HttpStatus.FORBIDDEN,
+          message: RETURN_MESSAGES.FORBIDDEN.INCORRECT_ROLE,
+        });
       }
 
     }
@@ -126,7 +124,7 @@ export class UserController {
     if (await this.userService.remove(userId)) {
       return {
         statusCode: HttpStatus.OK,
-        message: 'user deleted',
+        message: RETURN_MESSAGES.OK.USER_DELETED,
       }
     }
 
