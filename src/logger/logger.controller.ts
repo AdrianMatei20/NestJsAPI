@@ -5,6 +5,7 @@ import { AuthenticatedGuard } from 'src/auth/guards/authenticated.guard';
 import { GlobalAdminGuard } from 'src/auth/guards/global-admin.guard';
 import { Log } from './entities/log.entity';
 import { CustomMessageDto } from 'src/shared/utils/custom-message.dto';
+import { RETURN_MESSAGES } from 'src/constants/return-messages';
 
 @ApiTags('logger')
 @Controller('logger')
@@ -30,7 +31,7 @@ export class LoggerController {
 
     return {
       statusCode: HttpStatus.OK,
-      message: `${logs.length} log${logs.length === 1 ? '' : 's'} found`,
+      message: RETURN_MESSAGES.OK.N_LOGS_FOUND(logs.length),
       data: logs,
     }
 

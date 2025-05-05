@@ -2,6 +2,7 @@ import { CanActivate, ExecutionContext, ForbiddenException, HttpStatus, Injectab
 import { Observable } from "rxjs";
 import { GlobalRole } from "src/resources/user/enums/global-role";
 import { RETURN_MESSAGES } from "src/constants/return-messages";
+import { GqlExecutionContext } from "@nestjs/graphql";
 
 @Injectable()
 export class GlobalAdminGuard implements CanActivate {
@@ -9,7 +10,8 @@ export class GlobalAdminGuard implements CanActivate {
     constructor() { }
 
     canActivate(context: ExecutionContext): boolean | Promise<boolean> | Observable<boolean> {
-        const request = context.switchToHttp().getRequest();
+        const ctx = GqlExecutionContext.create(context);
+        const request = ctx.getContext().req ?? context.switchToHttp().getRequest();
         const user = request.user;
 
         if (!user) {

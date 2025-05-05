@@ -9,12 +9,16 @@ export const RETURN_MESSAGES = {
         ACCOUNT_DELETED: 'Account deleted.',
         SESSION_ENDED: 'User session ended!',
 
+        N_USERS_FOUND: (numberOfUsers: number) => `${numberOfUsers} user${numberOfUsers == 1 ? '' : 's'} found`,
         USER_FOUND: 'User found!',
         USER_DELETED: 'User deleted!',
 
+        N_PROJECTS_FOUND: (numberOfProjects: number) => `${numberOfProjects} project${numberOfProjects == 1 ? '' : 's'} found`,
         PROJECT_FOUND: 'Project found!',
         PROJECT_UPDATED: 'Project updated!',
         PROJECT_DELETED: 'Project deleted!',
+
+        N_LOGS_FOUND: (numberOfLogs: number) => `${numberOfLogs} log${numberOfLogs == 1 ? '' : 's'} found`,
     },
 
     CREATED: {

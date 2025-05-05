@@ -4,7 +4,7 @@ import { Project } from "../../src/resources/project/entities/project.entity";
 import { User } from "../../src/resources/user/entities/user.entity";
 import { ProjectRole } from "../../src/resources/project/enums/project-role";
 import { UserProjectRole } from "../../src/resources/project/entities/user-project-role.entity";
-import { userJamesSmith, userChristopherAnderson, userRonaldClark, userMaryWright } from "../../test/data/users";
+import { userJamesSmith, userChristopherAnderson, userRonaldClark, userMaryWright, user } from "../../test/data/users";
 import { projectUUIDs, userProjectRoleUUIDs } from "./UUIDs";
 
 // 01. A way to create projects.
@@ -32,7 +32,15 @@ export const project: Project = {
     name: 'Project Name',
     description: 'Project description.',
     createdAt: new Date('2024-01-01T12:00:00Z'),
-    userProjectRoles: [],
+    userProjectRoles: [
+        {
+            id: userJamesSmith.id,
+            user: user,
+            project: null,
+            projectRole: ProjectRole.OWNER,
+            createdAt: new Date(),
+        }
+    ],
 };
 export const userProjectRole: UserProjectRole = {
     id: userProjectRoleUUIDs[0],
@@ -48,28 +56,60 @@ export const projectOne: Project = {
     name: 'Project One',
     description: 'First project description.',
     createdAt: new Date('2024-01-01T12:00:00Z'),
-    userProjectRoles: [],
+    userProjectRoles: [
+        {
+            id: userProjectRoleUUIDs[0],
+            user: user,
+            project: null,
+            projectRole: ProjectRole.OWNER,
+            createdAt: new Date(),
+        }
+    ],
 };
 export const projectTwo: Project = {
     id: projectUUIDs[1],
     name: 'Project Two',
     description: 'Second project description.',
     createdAt: new Date('2024-02-01T12:00:00Z'),
-    userProjectRoles: [],
+    userProjectRoles: [
+        {
+            id: userJamesSmith.id,
+            user: user,
+            project: null,
+            projectRole: ProjectRole.OWNER,
+            createdAt: new Date(),
+        }
+    ],
 };
 export const projectThree: Project = {
     id: projectUUIDs[2],
     name: 'Project Three',
     description: 'Third project description.',
     createdAt: new Date('2024-03-01T12:00:00Z'),
-    userProjectRoles: [],
+    userProjectRoles: [
+        {
+            id: userJamesSmith.id,
+            user: user,
+            project: null,
+            projectRole: ProjectRole.OWNER,
+            createdAt: new Date(),
+        }
+    ],
 };
 export const projectFour: Project = {
     id: projectUUIDs[3],
     name: 'Project Four',
     description: 'Fourth project description.',
     createdAt: new Date('2024-04-01T12:00:00Z'),
-    userProjectRoles: [],
+    userProjectRoles: [
+        {
+            id: userJamesSmith.id,
+            user: user,
+            project: null,
+            projectRole: ProjectRole.OWNER,
+            createdAt: new Date(),
+        }
+    ],
 };
 export const projects: Project[] = [projectOne, projectTwo, projectThree, projectFour];
 
@@ -85,7 +125,7 @@ export const userProjectRoles = [
         id: userProjectRoleUUIDs[1],
         user: userChristopherAnderson,
         project: projectOne,
-        projectRole: ProjectRole.MEMBER,
+        projectRole: ProjectRole.EDITOR,
         createdAt: new Date(),
     },
     {
@@ -99,7 +139,7 @@ export const userProjectRoles = [
         id: userProjectRoleUUIDs[3],
         user: userJamesSmith,
         project: projectTwo,
-        projectRole: ProjectRole.MEMBER,
+        projectRole: ProjectRole.EDITOR,
         createdAt: new Date(),
     },
     {
@@ -113,7 +153,7 @@ export const userProjectRoles = [
         id: userProjectRoleUUIDs[5],
         user: userJamesSmith,
         project: projectThree,
-        projectRole: ProjectRole.MEMBER,
+        projectRole: ProjectRole.EDITOR,
         createdAt: new Date(),
     },
     {
@@ -127,14 +167,14 @@ export const userProjectRoles = [
         id: userProjectRoleUUIDs[7],
         user: userRonaldClark,
         project: projectFour,
-        projectRole: ProjectRole.MEMBER,
+        projectRole: ProjectRole.EDITOR,
         createdAt: new Date(),
     },
     {
         id: userProjectRoleUUIDs[8],
         user: userMaryWright,
         project: projectFour,
-        projectRole: ProjectRole.MEMBER,
+        projectRole: ProjectRole.EDITOR,
         createdAt: new Date(),
     },
 ];
@@ -151,7 +191,7 @@ export const RonaldOwnerAndJamesMember = [
         id: userProjectRoleUUIDs[10],
         user: userJamesSmith,
         project: project,
-        projectRole: ProjectRole.MEMBER,
+        projectRole: ProjectRole.EDITOR,
         createdAt: new Date(),
     },
 ];
@@ -168,7 +208,7 @@ export const JamesOwnerAndChristopherMember: UserProjectRole[] = [
         id: userProjectRoleUUIDs[12],
         user: userChristopherAnderson as User,
         project: projectOne,
-        projectRole: ProjectRole.MEMBER,
+        projectRole: ProjectRole.EDITOR,
         createdAt: new Date(),
     },
 ];

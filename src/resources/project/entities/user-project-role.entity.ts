@@ -15,7 +15,7 @@ export class UserProjectRole {
     @ManyToOne(() => Project, (project) => project.userProjectRoles, { onDelete: 'CASCADE' })
     project: Project;
 
-    @Column({ type: process.env.NODE_ENV === 'test' ? 'varchar' : 'enum', enum: ProjectRole, default: ProjectRole.MEMBER })
+    @Column({ type: process.env.NODE_ENV === 'test' ? 'varchar' : 'enum', enum: ProjectRole, default: ProjectRole.EDITOR })
     projectRole: ProjectRole;
 
     @Column({ type: process.env.NODE_ENV === 'test' ? 'datetime' : 'timestamptz' })

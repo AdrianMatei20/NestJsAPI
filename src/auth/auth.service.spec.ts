@@ -6,10 +6,10 @@ import { EmailService } from 'src/services/email/email.service';
 import { TokenService } from 'src/services/token/token.service';
 import { LoggerService } from 'src/logger/logger.service';
 import { BadRequestException, ConflictException, HttpStatus, InternalServerErrorException, NotFoundException, ServiceUnavailableException } from '@nestjs/common';
-import { getRegisterUserDto as getResetPasswordDto, emptyRegisterUserDto, registerUserDtoNoEmail, registerUserDtoNoFirstname, registerUserDtoNoLastname, registerUserDtoNoPassword, registerUserDtoNoPasswordConfirmation, registerUserDtoPasswordsNotMatching, getRegisterUserDto, getSanitizedRegisterUserDto } from 'test/data/register-user';
+import { emptyRegisterUserDto, registerUserDtoNoEmail, registerUserDtoNoFirstname, registerUserDtoNoLastname, registerUserDtoNoPassword, registerUserDtoNoPasswordConfirmation, getSanitizedRegisterUserDto, getJamesSmithRegisterUserDto, registerUserDtoPasswordsNotMatching } from 'test/data/register-user';
 import { RegisterUserDto } from 'src/resources/user/dto/register-user.dto';
 import { ResetPasswordService } from './reset-password/reset-password.service';
-import { badResetPasswordDto, forgotPasswordDto, logInUserDto, resetPassword, user, userJamesSmith } from 'test/data/users';
+import { badResetPasswordDto, forgotPasswordDto, getResetPasswordDto, logInUserDto, resetPassword, user, userJamesSmith } from 'test/data/users';
 import { SimpleMessageDto } from 'src/shared/utils/simple-message.dto';
 import { invalidUUID, nonExistingUserId } from 'test/data/UUIDs';
 
@@ -256,7 +256,7 @@ describe('AuthService', () => {
     });
 
     it('should return 409 Conflict for email already registered', async () => {
-      const registerUserDto: RegisterUserDto = getRegisterUserDto();
+      const registerUserDto: RegisterUserDto = getJamesSmithRegisterUserDto();
       (mockUserService.findOneByEmail as jest.Mock).mockResolvedValue(userJamesSmith);
 
       await expect(authService.registerUser(registerUserDto))
@@ -303,7 +303,7 @@ describe('AuthService', () => {
     });
 
     it('should return 500 InternalServerError if userService.create fails', async () => {
-      const registerUserDto: RegisterUserDto = getRegisterUserDto();
+      const registerUserDto: RegisterUserDto = getJamesSmithRegisterUserDto();
       (mockUserService.findOneByEmail as jest.Mock).mockResolvedValue(null);
       (bcrypt.hash as jest.Mock).mockResolvedValue('hashedPassword');
       (mockUserService.create as jest.Mock).mockRejectedValue(new Error('Database error'));
@@ -318,7 +318,7 @@ describe('AuthService', () => {
       );
 
       try {
-        await authService.registerUser(getRegisterUserDto());
+        await authService.registerUser(getJamesSmithRegisterUserDto());
       } catch (error) {
         expect(error).toBeInstanceOf(InternalServerErrorException);
         expect(error.getStatus()).toBe(HttpStatus.INTERNAL_SERVER_ERROR);
@@ -330,7 +330,7 @@ describe('AuthService', () => {
     });
 
     it('should return 503 ServiceUnavailable if emailService.sendRegistrationEmail fails', async () => {
-      const registerUserDto: RegisterUserDto = getRegisterUserDto();
+      const registerUserDto: RegisterUserDto = getJamesSmithRegisterUserDto();
       (mockUserService.findOneByEmail as jest.Mock).mockResolvedValue(null);
       (bcrypt.hash as jest.Mock).mockResolvedValue('hashedPassword');
       (mockUserService.create as jest.Mock).mockResolvedValue(userJamesSmith);
@@ -347,7 +347,7 @@ describe('AuthService', () => {
       );
 
       try {
-        await authService.registerUser(getRegisterUserDto());
+        await authService.registerUser(getJamesSmithRegisterUserDto());
       } catch (error) {
         expect(error).toBeInstanceOf(ServiceUnavailableException);
         expect(error.getStatus()).toBe(HttpStatus.SERVICE_UNAVAILABLE);
@@ -359,7 +359,7 @@ describe('AuthService', () => {
     });
 
     it('should call emailService.sendRegistrationEmail with the correct parameters', async () => {
-      const registerUserDto: RegisterUserDto = getRegisterUserDto();
+      const registerUserDto: RegisterUserDto = getJamesSmithRegisterUserDto();
       (mockUserService.findOneByEmail as jest.Mock).mockResolvedValue(null);
       (bcrypt.hash as jest.Mock).mockResolvedValue('hashedPassword');
       (mockUserService.create as jest.Mock).mockResolvedValue(userJamesSmith);

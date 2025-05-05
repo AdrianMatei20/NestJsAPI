@@ -25,6 +25,12 @@ import { LoggerService } from './logger/logger.service';
 import { AuthService } from './auth/auth.service';
 import { ResetPasswordService } from './auth/reset-password/reset-password.service';
 
+import { GraphQLModule } from '@nestjs/graphql';
+import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
+import { HelloResolver } from './graphql/hello/hello.resolver';
+import { ProjectResolver } from './graphql/project/project.resolver';
+import { join } from 'path';
+
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -49,9 +55,29 @@ import { ResetPasswordService } from './auth/reset-password/reset-password.servi
       synchronize: true,
     }),
     TypeOrmModule.forFeature([User, Project, UserProjectRole, Log, ResetPassword]),
+    GraphQLModule.forRoot<ApolloDriverConfig>({
+      driver: ApolloDriver,
+      autoSchemaFile: join(process.cwd(), 'src/schema.gql'), // auto-generate
+      sortSchema: true,
+      playground: true, // enable GraphQL playground
+      introspection: true, // explicitly allow introspection
+      context: ({ req }) => ({ req }), // attaches user to context
+    }),
   ],
   controllers: [AppController],
-  providers: [AppService, EmailService, TokenService, JwtService, SeedService, ObjectValidationService, LoggerService, AuthService, ResetPasswordService],
+  providers: [
+    AppService,
+    EmailService,
+    TokenService,
+    JwtService,
+    SeedService,
+    ObjectValidationService,
+    LoggerService,
+    AuthService,
+    ResetPasswordService,
+    HelloResolver,
+    ProjectResolver,
+  ],
 })
 export class AppModule {
 

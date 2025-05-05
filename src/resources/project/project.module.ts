@@ -9,6 +9,8 @@ import { ProjectController } from './project.controller';
 import { ProjectService } from './project.service';
 import { ObjectValidationService } from 'src/services/object-validation/object-validation.service';
 import { LoggerService } from 'src/logger/logger.service';
+import { registerEnumType } from '@nestjs/graphql';
+import { ProjectRole } from './enums/project-role';
 
 @Module({
   imports: [UserModule, LoggerModule, TypeOrmModule.forFeature([Project, UserProjectRole, Log])],
@@ -16,4 +18,13 @@ import { LoggerService } from 'src/logger/logger.service';
   providers: [ProjectService, ObjectValidationService, LoggerService],
   exports: [ProjectService],
 })
-export class ProjectModule {}
+export class ProjectModule {
+
+  constructor() {
+    registerEnumType(ProjectRole, {
+      name: 'ProjectRole',
+      description: 'Roles within a project',
+    });
+  }
+
+}

@@ -132,7 +132,9 @@ export class ProjectService {
   }
 
   async findAll(): Promise<Project[]> {
-    const projects = await this.projectRepository.find();
+    const projects = await this.projectRepository.find({
+      relations: ['userProjectRoles', 'userProjectRoles.user']
+    });
     return Array.isArray(projects) ? projects : [];
   }
 

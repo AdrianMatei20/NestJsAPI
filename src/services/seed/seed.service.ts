@@ -173,7 +173,7 @@ export class SeedService {
                     const userProjectRole: AssignUserDto = {
                         project: project,
                         user: await this.userService.findOneByEmail(memberEmail),
-                        projectRole: ProjectRole.MEMBER,
+                        projectRole: ProjectRole.EDITOR,
                         createdAt: new Date(projects[i].createdAt),
                     }
                     await this.userProjectRoleRepository.save(userProjectRole);
