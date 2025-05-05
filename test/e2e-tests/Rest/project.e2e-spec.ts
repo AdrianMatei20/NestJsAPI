@@ -6,27 +6,27 @@ import { PassportModule } from "@nestjs/passport";
 import { DataSource, Repository } from "typeorm";
 import { getRepositoryToken, TypeOrmModule } from "@nestjs/typeorm";
 
-import { AppModule } from "../../src/app.module";
-import { LoggerController } from "../../src/logger/logger.controller";
+import { AppModule } from "../../../src/app.module";
+import { LoggerController } from "../../../src/logger/logger.controller";
 
-import { User } from "../../src/resources/user/entities/user.entity";
-import { UserProjectRole } from "../../src/resources/project/entities/user-project-role.entity";
-import { Project } from "../../src/resources/project/entities/project.entity";
-import { ResetPassword } from "../../src/auth/reset-password/reset-password.entity";
-import { Log } from "../../src/logger/entities/log.entity";
-import { GlobalRole } from "../../src/resources/user/enums/global-role";
-import { ProjectRole } from "../../src/resources/project/enums/project-role";
+import { User } from "../../../src/resources/user/entities/user.entity";
+import { UserProjectRole } from "../../../src/resources/project/entities/user-project-role.entity";
+import { Project } from "../../../src/resources/project/entities/project.entity";
+import { ResetPassword } from "../../../src/auth/reset-password/reset-password.entity";
+import { Log } from "../../../src/logger/entities/log.entity";
+import { GlobalRole } from "../../../src/resources/user/enums/global-role";
+import { ProjectRole } from "../../../src/resources/project/enums/project-role";
 
-import { ProjectService } from "../../src/resources/project/project.service";
-import { UserService } from "../../src/resources/user/user.service";
-import { ObjectValidationService } from "../../src/services/object-validation/object-validation.service";
-import { LoggerService } from "../../src/logger/logger.service";
+import { ProjectService } from "../../../src/resources/project/project.service";
+import { UserService } from "../../../src/resources/user/user.service";
+import { ObjectValidationService } from "../../../src/services/object-validation/object-validation.service";
+import { LoggerService } from "../../../src/logger/logger.service";
 
-import { RETURN_MESSAGES } from "../../src/constants/return-messages";
-import { getRegisterUserDto } from "../data/register-user";
-import { LogInUserDto } from "../../src/auth/dto/log-in-user.dto";
-import { createProjectDto, createProjectDtoEmpty } from "../../test/data/projects";
-import { userJamesSmith } from "../../test/data/users";
+import { RETURN_MESSAGES } from "../../../src/constants/return-messages";
+import { getJamesSmithRegisterUserDto } from "../../data/register-user";
+import { LogInUserDto } from "../../../src/auth/dto/log-in-user.dto";
+import { createProjectDto, createProjectDtoEmpty } from "../../data/projects";
+import { userJamesSmith } from "../../data/users";
 
 import * as dotenv from 'dotenv';
 import request from 'supertest';
@@ -102,14 +102,14 @@ describe('ProjectController (e2e)', () => {
     });
 
     beforeEach(async () => {
-        const registerRegularUserDto = getRegisterUserDto();
+        const registerRegularUserDto = getJamesSmithRegisterUserDto();
 
         const regularUser = userRepository.create({ ...registerRegularUserDto, password: await hash(registerRegularUserDto.password, 12), createdAt: new Date() });
         await userRepository.save(regularUser);
         regularUser.emailVerified = true;
         await userRepository.update(regularUser.id, regularUser);
 
-        const registerAdminDto = getRegisterUserDto();
+        const registerAdminDto = getJamesSmithRegisterUserDto();
         registerAdminDto.email = 'admin@taskflow.com';
 
         const admin = userRepository.create({ ...registerAdminDto, password: await hash(registerAdminDto.password, 12), createdAt: new Date() });
@@ -118,7 +118,7 @@ describe('ProjectController (e2e)', () => {
         admin.globalRole = GlobalRole.ADMIN;
         await userRepository.update(admin.id, admin);
 
-        const registerUnknownUserDto = getRegisterUserDto();
+        const registerUnknownUserDto = getJamesSmithRegisterUserDto();
         registerUnknownUserDto.email = 'unknown@fakemail.com';
 
         const unknownUser = userRepository.create({ ...registerUnknownUserDto, password: await hash(registerUnknownUserDto.password, 12), createdAt: new Date() });
@@ -181,23 +181,22 @@ describe('ProjectController (e2e)', () => {
 
             expect(response.status).toBe(HttpStatus.CREATED);
             expect(response.body.statusCode).toBe(HttpStatus.CREATED);
-            expect(response.body.message).toBe('project created');
+            expect(response.body.message).toBe(RETURN_MESSAGES.CREATED.PROJECT);
             expect(response.body.data).toEqual(
                 expect.objectContaining({
                     id: expect.any(String),
                     name: createProjectDto.name,
                     description: createProjectDto.description,
                     createdAt: expect.any(String),
-                    members: expect.arrayContaining([
-                        expect.objectContaining({
-                            id: expect.any(String),
-                            firstname: userJamesSmith.firstname,
-                            lastname: userJamesSmith.lastname,
-                            createdAt: expect.any(String),
-                            email: logInAdminDto.email,
-                            projectRole: ProjectRole.OWNER,
-                        })
-                    ])
+                    owner: expect.objectContaining({
+                        id: expect.any(String),
+                        firstname: expect.any(String),
+                        lastname: expect.any(String),
+                        createdAt: expect.any(String),
+                        email: expect.any(String),
+                        projectRole: ProjectRole.OWNER,
+                    }),
+                    members: expect.any(Array),
                 })
             );
 
@@ -205,10 +204,12 @@ describe('ProjectController (e2e)', () => {
 
             expect(projectCount).toBe(1);
 
-            const project: Project = await projectRepository.findOne({where: {
-                name: createProjectDto.name,
-                description: createProjectDto.description,
-            }});
+            const project: Project = await projectRepository.findOne({
+                where: {
+                    name: createProjectDto.name,
+                    description: createProjectDto.description,
+                }
+            });
 
             expect(project).not.toBeNull();
         });
@@ -228,23 +229,22 @@ describe('ProjectController (e2e)', () => {
 
             expect(response.status).toBe(HttpStatus.CREATED);
             expect(response.body.statusCode).toBe(HttpStatus.CREATED);
-            expect(response.body.message).toBe('project created');
+            expect(response.body.message).toBe(RETURN_MESSAGES.CREATED.PROJECT);
             expect(response.body.data).toEqual(
                 expect.objectContaining({
                     id: expect.any(String),
                     name: createProjectDto.name,
                     description: createProjectDto.description,
                     createdAt: expect.any(String),
-                    members: expect.arrayContaining([
-                        expect.objectContaining({
-                            id: expect.any(String),
-                            firstname: userJamesSmith.firstname,
-                            lastname: userJamesSmith.lastname,
-                            createdAt: expect.any(String),
-                            email: userJamesSmith.email,
-                            projectRole: ProjectRole.OWNER,
-                        })
-                    ])
+                    owner: expect.objectContaining({
+                        id: expect.any(String),
+                        firstname: expect.any(String),
+                        lastname: expect.any(String),
+                        createdAt: expect.any(String),
+                        email: expect.any(String),
+                        projectRole: ProjectRole.OWNER,
+                    }),
+                    members: expect.any(Array),
                 })
             );
 
@@ -252,10 +252,12 @@ describe('ProjectController (e2e)', () => {
 
             expect(projectCount).toBe(1);
 
-            const project: Project = await projectRepository.findOne({where: {
-                name: createProjectDto.name,
-                description: createProjectDto.description,
-            }});
+            const project: Project = await projectRepository.findOne({
+                where: {
+                    name: createProjectDto.name,
+                    description: createProjectDto.description,
+                }
+            });
 
             expect(project).not.toBeNull();
         });
@@ -275,7 +277,7 @@ describe('ProjectController (e2e)', () => {
 
             expect(response.status).toBe(HttpStatus.FORBIDDEN);
             expect(response.body.statusCode).toBe(HttpStatus.FORBIDDEN);
-            expect(response.body.message).toBe('Access denied: unknown role');
+            expect(response.body.message).toBe(RETURN_MESSAGES.FORBIDDEN.INCORRECT_ROLE);
         });
 
         it('should return 400 BadRequest for missing params', async () => {

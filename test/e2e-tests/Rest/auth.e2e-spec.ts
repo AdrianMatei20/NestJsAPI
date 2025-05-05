@@ -6,26 +6,26 @@ import { PassportModule } from "@nestjs/passport";
 import { Repository } from "typeorm";
 import { getRepositoryToken, TypeOrmModule } from "@nestjs/typeorm";
 
-import { AppModule } from "../../src/app.module";
-import { AuthController } from "../../src/auth/auth.controller";
-import { AuthService } from "../../src/auth/auth.service";
+import { AppModule } from "../../../src/app.module";
+import { AuthController } from "../../../src/auth/auth.controller";
+import { AuthService } from "../../../src/auth/auth.service";
 
-import { User } from "../../src/resources/user/entities/user.entity";
-import { UserProjectRole } from "../../src/resources/project/entities/user-project-role.entity";
-import { Project } from "../../src/resources/project/entities/project.entity";
-import { ResetPassword } from "../../src/auth/reset-password/reset-password.entity";
-import { Log } from "../../src/logger/entities/log.entity";
+import { User } from "../../../src/resources/user/entities/user.entity";
+import { UserProjectRole } from "../../../src/resources/project/entities/user-project-role.entity";
+import { Project } from "../../../src/resources/project/entities/project.entity";
+import { ResetPassword } from "../../../src/auth/reset-password/reset-password.entity";
+import { Log } from "../../../src/logger/entities/log.entity";
 
-import { UserService } from "../../src/resources/user/user.service";
-import { ObjectValidationService } from "../../src/services/object-validation/object-validation.service";
-import { LoggerService } from "../../src/logger/logger.service";
-import { EmailService } from "../../src/services/email/email.service";
-import { ResetPasswordService } from "../../src/auth/reset-password/reset-password.service";
-import { TokenService } from "../../src/services/token/token.service";
+import { UserService } from "../../../src/resources/user/user.service";
+import { ObjectValidationService } from "../../../src/services/object-validation/object-validation.service";
+import { LoggerService } from "../../../src/logger/logger.service";
+import { EmailService } from "../../../src/services/email/email.service";
+import { ResetPasswordService } from "../../../src/auth/reset-password/reset-password.service";
+import { TokenService } from "../../../src/services/token/token.service";
 
 import { RegisterUserDto } from "src/resources/user/dto/register-user.dto";
-import { emptyRegisterUserDto, getRegisterUserDto, registerUserDto, registerUserDtoNoEmail, registerUserDtoNoFirstname, registerUserDtoNoLastname, registerUserDtoNoPassword, registerUserDtoNoPasswordConfirmation, registerUserDtoPasswordsNotMatching } from "../data/register-user";
-import { RETURN_MESSAGES } from "../../src/constants/return-messages";
+import { emptyRegisterUserDto, getJamesSmithRegisterUserDto, registerUserDto, registerUserDtoNoEmail, registerUserDtoNoFirstname, registerUserDtoNoLastname, registerUserDtoNoPassword, registerUserDtoNoPasswordConfirmation, registerUserDtoPasswordsNotMatching } from "../../data/register-user";
+import { RETURN_MESSAGES } from "../../../src/constants/return-messages";
 
 import * as dotenv from 'dotenv';
 import request from 'supertest';
@@ -190,7 +190,7 @@ describe('AuthController (e2e)', () => {
         });
 
         it('should return Conflict for existing user', async () => {
-            const registerUserDto: RegisterUserDto = getRegisterUserDto();
+            const registerUserDto: RegisterUserDto = getJamesSmithRegisterUserDto();
             registerUserDto.password = await hash(registerUserDto.password, 12);
             const user = userRepository.create({ ...registerUserDto, createdAt: new Date() });
             await userRepository.save(user);

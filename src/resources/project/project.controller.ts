@@ -5,7 +5,7 @@ import { UpdateProjectDto } from './dto/update-project.dto';
 import { ApiExtraModels, ApiOperation, ApiResponse, ApiTags, getSchemaPath } from '@nestjs/swagger';
 import { AuthenticatedGuard } from 'src/auth/guards/authenticated.guard';
 import { CustomMessageDto } from 'src/shared/utils/custom-message.dto';
-import { PublicProjectDto } from './dto/project.dto';
+import { PublicProjectDto } from './dto/public-project.dto';
 import { ProjectRoleGuard } from 'src/auth/guards/project-role.guard';
 import { ProjectRole } from './enums/project-role';
 import { Project } from './entities/project.entity';
@@ -108,8 +108,8 @@ export class ProjectController {
         const projects: Project[] = await this.projectService.findAll();
         return {
           statusCode: HttpStatus.OK,
-          message: `${projects.length} project${projects.length == 1 ? '' : 's'} found`,
-          data: projects,
+          message: RETURN_MESSAGES.OK.N_PROJECTS_FOUND(projects.length),
+          data: projects.map(project => new PublicProjectDto(project)),
         }
       }
 
@@ -117,7 +117,7 @@ export class ProjectController {
         const projects: Project[] = await this.projectService.findAllByUserId(req.user.id);
         return {
           statusCode: HttpStatus.OK,
-          message: `${projects.length} project${projects.length == 1 ? '' : 's'} found`,
+          message: RETURN_MESSAGES.OK.N_PROJECTS_FOUND(projects.length),
           data: projects.map(project => new PublicProjectDto(project)),
         }
       }
@@ -134,6 +134,7 @@ export class ProjectController {
 
   @Get(':id')
   @UseGuards(AuthenticatedGuard)
+  @UseGuards(ProjectRoleGuard)
   @ApiOperation({ summary: 'Returns the project with the provided id.' })
   @ApiResponse({
     status: HttpStatus.OK, description: 'successful get', schema: {
@@ -166,7 +167,7 @@ export class ProjectController {
         return {
           statusCode: HttpStatus.OK,
           message: RETURN_MESSAGES.OK.PROJECT_FOUND,
-          data: project,
+          data: new PublicProjectDto(project),
         }
       }
 

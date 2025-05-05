@@ -1,0 +1,57 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+input CreateProjectDto {
+  description: String!
+  name: String!
+}
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
+type Mutation {
+  createProject(input: CreateProjectDto!): Project!
+}
+
+type Project {
+  createdAt: DateTime!
+  description: String!
+  id: ID!
+  name: String!
+}
+
+type ProjectMember {
+  createdAt: DateTime!
+  email: String!
+  firstname: String!
+  id: ID!
+  lastname: String!
+  projectRole: ProjectRole!
+}
+
+"""Roles within a project"""
+enum ProjectRole {
+  ADMIN
+  EDITOR
+  OWNER
+  VIEWER
+}
+
+type PublicProjectDto {
+  createdAt: DateTime!
+  description: String!
+  id: ID!
+  members: [ProjectMember!]!
+  name: String!
+  owner: ProjectMember!
+}
+
+type Query {
+  hello: String!
+  project(id: String!): PublicProjectDto!
+  projects: [PublicProjectDto!]!
+  userProjects: [PublicProjectDto!]!
+}

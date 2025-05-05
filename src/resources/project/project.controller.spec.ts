@@ -4,7 +4,7 @@ import { ProjectService } from './project.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Project } from './entities/project.entity';
 import { AuthenticatedGuard } from 'src/auth/guards/authenticated.guard';
-import { PublicProjectDto } from './dto/project.dto';
+import { PublicProjectDto } from './dto/public-project.dto';
 import { ProjectRoleGuard } from 'src/auth/guards/project-role.guard';
 import { SimpleMessageDto } from 'src/shared/utils/simple-message.dto';
 import { ForbiddenException, HttpStatus } from '@nestjs/common';
@@ -133,7 +133,7 @@ describe('ProjectController', () => {
 
       const expectedResult: CustomMessageDto<Project[] | PublicProjectDto[]> = {
         statusCode: HttpStatus.OK,
-        message: '0 projects found',
+        message: RETURN_MESSAGES.OK.N_PROJECTS_FOUND(0),
         data: [],
       };
 
@@ -149,8 +149,8 @@ describe('ProjectController', () => {
 
       const expectedResult: CustomMessageDto<Project[] | PublicProjectDto[]> = {
         statusCode: HttpStatus.OK,
-        message: '1 project found',
-        data: [project],
+        message: RETURN_MESSAGES.OK.N_PROJECTS_FOUND(1),
+        data: [new PublicProjectDto(project)],
       };
 
       const actualResult = await projectController.findAll(adminRequest);
@@ -165,8 +165,8 @@ describe('ProjectController', () => {
 
       const expectedResult: CustomMessageDto<Project[] | PublicProjectDto[]> = {
         statusCode: HttpStatus.OK,
-        message: `${projects.length} projects found`,
-        data: projects,
+        message: RETURN_MESSAGES.OK.N_PROJECTS_FOUND(projects.length),
+        data: projects.map(project => new PublicProjectDto(project)),
       };
 
       const actualResult = await projectController.findAll(adminRequest);
@@ -181,7 +181,7 @@ describe('ProjectController', () => {
 
       const expectedResult: CustomMessageDto<Project[] | PublicProjectDto[]> = {
         statusCode: HttpStatus.OK,
-        message: '0 projects found',
+        message: RETURN_MESSAGES.OK.N_PROJECTS_FOUND(0),
         data: [],
       };
 
@@ -197,7 +197,7 @@ describe('ProjectController', () => {
 
       const expectedResult: CustomMessageDto<Project[] | PublicProjectDto[]> = {
         statusCode: HttpStatus.OK,
-        message: '1 project found',
+        message: RETURN_MESSAGES.OK.N_PROJECTS_FOUND(1),
         data: [new PublicProjectDto(project)],
       };
 
@@ -213,7 +213,7 @@ describe('ProjectController', () => {
 
       const expectedResult: CustomMessageDto<Project[] | PublicProjectDto[]> = {
         statusCode: HttpStatus.OK,
-        message: `${projects.length} projects found`,
+        message: RETURN_MESSAGES.OK.N_PROJECTS_FOUND(projects.length),
         data: projects.map(project => new PublicProjectDto(project)),
       };
 
@@ -249,8 +249,9 @@ describe('ProjectController', () => {
     it('should have AuthenticatedGuard applied to the create endpoint', () => {
       const guards = Reflect.getMetadata('__guards__', projectController.findOne);
       expect(guards).toBeDefined();
-      expect(guards.length).toBe(1);
-      expect(guards[0]).toBe(AuthenticatedGuard);
+      expect(guards.length).toBe(2);
+      expect(guards[0]).toBe(ProjectRoleGuard);
+      expect(guards[1]).toBe(AuthenticatedGuard);
     });
 
     it('should call projectService.findOneById and return Project for admin requests if project is found', async () => {
@@ -259,7 +260,7 @@ describe('ProjectController', () => {
       const expectedResult: CustomMessageDto<Project | PublicProjectDto> = {
         statusCode: HttpStatus.OK,
         message: RETURN_MESSAGES.OK.PROJECT_FOUND,
-        data: project,
+        data: new PublicProjectDto(project),
       };
 
       const actualResult = await projectController.findOne(adminRequest, project.id);

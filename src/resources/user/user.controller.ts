@@ -29,7 +29,7 @@ export class UserController {
       case (GlobalRole.ADMIN): {
         return {
           statusCode: HttpStatus.OK,
-          message: `${users.length} user${users.length == 1 ? '' : 's'} found`,
+          message: RETURN_MESSAGES.OK.N_USERS_FOUND(users.length),
           data: users.map(user => new AdminUserDto(user)),
         }
       }
@@ -37,7 +37,7 @@ export class UserController {
       case (GlobalRole.REGULAR_USER): {
         return {
           statusCode: HttpStatus.OK,
-          message: `${users.length} user${users.length == 1 ? '' : 's'} found`,
+          message: RETURN_MESSAGES.OK.N_USERS_FOUND(users.length),
           data: users.map(user => new PublicUserDto(user)),
         }
       }

@@ -60,7 +60,7 @@ describe('UserController', () => {
       expect(mockUserService.findAll).toHaveBeenCalled();
       expect(result).toEqual({
         statusCode: HttpStatus.OK,
-        message: `${users.length} users found`,
+        message: RETURN_MESSAGES.OK.N_USERS_FOUND(users.length),
         data: mockUsers.map(user => new AdminUserDto(user)),
       });
     });
@@ -91,7 +91,7 @@ describe('UserController', () => {
       expect(mockUserService.findAll).toHaveBeenCalled();
       expect(result).toEqual({
         statusCode: HttpStatus.OK,
-        message: `${users.length} users found`,
+        message: RETURN_MESSAGES.OK.N_USERS_FOUND(users.length),
         data: mockUsers.map(user => new PublicUserDto(user)),
       });
     });
@@ -131,7 +131,7 @@ describe('UserController', () => {
         });
       }
     });
-    
+
   });
 
   describe('/user/:id (GET)', () => {

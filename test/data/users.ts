@@ -39,8 +39,32 @@ export const userMaryWright: PublicUserDto = {
     createdAt: new Date('2020/04/06 23:15:44'),
 };
 
-export const userAdmin: PublicUserDto = {
+export const userLisaMitchell: PublicUserDto = {
+    id: userUUIDs[3],
+    firstname: "Lisa",
+    lastname: "Mitchell",
+    email: "lisamitchell@fakemail.com",
+    createdAt: new Date('2020/05/17 14:43:11'),
+};
+
+export const userMichelleJohnson: PublicUserDto = {
+    id: userUUIDs[3],
+    firstname: "Michelle",
+    lastname: "Johnson",
+    email: "michellejohnson@fakemail.com",
+    createdAt: new Date('2020/06/21 10:03:32'),
+};
+
+export const userJohnThomas: PublicUserDto = {
     id: userUUIDs[4],
+    firstname: "John",
+    lastname: "Thomas",
+    email: "johnthomas@fakemail.com",
+    createdAt: new Date('2020/07/13 09:57:01'),
+};
+
+export const userAdmin: PublicUserDto = {
+    id: userUUIDs[5],
     firstname: "Adrian",
     lastname: "Matei",
     email: "adrian.matei@fakemail.com",

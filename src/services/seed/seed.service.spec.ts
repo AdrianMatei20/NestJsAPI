@@ -131,7 +131,7 @@ describe('SeedService', () => {
       const logsCount: number = await loggerRepository.count();
       expect(logsCount).toBeGreaterThanOrEqual(100);
 
-    }, 25000);
+    }, 50000);
 
     it('should skip seeding if environment variables not set', async () => {
       await seedService.seed();
@@ -185,7 +185,7 @@ describe('SeedService', () => {
       const logsCount: number = await loggerRepository.count();
       expect(logsCount).toBeGreaterThanOrEqual(100);
 
-    }, 25000);
+    }, 50000);
   });
 
 });

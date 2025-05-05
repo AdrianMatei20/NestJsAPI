@@ -3,7 +3,7 @@ import { PassportSerializer } from "@nestjs/passport";
 import { AuthService } from "./auth.service";
 import { User } from "src/resources/user/entities/user.entity";
 import { AdminUserDto } from "src/resources/user/dto/admin-user.dto";
-import { GlobalRole } from "src/resources/user/enums/global-role";
+import { CurrentUser } from "src/auth/current-user";
 
 @Injectable()
 export class SessionSerializer extends PassportSerializer {
@@ -12,7 +12,7 @@ export class SessionSerializer extends PassportSerializer {
         super();
     }
 
-    serializeUser(user: User, done: (err: Error, user: {id: string, globalRole: GlobalRole}) => void) {
+    serializeUser(user: User, done: (err: Error, user: CurrentUser) => void) {
         done(null, { id: user.id, globalRole: user.globalRole });
     }
 
