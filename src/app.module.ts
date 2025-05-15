@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
+import { HealthModule } from './health/health.module';
 import { ConfigModule } from '@nestjs/config';
 import { PassportModule } from '@nestjs/passport';
 import { AuthModule } from './auth/auth.module';
@@ -40,6 +41,7 @@ import { join } from 'path';
     PassportModule.register({
       session: true,
     }),
+    HealthModule,
     AuthModule,
     ProjectModule,
     UserModule,
