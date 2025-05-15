@@ -1,0 +1,81 @@
+name: Deploy to AWS EC2
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Create EC2 Key File
+        run: |
+          echo "${{ secrets.EC2_KEY }}" > ec2_key.pem
+          chmod 600 ec2_key.pem
+
+      - name: Deploy to EC2
+        run: |
+          ssh -o StrictHostKeyChecking=no -i ec2_key.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+
+            # Step: Write .env file
+            cat > /home/${USER}/your-project-folder/.env <<EOL
+            NODE_ENV=test
+            SECRET=${{ secrets.SECRET }}
+            DB_TYPE=${{ secrets.DB_TYPE }}
+            PG_HOST=localhost
+            PG_USER=${{ secrets.PG_USER }}
+            PG_PASSWORD=${{ secrets.PG_PASSWORD }}
+            PG_DB=${{ secrets.PG_DB }}
+            PG_PORT=${{ secrets.PG_PORT }}
+            EMAIL_JS_SERVICE_ID=${{ secrets.EMAIL_JS_SERVICE_ID }}
+            EMAIL_JS_TEMPLATE_ID=${{ secrets.EMAIL_JS_TEMPLATE_ID }}
+            EMAIL_JS_PUBLIC_KEY=${{ secrets.EMAIL_JS_PUBLIC_KEY }}
+            EMAIL_JS_PRIVATE_KEY=${{ secrets.EMAIL_JS_PRIVATE_KEY }}
+            ADMIN_USER_EMAIL=${{ secrets.ADMIN_USER_EMAIL }}
+            DEFAULT_USER_EMAIL=${{ secrets.DEFAULT_USER_EMAIL }}
+            DEFAULT_USER_FIRSTNAME=${{ secrets.DEFAULT_USER_FIRSTNAME }}
+            DEFAULT_USER_LASTNAME=${{ secrets.DEFAULT_USER_LASTNAME }}
+            DEFAULT_PASSWORD=${{ secrets.DEFAULT_PASSWORD }}
+            EOL
+
+            # Install Git
+            if ! command -v git &> /dev/null; then
+              sudo dnf install -y git
+            fi
+
+            # Install Docker
+            if ! command -v docker &> /dev/null; then
+              sudo dnf install -y docker
+              sudo systemctl start docker
+              sudo usermod -aG docker $USER
+            fi
+
+            # Install Docker Compose v2
+            if ! command -v docker-compose &> /dev/null; then
+              DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
+              mkdir -p $DOCKER_CONFIG/cli-plugins
+              curl -SL https://github.com/docker/compose/releases/latest/download/docker-compose-linux-x86_64 \
+                -o $DOCKER_CONFIG/cli-plugins/docker-compose
+              chmod +x $DOCKER_CONFIG/cli-plugins/docker-compose
+            fi
+
+            # Prepare app directory
+            cd /home/${USER}
+            if [ ! -d "nestjs-app" ]; then
+              git clone https://github.com/YOUR_USERNAME/YOUR_REPO.git nestjs-app
+            fi
+
+            cd nestjs-app
+            git pull origin main
+
+            # Docker Compose deploy
+            docker compose down || true
+            docker compose build
+            docker compose up -d
+
+          EOF
