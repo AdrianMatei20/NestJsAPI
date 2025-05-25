@@ -33,6 +33,31 @@ services:
       - POSTGRES_DB=postgres
     volumes:
       - pgdata:/var/lib/postgresql/data
+  
+  prometheus:
+    container_name: prometheus
+    image: prom/prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+  
+  grafana:
+    container_name: grafana
+    image: grafana/grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-storage:/var/lib/grafana
+  
+  postgres_exporter:
+    container_name: postgres_exporter
+    image: prometheuscommunity/postgres-exporter
+    environment:
+      DATA_SOURCE_NAME: "postgresql://postgres:postgres@postgres:5432/postgres?sslmode=disable"
+    ports:
+      - "9187:9187"
 
 volumes:
   pgdata: {}
+  grafana-storage:
