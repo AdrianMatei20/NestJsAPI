@@ -10,6 +10,8 @@ import { ProjectModule } from './resources/project/project.module';
 import { UserModule } from './resources/user/user.module';
 import { LoggerModule } from './logger/logger.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { PrometheusModule } from '@willsoto/nestjs-prometheus';
+import { MonitoringModule } from './metrics/monitoring.module';
 
 import { User } from './resources/user/entities/user.entity';
 import { Project } from './resources/project/entities/project.entity';
@@ -65,6 +67,12 @@ import { join } from 'path';
       introspection: true, // explicitly allow introspection
       context: ({ req }) => ({ req }), // attaches user to context
     }),
+    PrometheusModule.register({
+      defaultMetrics: {
+        enabled: true,
+      },
+    }),
+    MonitoringModule,
   ],
   controllers: [AppController],
   providers: [
