@@ -59,7 +59,7 @@ export const LOG_MESSAGES = {
             INVALID_UUID: 'Could not create project. The provided user id was not a valid UUID.',
             FAILED_TO_FIND_USER: (userId: string) => `Failed to find user with id ${userId}.`,
             USER_NOT_FOUND: (projectName: string, userId: string) => `Could not create project '${projectName}'. User with id ${userId} not found.`,
-            MISSING_PROPS: (missingProperties: string[]) => `Could not create project. Reasin: missing properties: ${missingProperties}.`,
+            MISSING_PROPS: (missingProperties: string[]) => `Could not create project. Reason: missing properties: ${missingProperties}.`,
             FAILED_TO_CREATE_PROJECT: (projectName: string) => `Failed to create project '${projectName}'.`,
             SUCCESS: (firstname: string, lastname: string, projectName: string) => `User ${firstname} ${lastname} created project '${projectName}'.`,
         },
