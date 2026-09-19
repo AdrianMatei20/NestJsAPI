@@ -25,13 +25,15 @@ import { LoggerService } from "../../../src/logger/logger.service";
 import { RETURN_MESSAGES } from "../../../src/constants/return-messages";
 import { getJamesSmithRegisterUserDto } from "../../data/register-user";
 import { LogInUserDto } from "../../../src/auth/dto/log-in-user.dto";
-import { createProjectDto, createProjectDtoEmpty } from "../../data/projects";
+import { createProjectDto, createProjectDtoEmpty, projectOne } from "../../data/projects";
 import { userJamesSmith } from "../../data/users";
 
 import * as dotenv from 'dotenv';
 import request from 'supertest';
 import session from "express-session";
 import { hash } from 'bcrypt';
+import { CacheService } from "src/cache/cache.service";
+import { invalidUUID } from "test/data/UUIDs";
 
 describe('ProjectController (e2e)', () => {
     let app: INestApplication;
@@ -41,6 +43,7 @@ describe('ProjectController (e2e)', () => {
     let logInRegularUserDto: LogInUserDto;
     let logInAdminDto: LogInUserDto;
     let logInUnknownDto: LogInUserDto;
+    let mockCacheService: any;
 
     beforeAll(async () => {
         const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -65,6 +68,10 @@ describe('ProjectController (e2e)', () => {
                 UserService,
                 ObjectValidationService,
                 LoggerService,
+                {
+                    provide: CacheService,
+                    useValue: mockCacheService,
+                },
             ],
         }).compile();
 
@@ -102,6 +109,12 @@ describe('ProjectController (e2e)', () => {
     });
 
     beforeEach(async () => {
+        mockCacheService = {
+            get: jest.fn(),
+            set: jest.fn(),
+            del: jest.fn(),
+        };
+
         const registerRegularUserDto = getJamesSmithRegisterUserDto();
 
         const regularUser = userRepository.create({ ...registerRegularUserDto, password: await hash(registerRegularUserDto.password, 12), createdAt: new Date() });
@@ -154,7 +167,7 @@ describe('ProjectController (e2e)', () => {
         await app.close();
     });
 
-    describe('/project (POST)', () => {
+    describe('POST /project', () => {
 
         it('should return Unauthorized if user is not logged in', async () => {
             return await request(app.getHttpServer())
@@ -300,7 +313,7 @@ describe('ProjectController (e2e)', () => {
 
     });
 
-    describe('/project (GET)', () => {
+    describe('GET /project', () => {
 
         it('should return Unauthorized if user is not logged in', async () => {
             return await request(app.getHttpServer())
@@ -310,6 +323,37 @@ describe('ProjectController (e2e)', () => {
                     statusCode: HttpStatus.UNAUTHORIZED,
                     message: RETURN_MESSAGES.UNAUTHORIZED,
                 });
+        });
+
+    });
+
+    describe('GET /project/:id', () => {
+
+        it('should return Unauthorized if user is not logged in', async () => {
+            return await request(app.getHttpServer())
+                .get(`/project/${projectOne.id}`)
+                .expect(HttpStatus.UNAUTHORIZED)
+                .expect({
+                    statusCode: HttpStatus.UNAUTHORIZED,
+                    message: RETURN_MESSAGES.UNAUTHORIZED,
+                });
+        });
+
+        it('should return 400 BadRequest for invalid UUID', async () => {
+            const loginResponse = await request(app.getHttpServer())
+                .post('/auth/login')
+                .send(logInRegularUserDto)
+                .expect(HttpStatus.CREATED);
+
+            const cookie = loginResponse.headers['set-cookie'];
+
+            const response = await request(app.getHttpServer())
+                .get(`/project/${invalidUUID}`)
+                .set('Cookie', cookie);
+
+            expect(response.status).toBe(HttpStatus.BAD_REQUEST);
+            expect(response.body.statusCode).toBe(HttpStatus.BAD_REQUEST);
+            expect(response.body.message).toBe(RETURN_MESSAGES.BAD_REQUEST.INVALID_PROJECT_ID);
         });
 
     });

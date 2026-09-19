@@ -35,6 +35,7 @@ import { ProjectRole } from "src/resources/project/enums/project-role";
 import { AssignUserDto } from "src/resources/project/dto/assign-user.dto";
 import { RegisterUserDto } from "src/resources/user/dto/register-user.dto";
 import { PublicProjectDto } from "src/resources/project/dto/public-project.dto";
+import { CacheService } from "src/cache/cache.service";
 
 describe('GraphQL project (e2e)', () => {
   let app: INestApplication;
@@ -56,6 +57,12 @@ describe('GraphQL project (e2e)', () => {
   let project3Id: string = "";
   let project4Id: string = "";
   let publicProjectDto: PublicProjectDto;
+
+  const mockCacheService = {
+    get: jest.fn(),
+    set: jest.fn(),
+    del: jest.fn(),
+  };
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -80,6 +87,7 @@ describe('GraphQL project (e2e)', () => {
         UserService,
         ObjectValidationService,
         LoggerService,
+        { provide: CacheService, useValue: mockCacheService },
       ],
     }).compile();
 
@@ -1051,7 +1059,7 @@ describe('GraphQL project (e2e)', () => {
       });
 
       const newProject = await projectRepository.findOne({
-        where: { id: response.body.id},
+        where: { id: response.body.id },
       });
 
       expect(newProject).not.toBeNull();

@@ -33,6 +33,7 @@ import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { HelloResolver } from './graphql/hello/hello.resolver';
 import { ProjectResolver } from './graphql/project/project.resolver';
 import { join } from 'path';
+import { CacheModule } from './cache/cache.module';
 
 @Module({
   imports: [
@@ -73,6 +74,7 @@ import { join } from 'path';
       },
     }),
     MonitoringModule,
+    CacheModule,
   ],
   controllers: [AppController],
   providers: [

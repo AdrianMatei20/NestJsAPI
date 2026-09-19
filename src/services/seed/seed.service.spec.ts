@@ -18,6 +18,7 @@ import { JwtService } from '@nestjs/jwt';
 import { ResetPassword } from 'src/auth/reset-password/reset-password.entity';
 import { userJamesSmith } from 'test/data/users';
 import { toBeBoolean, toBeTrue } from 'jest-extended';
+import { CacheService } from 'src/cache/cache.service';
 
 describe('SeedService', () => {
   let seedService: SeedService;
@@ -26,8 +27,15 @@ describe('SeedService', () => {
   let userProjectRoleRepository: Repository<UserProjectRole>;
   let loggerRepository: Repository<Log>;
   let mockEmailService: any;
+  let mockCacheService: any;
 
   beforeEach(async () => {
+    mockCacheService = {
+      get: jest.fn(),
+      set: jest.fn(),
+      del: jest.fn(),
+    };
+
     const { toBeBoolean, toBeTrue, toBeFalse } = require('jest-extended');
     expect.extend({ toBeBoolean, toBeTrue, toBeFalse });
 
@@ -83,6 +91,10 @@ describe('SeedService', () => {
           },
         },
         ResetPasswordService,
+        {
+          provide: CacheService,
+          useValue: mockCacheService,
+        },
       ],
     }).compile();
 

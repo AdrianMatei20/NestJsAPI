@@ -5,6 +5,7 @@ import { project, updateProjectDto } from 'test/data/projects';
 import { userJamesSmith } from 'test/data/users';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { debugLog, errorLog, infoLog, logs, warnLog } from 'test/data/logs';
+import { DATABASE_ERROR, ERROR } from 'src/constants/test-messages';
 
 describe('LoggerService', () => {
   let loggerService: LoggerService;
@@ -67,7 +68,7 @@ describe('LoggerService', () => {
       const trace = 'Cannot read properties of undefined (reading \'find\')';
       const metadata = { projectId: project.id, project, updateProjectDto };
 
-      (mockLogRepository.save as jest.Mock).mockRejectedValue(new Error('Database error'));
+      (mockLogRepository.save as jest.Mock).mockRejectedValue(new Error(DATABASE_ERROR));
       const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => { });
 
       await loggerService.error(message, context, trace, metadata);
@@ -82,7 +83,7 @@ describe('LoggerService', () => {
         timestamp: expect.any(Date),
       });
       expect(consoleErrorSpy).toHaveBeenCalledWith(
-        'Failed to save log: Database error',
+        `Failed to save log: ${DATABASE_ERROR}`,
       );
 
       consoleErrorSpy.mockRestore();
@@ -116,7 +117,7 @@ describe('LoggerService', () => {
       const context = 'ProjectService.update';
       const metadata = { projectId: project.id, project, updateProjectDto };
 
-      (mockLogRepository.save as jest.Mock).mockRejectedValue(new Error('Database error'));
+      (mockLogRepository.save as jest.Mock).mockRejectedValue(new Error(DATABASE_ERROR));
       const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => { });
 
       await loggerService.warn(message, context, metadata);
@@ -130,7 +131,7 @@ describe('LoggerService', () => {
         timestamp: expect.any(Date),
       });
       expect(consoleErrorSpy).toHaveBeenCalledWith(
-        'Failed to save log: Database error',
+        `Failed to save log: ${DATABASE_ERROR}`,
       );
 
       consoleErrorSpy.mockRestore();
@@ -164,7 +165,7 @@ describe('LoggerService', () => {
       const context = 'ProjectService.create';
       const metadata = { project, userId: userJamesSmith.id };
 
-      (mockLogRepository.save as jest.Mock).mockRejectedValue(new Error('Database error'));
+      (mockLogRepository.save as jest.Mock).mockRejectedValue(new Error(DATABASE_ERROR));
       const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => { });
 
       await loggerService.info(message, context, metadata);
@@ -178,7 +179,7 @@ describe('LoggerService', () => {
         timestamp: expect.any(Date),
       });
       expect(consoleErrorSpy).toHaveBeenCalledWith(
-        'Failed to save log: Database error',
+        `Failed to save log: ${DATABASE_ERROR}`,
       );
 
       consoleErrorSpy.mockRestore();
@@ -212,7 +213,7 @@ describe('LoggerService', () => {
       const context = 'ProjectService.create';
       const metadata = { project, userId: userJamesSmith.id };
 
-      (mockLogRepository.save as jest.Mock).mockRejectedValue(new Error('Database error'));
+      (mockLogRepository.save as jest.Mock).mockRejectedValue(new Error(DATABASE_ERROR));
       const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => { });
 
       await loggerService.debug(message, context, metadata);
@@ -226,7 +227,7 @@ describe('LoggerService', () => {
         timestamp: expect.any(Date),
       });
       expect(consoleErrorSpy).toHaveBeenCalledWith(
-        'Failed to save log: Database error',
+        `Failed to save log: ${DATABASE_ERROR}`,
       );
 
       consoleErrorSpy.mockRestore();
@@ -268,7 +269,7 @@ describe('LoggerService', () => {
       });
 
       const result = await loggerService.getLogs({
-        level: 'error',
+        level: 'ERROR',
         fromDate: '2021-01-01 00:00:00.000',
         toDate: '2022-12-31 23:59:59.999',
         sortBy: 'timestamp',
@@ -282,14 +283,14 @@ describe('LoggerService', () => {
       (mockLogRepository.createQueryBuilder as jest.Mock).mockReturnValue({
         andWhere: jest.fn().mockReturnThis(),
         orderBy: jest.fn().mockReturnThis(),
-        getMany: jest.fn().mockRejectedValue(new Error('Database error')),
+        getMany: jest.fn().mockRejectedValue(new Error(DATABASE_ERROR)),
       });
       const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => { });
 
       await loggerService.getLogs({order: 'DESC'});
 
       expect(consoleErrorSpy).toHaveBeenCalledWith(
-        'Failed to fetch logs: Database error',
+        `Failed to fetch logs: ${DATABASE_ERROR}`,
       );
 
       consoleErrorSpy.mockRestore();

@@ -15,6 +15,7 @@ import { invalidUUID, nonExistingUserId } from 'test/data/UUIDs';
 
 import * as bcrypt from 'bcrypt';
 import { LOG_MESSAGES } from 'src/constants/log-messages';
+import { DATABASE_ERROR, ERROR } from 'src/constants/test-messages';
 import { LOG_CONTEXTS } from 'src/constants/log-contexts';
 import { RETURN_MESSAGES } from 'src/constants/return-messages';
 
@@ -92,7 +93,7 @@ describe('AuthService', () => {
   describe('validateUser', () => {
 
     it('should return null if UserService.findOneByEmail fails', async () => {
-      (mockUserService.findOneByEmail as jest.Mock).mockRejectedValue(new Error('Database error'));
+      (mockUserService.findOneByEmail as jest.Mock).mockRejectedValue(new Error(DATABASE_ERROR));
 
       const result = await authService.validateUser(logInUserDto);
 
@@ -306,14 +307,14 @@ describe('AuthService', () => {
       const registerUserDto: RegisterUserDto = getJamesSmithRegisterUserDto();
       (mockUserService.findOneByEmail as jest.Mock).mockResolvedValue(null);
       (bcrypt.hash as jest.Mock).mockResolvedValue('hashedPassword');
-      (mockUserService.create as jest.Mock).mockRejectedValue(new Error('Database error'));
+      (mockUserService.create as jest.Mock).mockRejectedValue(new Error(DATABASE_ERROR));
 
       await expect(authService.registerUser(registerUserDto))
         .rejects.toThrow(InternalServerErrorException);
       expect(mockLoggerService.error).toHaveBeenCalledWith(
-        LOG_MESSAGES.AUTH.REGISTER_USER.FAILED_TO_REGISTER_USER(registerUserDto.email, 'Database error'),
+        LOG_MESSAGES.AUTH.REGISTER_USER.FAILED_TO_REGISTER_USER(registerUserDto.email, DATABASE_ERROR),
         LOG_CONTEXTS.AuthService.registerUser,
-        'Database error',
+        DATABASE_ERROR,
         { registerUserDto: getSanitizedRegisterUserDto(registerUserDto as RegisterUserDto) },
       );
 
@@ -418,14 +419,14 @@ describe('AuthService', () => {
     });
 
     it('should return 500 InternalServerError if userService.findOneById fails', async () => {
-      (mockUserService.findOneById as jest.Mock).mockRejectedValue(new Error('Database error'));
+      (mockUserService.findOneById as jest.Mock).mockRejectedValue(new Error(DATABASE_ERROR));
 
       await expect(authService.verifyUser(userJamesSmith.id, 'token'))
         .rejects.toThrow(InternalServerErrorException);
       expect(mockLoggerService.error).toHaveBeenCalledWith(
         LOG_MESSAGES.AUTH.VERIFY_USER.FAILED_TO_FIND_USER(userJamesSmith.id),
         LOG_CONTEXTS.AuthService.verifyUser,
-        'Database error',
+        DATABASE_ERROR,
         { userId: userJamesSmith.id },
       );
 
@@ -490,14 +491,14 @@ describe('AuthService', () => {
       mockTokenService.verifyToken.mockImplementationOnce(() => {
         return true;
       });
-      (mockUserService.markUserAccountAsVerified as jest.Mock).mockRejectedValue(new Error('Database error'));
+      (mockUserService.markUserAccountAsVerified as jest.Mock).mockRejectedValue(new Error(DATABASE_ERROR));
 
       await expect(authService.verifyUser(userJamesSmith.id, 'token'))
         .rejects.toThrow(InternalServerErrorException);
       expect(mockLoggerService.error).toHaveBeenCalledWith(
         LOG_MESSAGES.AUTH.VERIFY_USER.FAILED_TO_VERIFY_USER,
         LOG_CONTEXTS.AuthService.verifyUser,
-        'Database error',
+        DATABASE_ERROR,
         { userId: userJamesSmith.id, token: 'token' },
       );
 
@@ -561,14 +562,14 @@ describe('AuthService', () => {
     });
 
     it('should return 500 InternalServerError if userService.findOneById fails', async () => {
-      (mockUserService.findOneById as jest.Mock).mockRejectedValue(new Error('Database error'));
+      (mockUserService.findOneById as jest.Mock).mockRejectedValue(new Error(DATABASE_ERROR));
 
       await expect(authService.sendResetPasswordEmail(userJamesSmith.id))
         .rejects.toThrow(InternalServerErrorException);
       expect(mockLoggerService.error).toHaveBeenCalledWith(
         LOG_MESSAGES.AUTH.SEND_RESET_PASSWORD_EMAIL.FAILED_TO_FIND_USER(userJamesSmith.id),
         LOG_CONTEXTS.AuthService.sendResetPasswordEmail,
-        'Database error',
+        DATABASE_ERROR,
         { userId: userJamesSmith.id },
       );
 
@@ -604,14 +605,14 @@ describe('AuthService', () => {
 
     it('should return 500 InternalServerError if TokenService.createResetToken fails', async () => {
       (mockUserService.findOneById as jest.Mock).mockResolvedValue(userJamesSmith);
-      (mockResetPasswordService.createResetToken as jest.Mock).mockRejectedValue(new Error('error'));
+      (mockResetPasswordService.createResetToken as jest.Mock).mockRejectedValue(new Error(ERROR));
 
       await expect(authService.sendResetPasswordEmail(userJamesSmith.id))
         .rejects.toThrow(InternalServerErrorException);
       expect(mockLoggerService.error).toHaveBeenCalledWith(
-        LOG_MESSAGES.AUTH.SEND_RESET_PASSWORD_EMAIL.FAILED_TO_SEND_RESET_PASSWORD_EMAIL(userJamesSmith.email, 'error'),
+        LOG_MESSAGES.AUTH.SEND_RESET_PASSWORD_EMAIL.FAILED_TO_SEND_RESET_PASSWORD_EMAIL(userJamesSmith.email, ERROR),
         LOG_CONTEXTS.AuthService.sendResetPasswordEmail,
-        'error',
+        ERROR,
         { user: userJamesSmith },
       );
 
@@ -630,14 +631,14 @@ describe('AuthService', () => {
     it('should return 503 ServiceUnavailable if EmailService.sendResetPasswordEmail fails', async () => {
       (mockUserService.findOneById as jest.Mock).mockResolvedValue(userJamesSmith);
       (mockResetPasswordService.createResetToken as jest.Mock).mockResolvedValue('token');
-      (mockEmailService.sendResetPasswordEmail as jest.Mock).mockRejectedValue(new Error('error'));
+      (mockEmailService.sendResetPasswordEmail as jest.Mock).mockRejectedValue(new Error(ERROR));
 
       await expect(authService.sendResetPasswordEmail(userJamesSmith.id))
         .rejects.toThrow(ServiceUnavailableException);
       expect(mockLoggerService.error).toHaveBeenCalledWith(
-        LOG_MESSAGES.AUTH.SEND_RESET_PASSWORD_EMAIL.FAILED_TO_SEND_RESET_PASSWORD_EMAIL(userJamesSmith.email, 'error'),
+        LOG_MESSAGES.AUTH.SEND_RESET_PASSWORD_EMAIL.FAILED_TO_SEND_RESET_PASSWORD_EMAIL(userJamesSmith.email, ERROR),
         LOG_CONTEXTS.AuthService.sendResetPasswordEmail,
-        'error',
+        ERROR,
         { user: userJamesSmith },
       );
 
@@ -683,14 +684,14 @@ describe('AuthService', () => {
   describe('sendForgotPasswordEmail', () => {
 
     it('should return 500 InternalServerError if userService.findOneByEmail fails', async () => {
-      (mockUserService.findOneByEmail as jest.Mock).mockRejectedValue(new Error('Database error'));
+      (mockUserService.findOneByEmail as jest.Mock).mockRejectedValue(new Error(DATABASE_ERROR));
 
       await expect(authService.sendForgotPasswordEmail(forgotPasswordDto))
         .rejects.toThrow(InternalServerErrorException);
       expect(mockLoggerService.error).toHaveBeenCalledWith(
         LOG_MESSAGES.AUTH.SEND_FORGOT_PASSWORD_EMAIL.FAILED_TO_FIND_USER(forgotPasswordDto.email),
         LOG_CONTEXTS.AuthService.sendForgotPasswordEmail,
-        'Database error',
+        DATABASE_ERROR,
         { forgotPasswordDto: forgotPasswordDto },
       );
 
@@ -726,14 +727,14 @@ describe('AuthService', () => {
 
     it('should return 500 InternalServerError if TokenService.createResetToken fails', async () => {
       (mockUserService.findOneByEmail as jest.Mock).mockResolvedValue(userJamesSmith);
-      (mockResetPasswordService.createResetToken as jest.Mock).mockRejectedValue(new Error('error'));
+      (mockResetPasswordService.createResetToken as jest.Mock).mockRejectedValue(new Error(ERROR));
 
       await expect(authService.sendForgotPasswordEmail(forgotPasswordDto))
         .rejects.toThrow(InternalServerErrorException);
       expect(mockLoggerService.error).toHaveBeenCalledWith(
-        LOG_MESSAGES.AUTH.SEND_FORGOT_PASSWORD_EMAIL.FAILED_TO_SEND_RESET_PASSWORD_EMAIL(forgotPasswordDto.email, 'error'),
+        LOG_MESSAGES.AUTH.SEND_FORGOT_PASSWORD_EMAIL.FAILED_TO_SEND_RESET_PASSWORD_EMAIL(forgotPasswordDto.email, ERROR),
         LOG_CONTEXTS.AuthService.sendForgotPasswordEmail,
-        'error',
+        ERROR,
         { forgotPasswordDto: forgotPasswordDto, user: userJamesSmith },
       );
 
@@ -752,14 +753,14 @@ describe('AuthService', () => {
     it('should return 503 ServiceUnavailable if EmailService.sendResetPasswordEmail fails', async () => {
       (mockUserService.findOneByEmail as jest.Mock).mockResolvedValue(userJamesSmith);
       (mockResetPasswordService.createResetToken as jest.Mock).mockResolvedValue('token');
-      (mockEmailService.sendResetPasswordEmail as jest.Mock).mockRejectedValue(new Error('error'));
+      (mockEmailService.sendResetPasswordEmail as jest.Mock).mockRejectedValue(new Error(ERROR));
 
       await expect(authService.sendForgotPasswordEmail(forgotPasswordDto))
         .rejects.toThrow(ServiceUnavailableException);
       expect(mockLoggerService.error).toHaveBeenCalledWith(
-        LOG_MESSAGES.AUTH.SEND_FORGOT_PASSWORD_EMAIL.FAILED_TO_SEND_RESET_PASSWORD_EMAIL(forgotPasswordDto.email, 'error'),
+        LOG_MESSAGES.AUTH.SEND_FORGOT_PASSWORD_EMAIL.FAILED_TO_SEND_RESET_PASSWORD_EMAIL(forgotPasswordDto.email, ERROR),
         LOG_CONTEXTS.AuthService.sendForgotPasswordEmail,
-        'error',
+        ERROR,
         { forgotPasswordDto: forgotPasswordDto, user: userJamesSmith },
       );
 
@@ -826,14 +827,14 @@ describe('AuthService', () => {
     });
 
     it('should return 500 InternalServerError if UserService.findOneById fails', async () => {
-      (mockUserService.findOneById as jest.Mock).mockRejectedValue(new Error('Database error'));
+      (mockUserService.findOneById as jest.Mock).mockRejectedValue(new Error(DATABASE_ERROR));
 
       await expect(authService.resetPassword(userJamesSmith.id, 'token', getResetPasswordDto()))
         .rejects.toThrow(InternalServerErrorException);
       expect(mockLoggerService.error).toHaveBeenCalledWith(
         LOG_MESSAGES.AUTH.RESET_PASSWORD.FAILED_TO_FIND_USER(userJamesSmith.id),
         LOG_CONTEXTS.AuthService.resetPassword,
-        'Database error',
+        DATABASE_ERROR,
         { userId: userJamesSmith.id, token: 'token', resetPasswordDto: getResetPasswordDto() },
       );
 
@@ -869,14 +870,14 @@ describe('AuthService', () => {
 
     it('should return 500 InternalServerError if ResetPasswordService.validateResetToken fails', async () => {
       (mockUserService.findOneById as jest.Mock).mockResolvedValue(userJamesSmith);
-      (mockResetPasswordService.validateResetToken as jest.Mock).mockRejectedValue(new Error('error'));
+      (mockResetPasswordService.validateResetToken as jest.Mock).mockRejectedValue(new Error(ERROR));
 
       await expect(authService.resetPassword(userJamesSmith.id, 'token', getResetPasswordDto()))
         .rejects.toThrow(InternalServerErrorException);
       expect(mockLoggerService.error).toHaveBeenCalledWith(
         LOG_MESSAGES.AUTH.RESET_PASSWORD.FAILED_TO_VALIDATE_TOKEN('token'),
         LOG_CONTEXTS.AuthService.resetPassword,
-        'error',
+        ERROR,
         { userId: userJamesSmith.id, token: 'token', resetPasswordDto: getResetPasswordDto() },
       );
 
@@ -943,14 +944,14 @@ describe('AuthService', () => {
     it('should return 500 InternalServerError if ResetPasswordService.findByToken fails', async () => {
       (mockUserService.findOneById as jest.Mock).mockResolvedValue(userJamesSmith);
       (mockResetPasswordService.validateResetToken as jest.Mock).mockResolvedValue(true);
-      (mockResetPasswordService.findByToken as jest.Mock).mockRejectedValue(new Error('Database error'));
+      (mockResetPasswordService.findByToken as jest.Mock).mockRejectedValue(new Error(DATABASE_ERROR));
 
       await expect(authService.resetPassword(userJamesSmith.id, 'token', getResetPasswordDto()))
         .rejects.toThrow(InternalServerErrorException);
       expect(mockLoggerService.error).toHaveBeenCalledWith(
         LOG_MESSAGES.AUTH.RESET_PASSWORD.FAILED,
         LOG_CONTEXTS.AuthService.resetPassword,
-        'Database error',
+        DATABASE_ERROR,
         { userId: userJamesSmith.id, token: 'token', resetPasswordDto: getResetPasswordDto() },
       );
 
@@ -970,14 +971,14 @@ describe('AuthService', () => {
       (mockUserService.findOneById as jest.Mock).mockResolvedValue(userJamesSmith);
       (mockResetPasswordService.validateResetToken as jest.Mock).mockResolvedValue(true);
       (mockResetPasswordService.findByToken as jest.Mock).mockResolvedValue(resetPassword);
-      (mockUserService.update as jest.Mock).mockRejectedValue(new Error('Database error'));
+      (mockUserService.update as jest.Mock).mockRejectedValue(new Error(DATABASE_ERROR));
 
       await expect(authService.resetPassword(userJamesSmith.id, 'token', getResetPasswordDto()))
         .rejects.toThrow(InternalServerErrorException);
       expect(mockLoggerService.error).toHaveBeenCalledWith(
         LOG_MESSAGES.AUTH.RESET_PASSWORD.FAILED,
         LOG_CONTEXTS.AuthService.resetPassword,
-        'Database error',
+        DATABASE_ERROR,
         { userId: userJamesSmith.id, token: 'token', resetPasswordDto: getResetPasswordDto() },
       );
 
@@ -998,14 +999,14 @@ describe('AuthService', () => {
       (mockResetPasswordService.validateResetToken as jest.Mock).mockResolvedValue(true);
       (mockResetPasswordService.findByToken as jest.Mock).mockResolvedValue(resetPassword);
       (mockUserService.update as jest.Mock).mockResolvedValue(userJamesSmith);
-      (mockResetPasswordService.invalidateResetToken as jest.Mock).mockRejectedValue(new Error('Database error'));
+      (mockResetPasswordService.invalidateResetToken as jest.Mock).mockRejectedValue(new Error(DATABASE_ERROR));
 
       await expect(authService.resetPassword(userJamesSmith.id, 'token', getResetPasswordDto()))
         .rejects.toThrow(InternalServerErrorException);
       expect(mockLoggerService.error).toHaveBeenCalledWith(
         LOG_MESSAGES.AUTH.RESET_PASSWORD.FAILED,
         LOG_CONTEXTS.AuthService.resetPassword,
-        'Database error',
+        DATABASE_ERROR,
         { userId: userJamesSmith.id, token: 'token', resetPasswordDto: getResetPasswordDto() },
       );
 
@@ -1071,14 +1072,14 @@ describe('AuthService', () => {
   describe('findByEmail', () => {
 
     it('should return 500 InternalServerError if UserService.findOneByEmail fails', async () => {
-      (mockUserService.findOneByEmail as jest.Mock).mockRejectedValue(new Error('Database error'));
+      (mockUserService.findOneByEmail as jest.Mock).mockRejectedValue(new Error(DATABASE_ERROR));
 
       await expect(authService.findByEmail(userJamesSmith.email))
         .rejects.toThrow(InternalServerErrorException);
       expect(mockLoggerService.error).toHaveBeenCalledWith(
         LOG_MESSAGES.AUTH.FIND_BY_EMAIL.FAILED_TO_FIND_USER(userJamesSmith.email),
         LOG_CONTEXTS.AuthService.findByEmail,
-        'Database error',
+        DATABASE_ERROR,
         { email: userJamesSmith.email },
       );
 
@@ -1151,14 +1152,14 @@ describe('AuthService', () => {
     });
 
     it('should return 500 InternalServerError if userService.findOneById fails', async () => {
-      (mockUserService.findOneById as jest.Mock).mockRejectedValue(new Error('Database error'));
+      (mockUserService.findOneById as jest.Mock).mockRejectedValue(new Error(DATABASE_ERROR));
 
       await expect(authService.deleteUser(userJamesSmith.id))
         .rejects.toThrow(InternalServerErrorException);
       expect(mockLoggerService.error).toHaveBeenCalledWith(
         LOG_MESSAGES.AUTH.DELETE_USER.FAILED_TO_FIND_USER(userJamesSmith.id),
         LOG_CONTEXTS.AuthService.deleteUser,
-        'Database error',
+        DATABASE_ERROR,
         { userId: userJamesSmith.id },
       );
 
@@ -1199,7 +1200,7 @@ describe('AuthService', () => {
 
     it('should return 500 InternalServerError if userService.remove fails', async () => {
       (mockUserService.findOneById as jest.Mock).mockResolvedValue(userJamesSmith);
-      (mockUserService.remove as jest.Mock).mockRejectedValue(new Error('Database error'));
+      (mockUserService.remove as jest.Mock).mockRejectedValue(new Error(DATABASE_ERROR));
 
       await expect(authService.deleteUser(userJamesSmith.id))
         .rejects.toThrow(InternalServerErrorException);
@@ -1208,7 +1209,7 @@ describe('AuthService', () => {
       expect(mockLoggerService.error).toHaveBeenCalledWith(
         LOG_MESSAGES.AUTH.DELETE_USER.FAILED_TO_DELETE_USER,
         LOG_CONTEXTS.AuthService.deleteUser,
-        'Database error',
+        DATABASE_ERROR,
         { userId: userJamesSmith.id, user: userJamesSmith },
       );
 

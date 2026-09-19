@@ -1,4 +1,5 @@
-import { CanActivate, ExecutionContext, ForbiddenException, HttpStatus, Injectable, UnauthorizedException } from "@nestjs/common";
+import { BadRequestException, CanActivate, ExecutionContext, ForbiddenException, HttpStatus, Injectable, UnauthorizedException } from "@nestjs/common";
+import { validate as isValidUUID } from 'uuid';
 import { GqlContextType, GqlExecutionContext } from "@nestjs/graphql";
 import { Reflector } from "@nestjs/core";
 import { InjectRepository } from "@nestjs/typeorm";
@@ -32,9 +33,14 @@ export class ProjectRoleGuard implements CanActivate {
             projectId = args.id || args.input?.projectId;
         }
 
-        // Retrieve the required roles from metadata
-        const requiredRoles = this.reflector.get<ProjectRole[]>('projectRoles', context.getHandler());
-
+        // Check if the project id is a valid UUID
+        if (!isValidUUID(projectId)) {
+            throw new BadRequestException({
+                statusCode: HttpStatus.BAD_REQUEST,
+                message: RETURN_MESSAGES.BAD_REQUEST.INVALID_PROJECT_ID,
+            });
+        }
+        
         if (!user) {
             throw new UnauthorizedException({
                 statusCode: HttpStatus.UNAUTHORIZED,
@@ -59,6 +65,9 @@ export class ProjectRoleGuard implements CanActivate {
                 message: RETURN_MESSAGES.FORBIDDEN.PROJECT_NOT_FOUND_OR_LACKING_PERMISSIONS,
             });
         }
+
+        // Retrieve the required roles from metadata
+        const requiredRoles = this.reflector.get<ProjectRole[]>('projectRoles', context.getHandler());
 
         // Check if the user has one of the required roles
         const hasAccess = project.userProjectRoles.some((userProjectRole) => {

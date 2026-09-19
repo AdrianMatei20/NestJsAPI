@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { UserModule } from '../user/user.module';
 import { LoggerModule } from 'src/logger/logger.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { CacheModule } from 'src/cache/cache.module';
 import { Project } from './entities/project.entity';
 import { UserProjectRole } from './entities/user-project-role.entity';
 import { Log } from 'src/logger/entities/log.entity';
@@ -13,7 +14,7 @@ import { registerEnumType } from '@nestjs/graphql';
 import { ProjectRole } from './enums/project-role';
 
 @Module({
-  imports: [UserModule, LoggerModule, TypeOrmModule.forFeature([Project, UserProjectRole, Log])],
+  imports: [UserModule, LoggerModule, TypeOrmModule.forFeature([Project, UserProjectRole, Log]), CacheModule],
   controllers: [ProjectController],
   providers: [ProjectService, ObjectValidationService, LoggerService],
   exports: [ProjectService],

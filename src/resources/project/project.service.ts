@@ -16,6 +16,7 @@ import { ProjectRole } from './enums/project-role';
 import { UserService } from '../user/user.service';
 import { ObjectValidationService } from 'src/services/object-validation/object-validation.service';
 import { LoggerService } from 'src/logger/logger.service';
+import { CacheService } from 'src/cache/cache.service';
 
 import { LOG_CONTEXTS } from 'src/constants/log-contexts';
 import { LOG_MESSAGES } from 'src/constants/log-messages';
@@ -30,6 +31,7 @@ export class ProjectService {
     private readonly userService: UserService,
     private readonly objectValidationService: ObjectValidationService,
     private readonly loggerService: LoggerService,
+    private readonly cacheService: CacheService,
   ) { }
 
   async create(createProjectDto: CreateProjectDto, userId: string): Promise<Project> {
@@ -220,6 +222,23 @@ export class ProjectService {
       });
     }
 
+    // Try to retrieve the project from cache
+    const cacheKey = `project:${projectId}`;
+    try {
+      // Try fetching from cache
+      const cachedProject = await this.cacheService.get<Project>(cacheKey);
+      if (cachedProject) {
+        return cachedProject;
+      }
+    } catch (error) {
+      await this.loggerService.warn(
+        LOG_MESSAGES.PROJECT.FIND_ONE_BY_ID.FAILED_TO_RETRIEVE_PROJECT_FROM_CACHE(projectId),
+        LOG_CONTEXTS.ProjectService.findOneById,
+        error.message,
+      );
+      // Continue to DB even if cache read fails
+    }
+
     // Check if project exists
     var project: Project = null;
     try {
@@ -249,6 +268,17 @@ export class ProjectService {
         statusCode: HttpStatus.NOT_FOUND,
         message: RETURN_MESSAGES.NOT_FOUND.PROJECT,
       });
+    }
+
+    // Cache the project for 5 minutes (300 seconds)
+    try {
+      await this.cacheService.set(cacheKey, project, 5 * 60);
+    } catch (error) {
+      await this.loggerService.warn(
+        LOG_MESSAGES.PROJECT.FIND_ONE_BY_ID.FAILED_TO_CACHE_PROJECT(projectId),
+        LOG_CONTEXTS.ProjectService.findOneById,
+        error.message,
+      );
     }
 
     return project;

@@ -13,8 +13,10 @@ import { createProjectDto, createProjectDtoEmpty, createProjectDtoNoDescription,
 import { userJamesSmith } from 'test/data/users';
 import { invalidUUID, nonExistingUserId } from 'test/data/UUIDs';
 import { LOG_MESSAGES } from 'src/constants/log-messages';
+import { CACHE_ERROR, DATABASE_ERROR } from 'src/constants/test-messages';
 import { LOG_CONTEXTS } from 'src/constants/log-contexts';
 import { RETURN_MESSAGES } from 'src/constants/return-messages';
+import { CacheService } from 'src/cache/cache.service';
 
 describe('ProjectService', () => {
   let projectService: ProjectService;
@@ -22,6 +24,7 @@ describe('ProjectService', () => {
   let mockProjectRepository: any;
   let mockUserProjectRoleRepository: any;
   let mockLoggerService: any;
+  let mockCacheService: any;
 
   beforeEach(async () => {
     mockProjectRepository = {
@@ -48,6 +51,12 @@ describe('ProjectService', () => {
       info: jest.fn().mockResolvedValue({}),
     };
 
+    mockCacheService = {
+      get: jest.fn(),
+      set: jest.fn(),
+      del: jest.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ProjectService,
@@ -67,6 +76,10 @@ describe('ProjectService', () => {
         {
           provide: LoggerService,
           useValue: mockLoggerService,
+        },
+        {
+          provide: CacheService,
+          useValue: mockCacheService,
         },
       ],
     }).compile();
@@ -108,7 +121,7 @@ describe('ProjectService', () => {
     });
 
     it('should return 500 InternalServerError if userService.findOneById fails', async () => {
-      (mockUserService.findOneById as jest.Mock).mockRejectedValue(new Error('Database error'));
+      (mockUserService.findOneById as jest.Mock).mockRejectedValue(new Error(DATABASE_ERROR));
 
       await expect(projectService.create(createProjectDto, userJamesSmith.id))
         .rejects.toThrow(InternalServerErrorException);
@@ -116,7 +129,7 @@ describe('ProjectService', () => {
       expect(mockLoggerService.error).toHaveBeenCalledWith(
         LOG_MESSAGES.PROJECT.CREATE.FAILED_TO_FIND_USER(userJamesSmith.id),
         LOG_CONTEXTS.ProjectService.create,
-        'Database error',
+        DATABASE_ERROR,
         { createProjectDto: createProjectDto, userId: userJamesSmith.id },
       );
 
@@ -230,7 +243,7 @@ describe('ProjectService', () => {
 
     it('should return 500 InternalServerError if projectRepository.create fails', async () => {
       (mockUserService.findOneById as jest.Mock).mockResolvedValue(userJamesSmith);
-      (mockProjectRepository.create as jest.Mock).mockImplementation(() => { throw new Error('Database error'); });
+      (mockProjectRepository.create as jest.Mock).mockImplementation(() => { throw new Error(DATABASE_ERROR); });
 
       await expect(projectService.create(createProjectDto, userJamesSmith.id))
         .rejects.toThrow(InternalServerErrorException);
@@ -238,7 +251,7 @@ describe('ProjectService', () => {
       expect(mockLoggerService.error).toHaveBeenCalledWith(
         LOG_MESSAGES.PROJECT.CREATE.FAILED_TO_CREATE_PROJECT(createProjectDto.name),
         LOG_CONTEXTS.ProjectService.create,
-        'Database error',
+        DATABASE_ERROR,
         { createProjectDto, userId: userJamesSmith.id },
       );
 
@@ -259,7 +272,7 @@ describe('ProjectService', () => {
 
       (mockUserService.findOneById as jest.Mock).mockResolvedValue(userJamesSmith);
       (mockProjectRepository.create as jest.Mock).mockResolvedValue(project);
-      (mockProjectRepository.save as jest.Mock).mockRejectedValue(new Error('Database error'));
+      (mockProjectRepository.save as jest.Mock).mockRejectedValue(new Error(DATABASE_ERROR));
 
       await expect(projectService.create(createProjectDto, userJamesSmith.id))
         .rejects.toThrow(InternalServerErrorException);
@@ -267,7 +280,7 @@ describe('ProjectService', () => {
       expect(mockLoggerService.error).toHaveBeenCalledWith(
         LOG_MESSAGES.PROJECT.CREATE.FAILED_TO_CREATE_PROJECT(createProjectDto.name),
         LOG_CONTEXTS.ProjectService.create,
-        'Database error',
+        DATABASE_ERROR,
         { createProjectDto, userId: userJamesSmith.id },
       );
 
@@ -289,7 +302,7 @@ describe('ProjectService', () => {
       (mockUserService.findOneById as jest.Mock).mockResolvedValue(userJamesSmith);
       (mockProjectRepository.create as jest.Mock).mockResolvedValue(project);
       (mockProjectRepository.save as jest.Mock).mockResolvedValue(project);
-      (mockUserProjectRoleRepository.save as jest.Mock).mockRejectedValue(new Error('Database error'));
+      (mockUserProjectRoleRepository.save as jest.Mock).mockRejectedValue(new Error(DATABASE_ERROR));
 
       await expect(projectService.create(createProjectDto, userJamesSmith.id))
         .rejects.toThrow(InternalServerErrorException);
@@ -297,7 +310,7 @@ describe('ProjectService', () => {
       expect(mockLoggerService.error).toHaveBeenCalledWith(
         LOG_MESSAGES.PROJECT.CREATE.FAILED_TO_CREATE_PROJECT(createProjectDto.name),
         LOG_CONTEXTS.ProjectService.create,
-        'Database error',
+        DATABASE_ERROR,
         { createProjectDto, userId: userJamesSmith.id },
       );
 
@@ -320,7 +333,7 @@ describe('ProjectService', () => {
       (mockProjectRepository.create as jest.Mock).mockResolvedValue(project);
       (mockProjectRepository.save as jest.Mock).mockResolvedValue(project);
       (mockUserProjectRoleRepository.save as jest.Mock).mockResolvedValue(project);
-      (mockProjectRepository.findOne as jest.Mock).mockRejectedValue(new Error('Database error'));
+      (mockProjectRepository.findOne as jest.Mock).mockRejectedValue(new Error(DATABASE_ERROR));
 
       await expect(projectService.create(createProjectDto, userJamesSmith.id))
         .rejects.toThrow(InternalServerErrorException);
@@ -328,7 +341,7 @@ describe('ProjectService', () => {
       expect(mockLoggerService.error).toHaveBeenCalledWith(
         LOG_MESSAGES.PROJECT.CREATE.FAILED_TO_CREATE_PROJECT(createProjectDto.name),
         LOG_CONTEXTS.ProjectService.create,
-        'Database error',
+        DATABASE_ERROR,
         { createProjectDto, userId: userJamesSmith.id },
       );
 
@@ -413,7 +426,7 @@ describe('ProjectService', () => {
     });
 
     it('should return 500 InternalServerError if userService.findOneById fails', async () => {
-      (mockUserService.findOneById as jest.Mock).mockRejectedValue(new Error('Database error'));
+      (mockUserService.findOneById as jest.Mock).mockRejectedValue(new Error(DATABASE_ERROR));
 
       await expect(projectService.findAllByUserId(userJamesSmith.id))
         .rejects.toThrow(InternalServerErrorException);
@@ -421,7 +434,7 @@ describe('ProjectService', () => {
       expect(mockLoggerService.error).toHaveBeenCalledWith(
         LOG_MESSAGES.PROJECT.FIND_ALL_BY_USER_ID.FAILED_TO_FIND_USER(userJamesSmith.id),
         LOG_CONTEXTS.ProjectService.findAllByUserId,
-        'Database error',
+        DATABASE_ERROR,
         { userId: userJamesSmith.id },
       );
 
@@ -463,7 +476,7 @@ describe('ProjectService', () => {
 
     it('should return 500 InternalServerError if userProjectRoleRepository.find fails', async () => {
       (mockUserService.findOneById as jest.Mock).mockResolvedValue(userJamesSmith);
-      (mockUserProjectRoleRepository.find as jest.Mock).mockRejectedValue(new Error('Database error'));
+      (mockUserProjectRoleRepository.find as jest.Mock).mockRejectedValue(new Error(DATABASE_ERROR));
 
       await expect(projectService.findAllByUserId(userJamesSmith.id))
         .rejects.toThrow(InternalServerErrorException);
@@ -471,7 +484,7 @@ describe('ProjectService', () => {
       expect(mockLoggerService.error).toHaveBeenCalledWith(
         LOG_MESSAGES.PROJECT.FIND_ALL_BY_USER_ID.FAILED_TO_RETRIEVE_PROJECTS,
         LOG_CONTEXTS.ProjectService.findAllByUserId,
-        'Database error',
+        DATABASE_ERROR,
         { userId: userJamesSmith.id },
       );
 
@@ -540,16 +553,31 @@ describe('ProjectService', () => {
       }
     });
 
-    it('should return 500 InternalServerError if projectRepository.findOne fails', async () => {
-      (mockProjectRepository.findOne as jest.Mock).mockRejectedValue(new Error('Database error'));
+    it('should return the project if its found cached', async () => {
+      (mockCacheService.get as jest.Mock).mockReturnValue(projectWithJamesOwnerAndChristopherMember);
+
+      const result = await projectService.findOneById(projectOne.id);
+
+      expect(result).toEqual(projectWithJamesOwnerAndChristopherMember);
+    });
+
+    it('should return 500 InternalServerError if both cache search and db search fails', async () => {
+      (mockCacheService.get as jest.Mock).mockRejectedValue(new Error(CACHE_ERROR));
+      (mockProjectRepository.findOne as jest.Mock).mockRejectedValue(new Error(DATABASE_ERROR));
 
       await expect(projectService.findOneById(project.id))
         .rejects.toThrow(InternalServerErrorException);
+      expect(mockLoggerService.warn).toHaveBeenCalled();
+      expect(mockLoggerService.warn).toHaveBeenCalledWith(
+        LOG_MESSAGES.PROJECT.FIND_ONE_BY_ID.FAILED_TO_RETRIEVE_PROJECT_FROM_CACHE(project.id),
+        LOG_CONTEXTS.ProjectService.findOneById,
+        CACHE_ERROR,
+      );
       expect(mockLoggerService.error).toHaveBeenCalled();
       expect(mockLoggerService.error).toHaveBeenCalledWith(
         LOG_MESSAGES.PROJECT.FIND_ONE_BY_ID.FAILED_TO_FIND_PROJECT(project.id),
         LOG_CONTEXTS.ProjectService.findOneById,
-        'Database error',
+        DATABASE_ERROR,
         { projectId: project.id },
       );
 
@@ -565,8 +593,60 @@ describe('ProjectService', () => {
       }
     });
 
-    it('should return 404 NotFound for non-existing project', async () => {
+    it('should return 500 InternalServerError if project is not in cache and db search fails', async () => {
+      (mockCacheService.get as jest.Mock).mockReturnValue(null);
+      (mockProjectRepository.findOne as jest.Mock).mockRejectedValue(new Error(DATABASE_ERROR));
+
+      await expect(projectService.findOneById(project.id))
+        .rejects.toThrow(InternalServerErrorException);
+      expect(mockLoggerService.error).toHaveBeenCalled();
+      expect(mockLoggerService.error).toHaveBeenCalledWith(
+        LOG_MESSAGES.PROJECT.FIND_ONE_BY_ID.FAILED_TO_FIND_PROJECT(project.id),
+        LOG_CONTEXTS.ProjectService.findOneById,
+        DATABASE_ERROR,
+        { projectId: project.id },
+      );
+
+      try {
+        await projectService.findOneById(project.id);
+      } catch (error) {
+        expect(error).toBeInstanceOf(InternalServerErrorException);
+        expect(error.getStatus()).toBe(HttpStatus.INTERNAL_SERVER_ERROR);
+        expect(error.getResponse()).toEqual({
+          statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+          message: RETURN_MESSAGES.INTERNAL_SERVER_ERROR,
+        });
+      }
+    });
+
+    it('should return 404 NotFound if cache search fails and project is not found in db', async () => {
+      (mockCacheService.get as jest.Mock).mockRejectedValue(new Error(CACHE_ERROR));
       (mockProjectRepository.findOne as jest.Mock).mockResolvedValue(null);
+
+      await expect(projectService.findOneById(project.id))
+        .rejects.toThrow(NotFoundException);
+      expect(mockLoggerService.warn).toHaveBeenCalled();
+      expect(mockLoggerService.warn).toHaveBeenCalledWith(
+        LOG_MESSAGES.PROJECT.FIND_ONE_BY_ID.FAILED_TO_RETRIEVE_PROJECT_FROM_CACHE(project.id),
+        LOG_CONTEXTS.ProjectService.findOneById,
+        CACHE_ERROR,
+      );
+
+      try {
+        await projectService.findOneById(project.id);
+      } catch (error) {
+        expect(error).toBeInstanceOf(NotFoundException);
+        expect(error.getStatus()).toBe(HttpStatus.NOT_FOUND);
+        expect(error.getResponse()).toEqual({
+          statusCode: HttpStatus.NOT_FOUND,
+          message: RETURN_MESSAGES.NOT_FOUND.PROJECT,
+        });
+      }
+    });
+
+    it('should return 404 NotFound if project is not found in cache or in db', async () => {
+      (mockCacheService.get as jest.Mock).mockReturnValue(null);
+      (mockProjectRepository.findOne as jest.Mock).mockReturnValue(null);
 
       await expect(projectService.findOneById(project.id))
         .rejects.toThrow(NotFoundException);
@@ -589,14 +669,47 @@ describe('ProjectService', () => {
       }
     });
 
-    it('should return the project when the project exists', async () => {
+    it('should return the project if cache search fails and the project is found in db', async () => {
+      (mockCacheService.get as jest.Mock).mockRejectedValue(new Error(CACHE_ERROR));
+      (mockProjectRepository.findOne as jest.Mock).mockResolvedValue(projectWithJamesOwnerAndChristopherMember);
+
+      const result = await projectService.findOneById(projectOne.id);
+
+      expect(result).toEqual(projectWithJamesOwnerAndChristopherMember);
+
+      expect(mockLoggerService.warn).toHaveBeenCalled();
+      expect(mockLoggerService.warn).toHaveBeenCalledWith(
+        LOG_MESSAGES.PROJECT.FIND_ONE_BY_ID.FAILED_TO_RETRIEVE_PROJECT_FROM_CACHE(project.id),
+        LOG_CONTEXTS.ProjectService.findOneById,
+        CACHE_ERROR,
+      );
+    });
+
+    it('should log a warning message if project caching fails', async () => {
+      (mockCacheService.get as jest.Mock).mockRejectedValue(new Error(CACHE_ERROR));
+      (mockCacheService.set as jest.Mock).mockRejectedValue(new Error(CACHE_ERROR));
+      (mockProjectRepository.findOne as jest.Mock).mockResolvedValue(projectWithJamesOwnerAndChristopherMember);
+
+      const result = await projectService.findOneById(projectOne.id);
+
+      expect(result).toEqual(projectWithJamesOwnerAndChristopherMember);
+
+      expect(mockLoggerService.warn).toHaveBeenCalled();
+      expect(mockLoggerService.warn).toHaveBeenCalledWith(
+        LOG_MESSAGES.PROJECT.FIND_ONE_BY_ID.FAILED_TO_CACHE_PROJECT(project.id),
+        LOG_CONTEXTS.ProjectService.findOneById,
+        CACHE_ERROR,
+      );
+    });
+
+    it('should return the project if the project is not found in cache but is found in db', async () => {
+      (mockCacheService.get as jest.Mock).mockReturnValue(null);
       (mockProjectRepository.findOne as jest.Mock).mockResolvedValue(projectWithJamesOwnerAndChristopherMember);
 
       const result = await projectService.findOneById(projectOne.id);
 
       expect(result).toEqual(projectWithJamesOwnerAndChristopherMember);
     });
-
   });
 
   describe('update', () => {
@@ -624,7 +737,7 @@ describe('ProjectService', () => {
     });
 
     it('should return 500 InternalServerError if projectRepository.findOne fails', async () => {
-      (mockProjectRepository.findOne as jest.Mock).mockRejectedValue(new Error('Database error'));
+      (mockProjectRepository.findOne as jest.Mock).mockRejectedValue(new Error(DATABASE_ERROR));
 
       await expect(projectService.update(project.id, updateProjectDto))
         .rejects.toThrow(InternalServerErrorException);
@@ -632,7 +745,7 @@ describe('ProjectService', () => {
       expect(mockLoggerService.error).toHaveBeenCalledWith(
         LOG_MESSAGES.PROJECT.UPDATE.FAILED_TO_FIND_PROJECT(project.id),
         LOG_CONTEXTS.ProjectService.update,
-        'Database error',
+        DATABASE_ERROR,
         { projectId: project.id, updateProjectDto },
       );
 
@@ -698,7 +811,7 @@ describe('ProjectService', () => {
 
     it('should return 500 InternalServerError if projectRepository.update fails', async () => {
       (mockProjectRepository.findOne as jest.Mock).mockResolvedValue(project);
-      (mockProjectRepository.update as jest.Mock).mockRejectedValue(new Error('Database error'));
+      (mockProjectRepository.update as jest.Mock).mockRejectedValue(new Error(DATABASE_ERROR));
 
       await expect(projectService.update(project.id, updateProjectDto))
         .rejects.toThrow(InternalServerErrorException);
@@ -706,7 +819,7 @@ describe('ProjectService', () => {
       expect(mockLoggerService.error).toHaveBeenCalledWith(
         LOG_MESSAGES.PROJECT.UPDATE.FAILED_TO_UPDATE_PROJECT(project.name),
         LOG_CONTEXTS.ProjectService.update,
-        'Database error',
+        DATABASE_ERROR,
         { projectId: project.id, project, updateProjectDto },
       );
 
@@ -833,7 +946,7 @@ describe('ProjectService', () => {
     });
 
     it('should return 500 InternalServerError if projectRepository.findOne fails', async () => {
-      (mockProjectRepository.findOne as jest.Mock).mockRejectedValue(new Error('Database error'));
+      (mockProjectRepository.findOne as jest.Mock).mockRejectedValue(new Error(DATABASE_ERROR));
 
       await expect(projectService.remove(project.id))
         .rejects.toThrow(InternalServerErrorException);
@@ -841,7 +954,7 @@ describe('ProjectService', () => {
       expect(mockLoggerService.error).toHaveBeenCalledWith(
         LOG_MESSAGES.PROJECT.REMOVE.FAILED_TO_FIND_PROJECT(project.id),
         LOG_CONTEXTS.ProjectService.remove,
-        'Database error',
+        DATABASE_ERROR,
         { projectId: project.id },
       );
 
@@ -883,7 +996,7 @@ describe('ProjectService', () => {
 
     it('should return 500 InternalServerError if delete fails', async () => {
       (mockProjectRepository.findOne as jest.Mock).mockResolvedValue(project);
-      (mockProjectRepository.delete as jest.Mock).mockRejectedValue(new Error('Database error'));
+      (mockProjectRepository.delete as jest.Mock).mockRejectedValue(new Error(DATABASE_ERROR));
 
       await expect(projectService.remove(project.id))
         .rejects.toThrow(InternalServerErrorException);
@@ -891,7 +1004,7 @@ describe('ProjectService', () => {
       expect(mockLoggerService.error).toHaveBeenCalledWith(
         LOG_MESSAGES.PROJECT.REMOVE.FAILED_TO_DELETE_PROJECT(project.id),
         LOG_CONTEXTS.ProjectService.remove,
-        'Database error',
+        DATABASE_ERROR,
         { projectId: project.id, project },
       );
 

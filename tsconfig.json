@@ -22,6 +22,9 @@
     "noImplicitAny": false,
     "strictBindCallApply": false,
     "forceConsistentCasingInFileNames": false,
-    "noFallthroughCasesInSwitch": false
+    "noFallthroughCasesInSwitch": false,
+    "useUnknownInCatchVariables": false,
+    "types": ["jest", "node"],
+    "ignoreDeprecations": "6.0"
   }
 }
