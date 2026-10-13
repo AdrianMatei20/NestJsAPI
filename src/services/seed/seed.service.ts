@@ -21,7 +21,6 @@ import projectUpdates from './test-data/project-changes.json';
 export class SeedService {
 
     constructor(
-        @InjectRepository(Project) private readonly projectRepository: Repository<Project>,
         @InjectRepository(UserProjectRole) private readonly userProjectRoleRepository: Repository<UserProjectRole>,
         private readonly projectService: ProjectService,
         private readonly userService: UserService,
@@ -136,50 +135,48 @@ export class SeedService {
             return;
         }
 
-        const userProjectRole: UserProjectRole[] = await this.userProjectRoleRepository.find({ where: { user: { id: testUsers[0].id } } });
+        const existingUserProjectRole: UserProjectRole = await this.userProjectRoleRepository.findOne({ where: { user: { id: testUsers[0].id } } });
 
-        if (userProjectRole.length > 0) {
+        if (existingUserProjectRole) {
             return;
         }
 
-        let projectIds = [];
+        // Look members up in memory instead of a DB round trip per member (email -> User is fixed for the whole seed run).
+        const userByEmail = new Map<string, User>(testUsers.map(user => [user.email, user]));
+        const emailFor = (person: { firstname: string; lastname: string }): string =>
+            (person.firstname + person.lastname + "@test.com").toLocaleLowerCase();
+
+        let projectIds: string[] = [];
+        let newUserProjectRoles: AssignUserDto[] = [];
 
         for (let i = 0; i < users.length; i++) {
-            const ownerEmail: string = (users[i].firstname + users[i].lastname + "@test.com").toLocaleLowerCase();
-            const user = await this.userService.findOneByEmail(ownerEmail);
+            const owner = userByEmail.get(emailFor(users[i]));
 
             const newProject: CreateProjectDto = {
                 name: projects[i].name,
                 description: projects[i].description,
             }
 
-            const createResponse = await this.projectService.create(newProject, user.id);
-
-            const project = await this.projectRepository.findOne({ where: { id: createResponse.id } });
+            const project: Project = await this.projectService.create(newProject, owner.id);
 
             if (projectUpdates.some(projectUpdate => projectUpdate.name === project.name)) {
                 projectIds.push(project.id);
             }
 
-            const shuffled = [...users.slice()].sort(() => 0.5 - Math.random());
-            const min: number = 3;
-            const max: number = 7;
-            const randomLength = Math.floor(Math.random() * (max - min + 1)) + min;
-            const members = shuffled.slice(0, randomLength);
-
-            for (const member of members) {
-                const memberEmail: string = (member.firstname + member.lastname + "@test.com").toLocaleLowerCase();
-                if (memberEmail !== ownerEmail) {
-                    const userProjectRole: AssignUserDto = {
-                        project: project,
-                        user: await this.userService.findOneByEmail(memberEmail),
-                        projectRole: ProjectRole.EDITOR,
-                        createdAt: new Date(projects[i].createdAt),
-                    }
-                    await this.userProjectRoleRepository.save(userProjectRole);
-                }
+            // Membership is fixed in test-data/projects.json (memberIndices), so the same
+            // users are assigned to the same projects on every seed run.
+            for (const memberIndex of projects[i].memberIndices) {
+                newUserProjectRoles.push({
+                    project,
+                    user: userByEmail.get(emailFor(users[memberIndex])),
+                    projectRole: ProjectRole.EDITOR,
+                    createdAt: new Date(projects[i].createdAt),
+                });
             }
         }
+
+        // One batched insert instead of one awaited save per membership row.
+        await this.userProjectRoleRepository.save(newUserProjectRoles);
 
         for (let i = 0; i < projectIds.length; i++) {
             let updateProjectDto: UpdateProjectDto = {
@@ -189,6 +186,64 @@ export class SeedService {
 
             await this.projectService.update(projectIds[i], updateProjectDto);
         }
+
+        await this.seedSampleBadRequests();
+    }
+
+    // Deliberately trigger a handful of invalid requests through the normal service methods
+    // (same code paths a real bad request would hit), purely so the log table also contains
+    // realistic WARN entries (validation, not-found, conflict) instead of only the INFO
+    // entries produced by successful seeding above. Every one of these throws before any
+    // write occurs, so none of them has a side effect beyond the log row itself.
+    private async seedSampleBadRequests() {
+        const nonExistentId = '00000000-0000-0000-0000-000000000000';
+        const invalidId = 'not-a-valid-uuid';
+        const existingTestUser = users[0];
+
+        // Conflict: email already registered.
+        try {
+            await this.authService.registerUser({
+                firstname: existingTestUser.firstname,
+                lastname: existingTestUser.lastname,
+                email: (existingTestUser.firstname + existingTestUser.lastname + "@test.com").toLocaleLowerCase(),
+                password: process.env.DEFAULT_PASSWORD,
+                passwordConfirmation: process.env.DEFAULT_PASSWORD,
+            }, false);
+        } catch { /* expected: email already registered */ }
+
+        // Bad request: passwords don't match.
+        try {
+            await this.authService.registerUser({
+                firstname: 'Seed',
+                lastname: 'Check',
+                email: 'seed-bad-request-check@test.com',
+                password: 'P@ssword123',
+                passwordConfirmation: 'DoesNotMatch456',
+            }, false);
+        } catch { /* expected: passwords don't match */ }
+
+        // Bad request: missing required properties.
+        try {
+            await this.authService.registerUser({ firstname: 'Seed', lastname: 'Check' } as RegisterUserDto, false);
+        } catch { /* expected: missing properties */ }
+
+        // Not found: valid UUID shape, but no such project.
+        try {
+            await this.projectService.findOneById(nonExistentId);
+        } catch { /* expected: project not found */ }
+
+        // Bad request: malformed project id.
+        try {
+            await this.projectService.findOneById(invalidId);
+        } catch { /* expected: invalid project id */ }
+
+        // Not found: valid UUID shape, but no such user, when creating a project.
+        try {
+            await this.projectService.create({
+                name: 'Seed check',
+                description: 'Intentionally invalid; used only to generate a WARN log entry.',
+            }, nonExistentId);
+        } catch { /* expected: user not found */ }
     }
 
 }

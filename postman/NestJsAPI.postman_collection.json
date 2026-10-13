@@ -1,0 +1,3188 @@
+{
+  "info": {
+    "_postman_id": "4133f15a-2b02-4fa8-b4bd-709df64424c8",
+    "name": "NestJsAPI",
+    "description": "REST API collection for the NestJsAPI project (a Jira-like project tracking backend built with NestJS). Covers every REST endpoint with both success and failure scenarios (validation errors, auth/role failures, not-found cases).\n\n**Auth model**: session-cookie based (express-session + passport). Run a \"Login\" request first — Postman's cookie jar will then automatically attach the session cookie to subsequent requests against the same {{baseUrl}}. Requests marked \"not logged in\" explicitly disable auth/cookies for that one request via a noauth override, so they still fail correctly even if you are logged in from a previous request.\n\n**Seeded test data**: SeedService assigns @test.com users to projects using a fixed \"memberIndices\" list per project in test-data/projects.json, so the same users always end up with the same roles on the same projects across every fresh seed. This collection relies on that: testOwnerEmail (James Smith) is always OWNER, and testEditorEmail (Patricia Perez) is always an EDITOR, of the \"Project Phoenix\" project — used by the \"Resolve seeded project id\" / \"insufficient project role\" requests in the Project folder. These emails are derived from committed, non-secret test data, so they're hardcoded as collection variables; only the shared password comes from your own .env (DEFAULT_PASSWORD).\n\n**Setup**: open this collection's Variables tab and fill in the \"Current value\" column for adminEmail / adminPassword / defaultEmail / defaultPassword to match your local .env seed values. Never commit real values into those fields.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "App",
+      "description": "",
+      "item": [
+        {
+          "name": "Get hello (root)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": []
+            },
+            "description": "Basic liveness endpoint. Always returns 200 with a plain \"Hello World!\"-style string."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Health",
+      "description": "",
+      "item": [
+        {
+          "name": "Health check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "health"
+              ]
+            },
+            "description": "Terminus health check. Pings the Postgres connection. Returns 200 when healthy, 503 when the DB is unreachable."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Metrics",
+      "description": "",
+      "item": [
+        {
+          "name": "Prometheus metrics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/metrics",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "metrics"
+              ]
+            },
+            "description": "Prometheus scrape endpoint. Returns default + custom app metrics in text exposition format."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "description": "",
+      "item": [
+        {
+          "name": "Register",
+          "description": "",
+          "item": [
+            {
+              "name": "Register - success",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/register",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "register"
+                  ]
+                },
+                "description": "Creates a new unverified account and (attempts to) send a confirmation email. 201/200 with a \"registration email sent\" message. Change {{newUserEmail}} between runs, or this will hit the Conflict scenario below.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"firstname\": \"Postman\",\n  \"lastname\": \"Tester\",\n  \"email\": \"{{newUserEmail}}\",\n  \"password\": \"{{newUserPassword}}\",\n  \"passwordConfirmation\": \"{{newUserPassword}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "auth": {
+                  "type": "noauth"
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code is 201\", function () {",
+                      "    pm.response.to.have.status(201);",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Register - 400 missing firstname",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/register",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "register"
+                  ]
+                },
+                "description": "Missing \"firstname\". Expect 400 Bad Request listing the missing property.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"lastname\": \"Tester\",\n  \"email\": \"{{newUserEmail}}\",\n  \"password\": \"{{newUserPassword}}\",\n  \"passwordConfirmation\": \"{{newUserPassword}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "auth": {
+                  "type": "noauth"
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code is 400\", function () {",
+                      "    pm.response.to.have.status(400);",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Register - 400 missing lastname",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/register",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "register"
+                  ]
+                },
+                "description": "Missing \"lastname\". Expect 400 Bad Request.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"firstname\": \"Postman\",\n  \"email\": \"{{newUserEmail}}\",\n  \"password\": \"{{newUserPassword}}\",\n  \"passwordConfirmation\": \"{{newUserPassword}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "auth": {
+                  "type": "noauth"
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code is 400\", function () {",
+                      "    pm.response.to.have.status(400);",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Register - 400 missing email",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/register",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "register"
+                  ]
+                },
+                "description": "Missing \"email\". Expect 400 Bad Request.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"firstname\": \"Postman\",\n  \"lastname\": \"Tester\",\n  \"password\": \"{{newUserPassword}}\",\n  \"passwordConfirmation\": \"{{newUserPassword}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "auth": {
+                  "type": "noauth"
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code is 400\", function () {",
+                      "    pm.response.to.have.status(400);",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Register - 400 missing password",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/register",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "register"
+                  ]
+                },
+                "description": "Missing \"password\". Expect 400 Bad Request.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"firstname\": \"Postman\",\n  \"lastname\": \"Tester\",\n  \"email\": \"{{newUserEmail}}\",\n  \"passwordConfirmation\": \"{{newUserPassword}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "auth": {
+                  "type": "noauth"
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code is 400\", function () {",
+                      "    pm.response.to.have.status(400);",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Register - 400 missing passwordConfirmation",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/register",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "register"
+                  ]
+                },
+                "description": "Missing \"passwordConfirmation\". Expect 400 Bad Request.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"firstname\": \"Postman\",\n  \"lastname\": \"Tester\",\n  \"email\": \"{{newUserEmail}}\",\n  \"password\": \"{{newUserPassword}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "auth": {
+                  "type": "noauth"
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code is 400\", function () {",
+                      "    pm.response.to.have.status(400);",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Register - 400 empty body",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/register",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "register"
+                  ]
+                },
+                "description": "Empty body. Expect 400 Bad Request listing all 5 missing properties.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "auth": {
+                  "type": "noauth"
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code is 400\", function () {",
+                      "    pm.response.to.have.status(400);",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Register - 400 password mismatch",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/register",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "register"
+                  ]
+                },
+                "description": "\"password\" and \"passwordConfirmation\" do not match. Expect 400 Bad Request.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"firstname\": \"Postman\",\n  \"lastname\": \"Tester\",\n  \"email\": \"{{newUserEmail}}\",\n  \"password\": \"P@ssword123\",\n  \"passwordConfirmation\": \"DifferentPassword456\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "auth": {
+                  "type": "noauth"
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code is 400\", function () {",
+                      "    pm.response.to.have.status(400);",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Register - 409 email already registered",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/register",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "register"
+                  ]
+                },
+                "description": "Uses an email that already exists (the seeded admin). Expect 409 Conflict.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"firstname\": \"Postman\",\n  \"lastname\": \"Tester\",\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{newUserPassword}}\",\n  \"passwordConfirmation\": \"{{newUserPassword}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "auth": {
+                  "type": "noauth"
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code is 409\", function () {",
+                      "    pm.response.to.have.status(409);",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Verify user",
+          "description": "",
+          "item": [
+            {
+              "name": "Verify user - success / unknown user (both return OK)",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/verify-user/{{userId}}/{{verifyToken}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "verify-user",
+                    "{{userId}}",
+                    "{{verifyToken}}"
+                  ]
+                },
+                "description": "Marks the account as verified. Note: to avoid leaking which user ids exist, an unknown (but validly-formatted) user id also returns 200 OK with the same generic message. Set {{userId}} and {{verifyToken}} from a real registration response/log first.",
+                "auth": {
+                  "type": "noauth"
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code is 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Verify user - 400 invalid UUID",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/verify-user/not-a-uuid/{{verifyToken}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "verify-user",
+                    "not-a-uuid",
+                    "{{verifyToken}}"
+                  ]
+                },
+                "description": "Path param \"id\" is not a valid UUID. Expect 400 Bad Request.",
+                "auth": {
+                  "type": "noauth"
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code is 400\", function () {",
+                      "    pm.response.to.have.status(400);",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Verify user - 400 invalid/expired token",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/verify-user/{{userId}}/not-a-real-token",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "verify-user",
+                    "{{userId}}",
+                    "not-a-real-token"
+                  ]
+                },
+                "description": "Valid user id but a bogus/expired token. Expect 400 Bad Request.",
+                "auth": {
+                  "type": "noauth"
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code is 400\", function () {",
+                      "    pm.response.to.have.status(400);",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Login",
+          "description": "",
+          "item": [
+            {
+              "name": "Login - success (admin)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/login",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "login"
+                  ]
+                },
+                "description": "Logs in as the seeded admin user. On success, Postman's cookie jar stores the \"SESSION_ID\" session cookie, which subsequent requests in this collection reuse automatically. Run this before any admin-scoped request below.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "auth": {
+                  "type": "noauth"
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code is 201\", function () {",
+                      "    pm.response.to.have.status(201);",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Login - success (regular user)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/login",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "login"
+                  ]
+                },
+                "description": "Logs in as the seeded regular user. Run this before any \"regular user\" scoped request below (overwrites the session cookie from the admin login).",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"{{defaultEmail}}\",\n  \"password\": \"{{defaultPassword}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "auth": {
+                  "type": "noauth"
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code is 201\", function () {",
+                      "    pm.response.to.have.status(201);",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Login - success (seeded project owner)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/login",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "login"
+                  ]
+                },
+                "description": "Logs in as James Smith, one of the deterministically-seeded @test.com users. Project membership is a fixed \"memberIndices\" list in test-data/projects.json, so this user is always the OWNER of the \"{{seededProjectName}}\" project on every fresh seed — unlike the admin/regular user's own projects, this pairing is stable across runs, so it's used for the project-role scenarios below. Uses the same {{defaultPassword}} as the other seeded accounts (DEFAULT_PASSWORD in .env).",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"{{testOwnerEmail}}\",\n  \"password\": \"{{defaultPassword}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "auth": {
+                  "type": "noauth"
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code is 201\", function () {",
+                      "    pm.response.to.have.status(201);",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Login - success (seeded project editor)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/login",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "login"
+                  ]
+                },
+                "description": "Logs in as Patricia Perez, deterministically seeded as an EDITOR (not owner) on \"{{seededProjectName}}\". Used to exercise the \"insufficient project role\" 403 scenarios in the Project folder.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"{{testEditorEmail}}\",\n  \"password\": \"{{defaultPassword}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "auth": {
+                  "type": "noauth"
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code is 201\", function () {",
+                      "    pm.response.to.have.status(201);",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Login - 401 wrong password",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/login",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "login"
+                  ]
+                },
+                "description": "Correct email, wrong password. Expect 401 Unauthorized.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"DefinitelyWrongPassword!\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "auth": {
+                  "type": "noauth"
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code is 401\", function () {",
+                      "    pm.response.to.have.status(401);",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Login - 401 unknown email",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/login",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "login"
+                  ]
+                },
+                "description": "Email does not exist. Expect 401 Unauthorized (no user enumeration).",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"no-such-user@example.com\",\n  \"password\": \"whatever123\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "auth": {
+                  "type": "noauth"
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code is 401\", function () {",
+                      "    pm.response.to.have.status(401);",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Reset password (logged in)",
+          "description": "",
+          "item": [
+            {
+              "name": "Send reset-password email - success",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/reset-password",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "reset-password"
+                  ]
+                },
+                "description": "Requires an active session (log in first). Sends a password-reset email to the current user. Expect 200 OK."
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code is 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Send reset-password email - 401 not logged in",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/reset-password",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "reset-password"
+                  ]
+                },
+                "description": "No session cookie sent. Expect 401 Unauthorized. (Use an incognito/no-cookie request, or clear cookies before running this.)",
+                "auth": {
+                  "type": "noauth"
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code is 401\", function () {",
+                      "    pm.response.to.have.status(401);",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Forgot password",
+          "description": "",
+          "item": [
+            {
+              "name": "Forgot password - known email",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/forgot-password",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "forgot-password"
+                  ]
+                },
+                "description": "Known, registered email. Expect 200 OK with a generic \"if you are registered...\" message.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"{{defaultEmail}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "auth": {
+                  "type": "noauth"
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code is 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Forgot password - unknown email (same response, by design)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/forgot-password",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "forgot-password"
+                  ]
+                },
+                "description": "Unknown email. Still returns 200 OK with the same generic message, to avoid leaking which emails are registered.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"no-such-user@example.com\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "auth": {
+                  "type": "noauth"
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code is 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Reset password (via emailed link)",
+          "description": "",
+          "item": [
+            {
+              "name": "Reset password - success",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/reset-password/{{userId}}/{{resetToken}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "reset-password",
+                    "{{userId}}",
+                    "{{resetToken}}"
+                  ]
+                },
+                "description": "Set {{userId}} and {{resetToken}} from a real \"forgot password\"/\"reset password\" email or server log first (tokens are single-use and time-limited). Expect 200 OK.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"password\": \"NewP@ssword123\",\n  \"passwordConfirmation\": \"NewP@ssword123\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "auth": {
+                  "type": "noauth"
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code is 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Reset password - 400 invalid UUID",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/reset-password/not-a-uuid/{{resetToken}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "reset-password",
+                    "not-a-uuid",
+                    "{{resetToken}}"
+                  ]
+                },
+                "description": "Path param \"id\" is not a valid UUID. Expect 400 Bad Request.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"password\": \"NewP@ssword123\",\n  \"passwordConfirmation\": \"NewP@ssword123\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "auth": {
+                  "type": "noauth"
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code is 400\", function () {",
+                      "    pm.response.to.have.status(400);",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Reset password - 400 invalid/expired token",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/reset-password/{{userId}}/not-a-real-token",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "reset-password",
+                    "{{userId}}",
+                    "not-a-real-token"
+                  ]
+                },
+                "description": "Valid user id but bogus/expired/already-used token. Expect 400 Bad Request.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"password\": \"NewP@ssword123\",\n  \"passwordConfirmation\": \"NewP@ssword123\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "auth": {
+                  "type": "noauth"
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code is 400\", function () {",
+                      "    pm.response.to.have.status(400);",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Reset password - 400 password mismatch",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/reset-password/{{userId}}/{{resetToken}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "reset-password",
+                    "{{userId}}",
+                    "{{resetToken}}"
+                  ]
+                },
+                "description": "\"password\" and \"passwordConfirmation\" do not match. Expect 400 Bad Request.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"password\": \"NewP@ssword123\",\n  \"passwordConfirmation\": \"SomethingElse456\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "auth": {
+                  "type": "noauth"
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code is 400\", function () {",
+                      "    pm.response.to.have.status(400);",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Logout",
+          "description": "",
+          "item": [
+            {
+              "name": "Logout - success",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/logout",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "logout"
+                  ]
+                },
+                "description": "Requires an active session (log in first). Destroys the session and clears the SESSION_ID cookie. Expect 200 OK."
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code is 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Logout - 401 not logged in",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/logout",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "logout"
+                  ]
+                },
+                "description": "No session cookie sent. Expect 401 Unauthorized.",
+                "auth": {
+                  "type": "noauth"
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code is 401\", function () {",
+                      "    pm.response.to.have.status(401);",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Delete account",
+          "description": "",
+          "item": [
+            {
+              "name": "Delete account - success",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/auth",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth"
+                  ]
+                },
+                "description": "Requires an active session (log in first, ideally as a throwaway test user, not the seeded admin/default user!). Permanently deletes the logged-in user's account. Expect 200 OK."
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code is 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Delete account - 401 not logged in",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/auth",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth"
+                  ]
+                },
+                "description": "No session cookie sent. Expect 401 Unauthorized.",
+                "auth": {
+                  "type": "noauth"
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code is 401\", function () {",
+                      "    pm.response.to.have.status(401);",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "User",
+      "description": "",
+      "item": [
+        {
+          "name": "Resolve seeded user id (Sharon Collins)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/user",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "user"
+              ]
+            },
+            "description": "Log in as admin first. Looks up the deterministically-seeded test user {{testDeletableUserEmail}} and stores her id as {{userId}}, so the requests below act on a real, reproducible user. Deliberately NOT James Smith / Patricia Perez, since those two are reserved for the Project role scenarios below and shouldn't be deleted by this folder's \"Delete user - success\" request."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "const target = (json.data || []).find(u => u.email === pm.collectionVariables.get(\"testDeletableUserEmail\"));",
+                  "pm.test(\"Seeded user found\", function () {",
+                  "    pm.expect(target).to.not.be.undefined;",
+                  "});",
+                  "if (target) {",
+                  "    pm.collectionVariables.set(\"userId\", target.id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List users - as admin",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/user",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "user"
+              ]
+            },
+            "description": "Log in as admin first. Admins receive the full AdminUserDto shape (includes emailVerified, globalRole). Expect 200 OK."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List users - as regular user",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/user",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "user"
+              ]
+            },
+            "description": "Log in as a regular user first. Regular users receive the reduced PublicUserDto shape. Expect 200 OK."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List users - 401 not logged in",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/user",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "user"
+              ]
+            },
+            "description": "No session cookie sent. Expect 401 Unauthorized.",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 401\", function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get user by id - success",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/user/{{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "user",
+                "{{userId}}"
+              ]
+            },
+            "description": "Log in first. {{userId}} is set by \"Resolve seeded user id (Sharon Collins)\" above (or set it manually to any real user id). Expect 200 OK."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get user by id - 400 invalid UUID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/user/not-a-uuid",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "user",
+                "not-a-uuid"
+              ]
+            },
+            "description": "Log in first. Path param is not a valid UUID. Expect 400 Bad Request."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 400\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get user by id - 404 not found",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/user/{{nonExistentUuid}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "user",
+                "{{nonExistentUuid}}"
+              ]
+            },
+            "description": "Log in first. Valid UUID shape, but no such user. Expect 404 Not Found."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 404\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get user by id - 401 not logged in",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/user/{{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "user",
+                "{{userId}}"
+              ]
+            },
+            "description": "No session cookie sent. Expect 401 Unauthorized.",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 401\", function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete user - success (admin only)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/user/{{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "user",
+                "{{userId}}"
+              ]
+            },
+            "description": "Log in as admin first. Deletes {{userId}} as resolved by \"Resolve seeded user id (Sharon Collins)\" above. Run \"Resolve seeded user id\" again on a re-seeded database before reusing this request, since this permanently removes that seeded account. Expect 200 OK."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete user - 403 not an admin",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/user/{{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "user",
+                "{{userId}}"
+              ]
+            },
+            "description": "Log in as a regular (non-admin) user first. Expect 403 Forbidden."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 403\", function () {",
+                  "    pm.response.to.have.status(403);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete user - 400 invalid UUID",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/user/not-a-uuid",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "user",
+                "not-a-uuid"
+              ]
+            },
+            "description": "Log in as admin first. Path param is not a valid UUID. Expect 400 Bad Request."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 400\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete user - 404 not found",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/user/{{nonExistentUuid}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "user",
+                "{{nonExistentUuid}}"
+              ]
+            },
+            "description": "Log in as admin first. Valid UUID shape, but no such user. Expect 404 Not Found."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 404\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete user - 401 not logged in",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/user/{{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "user",
+                "{{userId}}"
+              ]
+            },
+            "description": "No session cookie sent. Expect 401 Unauthorized.",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 401\", function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Project",
+      "description": "",
+      "item": [
+        {
+          "name": "Resolve seeded project id (Project Phoenix)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/project",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "project"
+              ]
+            },
+            "description": "Log in as admin first. Looks up \"{{seededProjectName}}\" and stores its id as {{seededProjectId}}. Thanks to SeedService's deterministic seeding, this project always has {{testOwnerEmail}} (James Smith) as OWNER and {{testEditorEmail}} (Patricia Perez) as an EDITOR on every fresh seed — used by the \"insufficient project role\" scenarios below, since a freshly-created project (via this collection) has no non-owner members to test with."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "const target = (json.data || []).find(p => p.name === pm.collectionVariables.get(\"seededProjectName\"));",
+                  "pm.test(\"Seeded project found\", function () {",
+                  "    pm.expect(target).to.not.be.undefined;",
+                  "});",
+                  "if (target) {",
+                  "    pm.collectionVariables.set(\"seededProjectId\", target.id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create project - success (admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/project",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "project"
+              ]
+            },
+            "description": "Log in as admin first. Creates a project owned by the current user. Expect 201 Created.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Postman Test Project\",\n  \"description\": \"Created from the Postman collection.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "if (pm.response.code === 201) {",
+                  "    const json = pm.response.json();",
+                  "    if (json.data && json.data.id) {",
+                  "        pm.collectionVariables.set(\"projectId\", json.data.id);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create project - success (regular user)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/project",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "project"
+              ]
+            },
+            "description": "Log in as a regular user first. Expect 201 Created.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Postman Test Project (user)\",\n  \"description\": \"Created from the Postman collection as a regular user.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create project - 401 not logged in",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/project",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "project"
+              ]
+            },
+            "description": "No session cookie sent. Expect 401 Unauthorized.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Should not be created\",\n  \"description\": \"No session cookie sent.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 401\", function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create project - 400 missing params",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/project",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "project"
+              ]
+            },
+            "description": "Log in first. Missing \"description\". Expect 400 Bad Request.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Missing description\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 400\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List my projects - as admin (sees all)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/project",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "project"
+              ]
+            },
+            "description": "Log in as admin first. Admins see every project in the system. Expect 200 OK."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List my projects - as regular user (sees own only)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/project",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "project"
+              ]
+            },
+            "description": "Log in as a regular user first. Regular users only see projects they are a member of. Expect 200 OK."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List my projects - 401 not logged in",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/project",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "project"
+              ]
+            },
+            "description": "No session cookie sent. Expect 401 Unauthorized.",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 401\", function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get project by id - success",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/project/{{projectId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "project",
+                "{{projectId}}"
+              ]
+            },
+            "description": "Log in first (as a member of the project, or as admin). {{projectId}} is auto-set by \"Create project - success (admin)\". Expect 200 OK."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get project by id - 401 not logged in",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/project/{{projectId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "project",
+                "{{projectId}}"
+              ]
+            },
+            "description": "No session cookie sent. Expect 401 Unauthorized.",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 401\", function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get project by id - 400 invalid UUID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/project/not-a-uuid",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "project",
+                "not-a-uuid"
+              ]
+            },
+            "description": "Log in first. Path param is not a valid UUID. Expect 400 Bad Request."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 400\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get project by id - 403 not a member / not found",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/project/{{nonExistentUuid}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "project",
+                "{{nonExistentUuid}}"
+              ]
+            },
+            "description": "Log in as a regular (non-admin) user first. Valid UUID shape but the project doesn't exist or the user isn't a member — both cases return the same 403, so membership can't be probed. Expect 403 Forbidden."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 403\", function () {",
+                  "    pm.response.to.have.status(403);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update project - success (owner/admin)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/project/{{projectId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "project",
+                "{{projectId}}"
+              ]
+            },
+            "description": "Log in as the project owner or a global admin. Only OWNER/ADMIN project roles may update. Expect 200 OK.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Postman Test Project (updated)\",\n  \"description\": \"Updated via the Postman collection.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update project - 403 insufficient project role",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/project/{{seededProjectId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "project",
+                "{{seededProjectId}}"
+              ]
+            },
+            "description": "Run \"Login - success (seeded project editor)\" and \"Resolve seeded project id (Project Phoenix)\" first. Patricia Perez is a deterministically-seeded EDITOR (not OWNER/ADMIN) on this project. Expect 403 Forbidden.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Should be rejected\",\n  \"description\": \"Attempted by an EDITOR project member.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 403\", function () {",
+                  "    pm.response.to.have.status(403);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update project - 401 not logged in",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/project/{{projectId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "project",
+                "{{projectId}}"
+              ]
+            },
+            "description": "No session cookie sent. Expect 401 Unauthorized.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Should be rejected\",\n  \"description\": \"No session cookie sent.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 401\", function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update project - 400 invalid UUID",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/project/not-a-uuid",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "project",
+                "not-a-uuid"
+              ]
+            },
+            "description": "Log in first. Path param is not a valid UUID. Expect 400 Bad Request.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test\",\n  \"description\": \"Test\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 400\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update project - 403 not found / not a member",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/project/{{nonExistentUuid}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "project",
+                "{{nonExistentUuid}}"
+              ]
+            },
+            "description": "Log in first. Valid UUID shape but no such project (or not a member). Expect 403 Forbidden.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test\",\n  \"description\": \"Test\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 403\", function () {",
+                  "    pm.response.to.have.status(403);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete project - 403 insufficient project role",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/project/{{seededProjectId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "project",
+                "{{seededProjectId}}"
+              ]
+            },
+            "description": "Run \"Login - success (seeded project editor)\" and \"Resolve seeded project id (Project Phoenix)\" first. Patricia Perez is a deterministically-seeded EDITOR (not OWNER/ADMIN) on this project, so the delete is rejected and Project Phoenix survives for future test runs. Expect 403 Forbidden."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 403\", function () {",
+                  "    pm.response.to.have.status(403);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete project - 401 not logged in",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/project/{{projectId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "project",
+                "{{projectId}}"
+              ]
+            },
+            "description": "No session cookie sent. Expect 401 Unauthorized.",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 401\", function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete project - 400 invalid UUID",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/project/not-a-uuid",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "project",
+                "not-a-uuid"
+              ]
+            },
+            "description": "Log in first. Path param is not a valid UUID. Expect 400 Bad Request."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 400\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete project - 403 not found / not a member",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/project/{{nonExistentUuid}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "project",
+                "{{nonExistentUuid}}"
+              ]
+            },
+            "description": "Log in first. Valid UUID shape but no such project (or not a member). Expect 403 Forbidden."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 403\", function () {",
+                  "    pm.response.to.have.status(403);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete project - success (owner/admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/project/{{projectId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "project",
+                "{{projectId}}"
+              ]
+            },
+            "description": "Log in as the project owner or a global admin. Run this LAST in the Project folder — it deletes {{projectId}}, so anything below it would then 403/404. Expect 200 OK."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Logger",
+      "description": "",
+      "item": [
+        {
+          "name": "Get logs - success (admin, no filters)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/logger",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "logger"
+              ]
+            },
+            "description": "Log in as admin first. Returns all logs, sorted by timestamp descending by default. Expect 200 OK."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get logs - 401 not logged in",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/logger",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "logger"
+              ]
+            },
+            "description": "No session cookie sent. Expect 401 Unauthorized.",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 401\", function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get logs - 403 logged in but not admin",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/logger",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "logger"
+              ]
+            },
+            "description": "Log in as a regular (non-admin) user first. Expect 403 Forbidden."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 403\", function () {",
+                  "    pm.response.to.have.status(403);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get logs - filter by level",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/logger?level=WARN",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "logger"
+              ],
+              "query": [
+                {
+                  "key": "level",
+                  "value": "WARN",
+                  "disabled": false
+                }
+              ]
+            },
+            "description": "Log in as admin first. The level column is stored uppercase (\"INFO\"/\"WARN\"/\"ERROR\") and matched exactly, so the query param must match that case. Seeding deliberately triggers 6 bad requests (duplicate email, password mismatch, missing properties, not-found/invalid-id lookups) specifically so this filter has real WARN rows to return — also try \"INFO\" (plentiful) or \"ERROR\" (none from seeding; only real unexpected failures log at this level)."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get logs - filter by date range",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/logger?fromDate=2024-01-01&toDate=2024-12-31",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "logger"
+              ],
+              "query": [
+                {
+                  "key": "fromDate",
+                  "value": "2024-01-01",
+                  "disabled": false
+                },
+                {
+                  "key": "toDate",
+                  "value": "2024-12-31",
+                  "disabled": false
+                }
+              ]
+            },
+            "description": "Log in as admin first. Only returns logs whose timestamp falls within [fromDate, toDate]."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get logs - sort by timestamp ascending",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/logger?sortBy=timestamp&order=ASC",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "logger"
+              ],
+              "query": [
+                {
+                  "key": "sortBy",
+                  "value": "timestamp",
+                  "disabled": false
+                },
+                {
+                  "key": "order",
+                  "value": "ASC",
+                  "disabled": false
+                }
+              ]
+            },
+            "description": "Log in as admin first. Oldest logs first."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get logs - sort by context descending",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/logger?sortBy=context&order=DESC",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "logger"
+              ],
+              "query": [
+                {
+                  "key": "sortBy",
+                  "value": "context",
+                  "disabled": false
+                },
+                {
+                  "key": "order",
+                  "value": "DESC",
+                  "disabled": false
+                }
+              ]
+            },
+            "description": "Log in as admin first. Sorted alphabetically by context, descending."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get logs - sort by context ascending",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/logger?sortBy=context&order=ASC",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "logger"
+              ],
+              "query": [
+                {
+                  "key": "sortBy",
+                  "value": "context",
+                  "disabled": false
+                },
+                {
+                  "key": "order",
+                  "value": "ASC",
+                  "disabled": false
+                }
+              ]
+            },
+            "description": "Log in as admin first. Sorted alphabetically by context, ascending."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3001"
+    },
+    {
+      "key": "adminEmail",
+      "value": ""
+    },
+    {
+      "key": "adminPassword",
+      "value": ""
+    },
+    {
+      "key": "defaultEmail",
+      "value": ""
+    },
+    {
+      "key": "defaultPassword",
+      "value": ""
+    },
+    {
+      "key": "projectId",
+      "value": ""
+    },
+    {
+      "key": "seededProjectId",
+      "value": ""
+    },
+    {
+      "key": "seededProjectName",
+      "value": "Project Phoenix"
+    },
+    {
+      "key": "testOwnerEmail",
+      "value": "jamessmith@test.com"
+    },
+    {
+      "key": "testEditorEmail",
+      "value": "patriciaperez@test.com"
+    },
+    {
+      "key": "testDeletableUserEmail",
+      "value": "sharoncollins@test.com"
+    },
+    {
+      "key": "userId",
+      "value": ""
+    },
+    {
+      "key": "nonExistentUuid",
+      "value": "00000000-0000-0000-0000-000000000000"
+    },
+    {
+      "key": "verifyToken",
+      "value": ""
+    },
+    {
+      "key": "resetToken",
+      "value": ""
+    },
+    {
+      "key": "newUserEmail",
+      "value": "postman.tester@example.com"
+    },
+    {
+      "key": "newUserPassword",
+      "value": "P@ssword123"
+    }
+  ]
+}
