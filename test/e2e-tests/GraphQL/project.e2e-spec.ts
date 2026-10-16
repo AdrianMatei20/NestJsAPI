@@ -12,6 +12,9 @@ import { LoggerController } from "../../../src/logger/logger.controller";
 import { User } from "../../../src/resources/user/entities/user.entity";
 import { UserProjectRole } from "../../../src/resources/project/entities/user-project-role.entity";
 import { Project } from "../../../src/resources/project/entities/project.entity";
+import { Issue } from "../../../src/resources/issue/entities/issue.entity";
+import { Label } from "../../../src/resources/label/entities/label.entity";
+import { Comment } from "../../../src/resources/comment/entities/comment.entity";
 import { ResetPassword } from "../../../src/auth/reset-password/reset-password.entity";
 import { Log } from "../../../src/logger/entities/log.entity";
 import { GlobalRole } from "../../../src/resources/user/enums/global-role";
@@ -75,7 +78,7 @@ describe('GraphQL project (e2e)', () => {
         TypeOrmModule.forRoot({
           type: 'sqlite',
           database: ':memory:',
-          entities: [User, UserProjectRole, Project, ResetPassword, Log],
+          entities: [User, UserProjectRole, Project, Issue, Label, Comment, ResetPassword, Log],
           synchronize: true,
           dropSchema: true,
         }),

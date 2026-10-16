@@ -13,6 +13,9 @@ import { AuthService } from "../../../src/auth/auth.service";
 import { User } from "../../../src/resources/user/entities/user.entity";
 import { UserProjectRole } from "../../../src/resources/project/entities/user-project-role.entity";
 import { Project } from "../../../src/resources/project/entities/project.entity";
+import { Issue } from "../../../src/resources/issue/entities/issue.entity";
+import { Label } from "../../../src/resources/label/entities/label.entity";
+import { Comment } from "../../../src/resources/comment/entities/comment.entity";
 import { ResetPassword } from "../../../src/auth/reset-password/reset-password.entity";
 import { Log } from "../../../src/logger/entities/log.entity";
 
@@ -50,7 +53,7 @@ describe('AuthController (e2e)', () => {
                 TypeOrmModule.forRoot({
                     type: 'sqlite',
                     database: ':memory:',
-                    entities: [User, UserProjectRole, Project, ResetPassword, Log],
+                    entities: [User, UserProjectRole, Project, Issue, Label, Comment, ResetPassword, Log],
                     synchronize: true,
                     dropSchema: true,
                 }),

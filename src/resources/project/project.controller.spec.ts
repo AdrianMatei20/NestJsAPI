@@ -320,6 +320,7 @@ describe('ProjectController', () => {
         name: updateProjectDto.name,
         description: updateProjectDto.description,
         createdAt: project.createdAt,
+        issues: [],
         userProjectRoles: JamesOwnerAndChristopherMember,
       };
 
@@ -346,6 +347,7 @@ describe('ProjectController', () => {
         name: updateProjectDto.name,
         description: updateProjectDto.description,
         createdAt: project.createdAt,
+        issues: [],
         userProjectRoles: JamesOwnerAndChristopherMember,
       };
 

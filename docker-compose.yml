@@ -15,12 +15,15 @@ services:
       - PG_PASSWORD=postgres
       - PG_DB=postgres
       - PG_PORT=5432
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
       - EMAIL_JS_SERVICE_ID=${EMAIL_JS_SERVICE_ID}
       - EMAIL_JS_TEMPLATE_ID=${EMAIL_JS_TEMPLATE_ID}
       - EMAIL_JS_PUBLIC_KEY=${EMAIL_JS_PUBLIC_KEY}
       - EMAIL_JS_PRIVATE_KEY=${EMAIL_JS_PRIVATE_KEY}
     depends_on:
       - postgres
+      - redis
 
   postgres:
     container_name: postgres

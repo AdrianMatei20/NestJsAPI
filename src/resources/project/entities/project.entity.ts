@@ -1,5 +1,6 @@
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 import { UserProjectRole } from "./user-project-role.entity";
+import { Issue } from "src/resources/issue/entities/issue.entity";
 import { Field, ID, ObjectType } from "@nestjs/graphql";
 
 @Entity()
@@ -24,5 +25,8 @@ export class Project {
 
     @OneToMany(() => UserProjectRole, (userProjectRole) => userProjectRole.project, { cascade: true })
     userProjectRoles: UserProjectRole[];
+
+    @OneToMany(() => Issue, (issue) => issue.project)
+    issues: Issue[];
 
 }

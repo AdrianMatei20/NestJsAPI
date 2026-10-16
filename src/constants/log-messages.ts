@@ -99,4 +99,101 @@ export const LOG_MESSAGES = {
         INVALID_UUID: 'Could not find user. The provided user id was not a valid UUID.',
     },
 
+    ISSUE: {
+        CREATE: {
+            MISSING_PROPS: (missingProperties: string[]) => `Could not create issue. Reason: missing properties: ${missingProperties}.`,
+            FORBIDDEN: (userId: string, projectId: string) => `User '${userId}' attempted to create an issue on project '${projectId}' without sufficient permissions.`,
+            INVALID_ASSIGNEE_ID: 'Could not create issue. The provided assignee id was not a valid UUID.',
+            ASSIGNEE_NOT_FOUND: (assigneeId: string) => `Could not create issue. Assignee with id '${assigneeId}' not found, or not a member of the project.`,
+            FAILED_TO_CREATE_ISSUE: (title: string) => `Failed to create issue '${title}'.`,
+            SUCCESS: (title: string, projectName: string) => `Created issue '${title}' on project '${projectName}'.`,
+        },
+        FIND_ALL: {
+            FORBIDDEN: (userId: string, projectId: string) => `User '${userId}' attempted to list issues on project '${projectId}' without being a member.`,
+            FAILED_TO_RETRIEVE_ISSUES: (projectId: string) => `Failed to retrieve issues for project '${projectId}'.`,
+        },
+        FIND_ONE_BY_ID: {
+            INVALID_UUID: 'Could not retrieve issue. The provided issue id was not a valid UUID.',
+            ISSUE_NOT_FOUND: (issueId: string) => `Could not retrieve issue. Issue with id '${issueId}' not found.`,
+            FORBIDDEN: (userId: string, issueId: string) => `User '${userId}' attempted to retrieve issue '${issueId}' without being a member of its project.`,
+            FAILED_TO_FIND_ISSUE: (issueId: string) => `Failed to find issue with id '${issueId}'.`,
+        },
+        UPDATE: {
+            INVALID_UUID: 'Could not update issue. The provided issue id was not a valid UUID.',
+            ISSUE_NOT_FOUND: (issueId: string) => `Could not update issue. Issue with id '${issueId}' not found.`,
+            FORBIDDEN: (userId: string, issueId: string) => `User '${userId}' attempted to update issue '${issueId}' without sufficient permissions.`,
+            INVALID_ASSIGNEE_ID: 'Could not update issue. The provided assignee id was not a valid UUID.',
+            ASSIGNEE_NOT_FOUND: (assigneeId: string) => `Could not update issue. Assignee with id '${assigneeId}' not found, or not a member of the project.`,
+            FAILED_TO_UPDATE_ISSUE: (issueId: string) => `Failed to update issue '${issueId}'.`,
+            SUCCESS: (title: string) => `Updated issue '${title}'.`,
+        },
+        REMOVE: {
+            INVALID_UUID: 'Could not delete issue. The provided issue id was not a valid UUID.',
+            ISSUE_NOT_FOUND: (issueId: string) => `Could not delete issue. Issue with id '${issueId}' not found.`,
+            FORBIDDEN: (userId: string, issueId: string) => `User '${userId}' attempted to delete issue '${issueId}' without sufficient permissions.`,
+            FAILED_TO_DELETE_ISSUE: (issueId: string) => `Failed to delete issue '${issueId}'.`,
+            SUCCESS: (title: string) => `Deleted issue '${title}'.`,
+        },
+    },
+
+    LABEL: {
+        CREATE: {
+            MISSING_PROPS: (missingProperties: string[]) => `Could not create label. Reason: missing properties: ${missingProperties}.`,
+            FORBIDDEN: (userId: string, projectId: string) => `User '${userId}' attempted to create a label on project '${projectId}' without sufficient permissions.`,
+            FAILED_TO_CREATE_LABEL: (name: string) => `Failed to create label '${name}'.`,
+            SUCCESS: (name: string, projectName: string) => `Created label '${name}' on project '${projectName}'.`,
+        },
+        FIND_ALL: {
+            FORBIDDEN: (userId: string, projectId: string) => `User '${userId}' attempted to list labels on project '${projectId}' without being a member.`,
+            FAILED_TO_RETRIEVE_LABELS: (projectId: string) => `Failed to retrieve labels for project '${projectId}'.`,
+        },
+        FIND_ONE_BY_ID: {
+            INVALID_UUID: 'Could not retrieve label. The provided label id was not a valid UUID.',
+            LABEL_NOT_FOUND: (labelId: string) => `Could not retrieve label. Label with id '${labelId}' not found.`,
+            FORBIDDEN: (userId: string, labelId: string) => `User '${userId}' attempted to retrieve label '${labelId}' without being a member of its project.`,
+            FAILED_TO_FIND_LABEL: (labelId: string) => `Failed to find label with id '${labelId}'.`,
+        },
+        UPDATE: {
+            INVALID_UUID: 'Could not update label. The provided label id was not a valid UUID.',
+            LABEL_NOT_FOUND: (labelId: string) => `Could not update label. Label with id '${labelId}' not found.`,
+            FORBIDDEN: (userId: string, labelId: string) => `User '${userId}' attempted to update label '${labelId}' without sufficient permissions.`,
+            FAILED_TO_UPDATE_LABEL: (labelId: string) => `Failed to update label '${labelId}'.`,
+            SUCCESS: (name: string) => `Updated label '${name}'.`,
+        },
+        REMOVE: {
+            INVALID_UUID: 'Could not delete label. The provided label id was not a valid UUID.',
+            LABEL_NOT_FOUND: (labelId: string) => `Could not delete label. Label with id '${labelId}' not found.`,
+            FORBIDDEN: (userId: string, labelId: string) => `User '${userId}' attempted to delete label '${labelId}' without sufficient permissions.`,
+            FAILED_TO_DELETE_LABEL: (labelId: string) => `Failed to delete label '${labelId}'.`,
+            SUCCESS: (name: string) => `Deleted label '${name}'.`,
+        },
+    },
+
+    COMMENT: {
+        CREATE: {
+            MISSING_PROPS: (missingProperties: string[]) => `Could not create comment. Reason: missing properties: ${missingProperties}.`,
+            FORBIDDEN: (userId: string, issueId: string) => `User '${userId}' attempted to comment on issue '${issueId}' without being a member of its project.`,
+            FAILED_TO_CREATE_COMMENT: (issueId: string) => `Failed to create comment on issue '${issueId}'.`,
+            SUCCESS: (issueId: string) => `Created comment on issue '${issueId}'.`,
+        },
+        FIND_ALL: {
+            FORBIDDEN: (userId: string, issueId: string) => `User '${userId}' attempted to list comments on issue '${issueId}' without being a member of its project.`,
+            FAILED_TO_RETRIEVE_COMMENTS: (issueId: string) => `Failed to retrieve comments for issue '${issueId}'.`,
+        },
+        UPDATE: {
+            INVALID_UUID: 'Could not update comment. The provided comment id was not a valid UUID.',
+            COMMENT_NOT_FOUND: (commentId: string) => `Could not update comment. Comment with id '${commentId}' not found.`,
+            FORBIDDEN: (userId: string, commentId: string) => `User '${userId}' attempted to update comment '${commentId}' without sufficient permissions.`,
+            FAILED_TO_UPDATE_COMMENT: (commentId: string) => `Failed to update comment '${commentId}'.`,
+            SUCCESS: (commentId: string) => `Updated comment '${commentId}'.`,
+        },
+        REMOVE: {
+            INVALID_UUID: 'Could not delete comment. The provided comment id was not a valid UUID.',
+            COMMENT_NOT_FOUND: (commentId: string) => `Could not delete comment. Comment with id '${commentId}' not found.`,
+            FORBIDDEN: (userId: string, commentId: string) => `User '${userId}' attempted to delete comment '${commentId}' without sufficient permissions.`,
+            FAILED_TO_DELETE_COMMENT: (commentId: string) => `Failed to delete comment '${commentId}'.`,
+            SUCCESS: (commentId: string) => `Deleted comment '${commentId}'.`,
+        },
+    },
+
 };

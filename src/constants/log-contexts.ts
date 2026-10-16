@@ -35,4 +35,27 @@ export const LOG_CONTEXTS = {
         remove: 'UserController.remove',
     },
 
+    IssueService: {
+        create: 'IssueService.create',
+        findAllByProjectId: 'IssueService.findAllByProjectId',
+        findOneById: 'IssueService.findOneById',
+        update: 'IssueService.update',
+        remove: 'IssueService.remove',
+    },
+
+    LabelService: {
+        create: 'LabelService.create',
+        findAllByProjectId: 'LabelService.findAllByProjectId',
+        findOneById: 'LabelService.findOneById',
+        update: 'LabelService.update',
+        remove: 'LabelService.remove',
+    },
+
+    CommentService: {
+        create: 'CommentService.create',
+        findAllByIssueId: 'CommentService.findAllByIssueId',
+        update: 'CommentService.update',
+        remove: 'CommentService.remove',
+    },
+
   };

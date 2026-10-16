@@ -841,6 +841,7 @@ describe('ProjectService', () => {
         name: updateProjectDto.name,
         description: project.description,
         createdAt: project.createdAt,
+        issues: project.issues,
         userProjectRoles: project.userProjectRoles,
       };
 
@@ -869,6 +870,7 @@ describe('ProjectService', () => {
         name: project.name,
         description: updateProjectDto.description,
         createdAt: project.createdAt,
+        issues: project.issues,
         userProjectRoles: project.userProjectRoles,
       };
 
@@ -897,6 +899,7 @@ describe('ProjectService', () => {
         name: updateProjectDto.name,
         description: updateProjectDto.description,
         createdAt: project.createdAt,
+        issues: project.issues,
         userProjectRoles: project.userProjectRoles,
       };
 

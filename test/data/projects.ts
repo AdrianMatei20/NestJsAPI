@@ -32,6 +32,7 @@ export const project: Project = {
     name: 'Project Name',
     description: 'Project description.',
     createdAt: new Date('2024-01-01T12:00:00Z'),
+    issues: [],
     userProjectRoles: [
         {
             id: userJamesSmith.id,
@@ -56,6 +57,7 @@ export const projectOne: Project = {
     name: 'Project One',
     description: 'First project description.',
     createdAt: new Date('2024-01-01T12:00:00Z'),
+    issues: [],
     userProjectRoles: [
         {
             id: userProjectRoleUUIDs[0],
@@ -71,6 +73,7 @@ export const projectTwo: Project = {
     name: 'Project Two',
     description: 'Second project description.',
     createdAt: new Date('2024-02-01T12:00:00Z'),
+    issues: [],
     userProjectRoles: [
         {
             id: userJamesSmith.id,
@@ -86,6 +89,7 @@ export const projectThree: Project = {
     name: 'Project Three',
     description: 'Third project description.',
     createdAt: new Date('2024-03-01T12:00:00Z'),
+    issues: [],
     userProjectRoles: [
         {
             id: userJamesSmith.id,
@@ -101,6 +105,7 @@ export const projectFour: Project = {
     name: 'Project Four',
     description: 'Fourth project description.',
     createdAt: new Date('2024-04-01T12:00:00Z'),
+    issues: [],
     userProjectRoles: [
         {
             id: userJamesSmith.id,
