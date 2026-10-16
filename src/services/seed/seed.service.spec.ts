@@ -5,11 +5,17 @@ import { getRepositoryToken, TypeOrmModule } from '@nestjs/typeorm';
 import { User } from 'src/resources/user/entities/user.entity';
 import { Project } from 'src/resources/project/entities/project.entity';
 import { UserProjectRole } from 'src/resources/project/entities/user-project-role.entity';
+import { Issue } from 'src/resources/issue/entities/issue.entity';
+import { Label } from 'src/resources/label/entities/label.entity';
+import { Comment } from 'src/resources/comment/entities/comment.entity';
 import { Log } from 'src/logger/entities/log.entity';
 import { ProjectService } from 'src/resources/project/project.service';
 import { LoggerService } from 'src/logger/logger.service';
 import { UserService } from 'src/resources/user/user.service';
 import { AuthService } from 'src/auth/auth.service';
+import { IssueService } from 'src/resources/issue/issue.service';
+import { LabelService } from 'src/resources/label/label.service';
+import { CommentService } from 'src/resources/comment/comment.service';
 import { ObjectValidationService } from '../object-validation/object-validation.service';
 import { EmailService } from '../email/email.service';
 import { TokenService } from '../token/token.service';
@@ -25,6 +31,9 @@ describe('SeedService', () => {
   let userRepository: Repository<User>;
   let projectRepository: Repository<Project>;
   let userProjectRoleRepository: Repository<UserProjectRole>;
+  let issueRepository: Repository<Issue>;
+  let labelRepository: Repository<Label>;
+  let commentRepository: Repository<Comment>;
   let loggerRepository: Repository<Log>;
   let mockEmailService: any;
   let mockCacheService: any;
@@ -65,17 +74,20 @@ describe('SeedService', () => {
         TypeOrmModule.forRoot({
           type: 'sqlite',
           database: ':memory:',
-          entities: [User, UserProjectRole, Project, Log, ResetPassword],
+          entities: [User, UserProjectRole, Project, Issue, Label, Comment, Log, ResetPassword],
           synchronize: true,
           dropSchema: true,
         }),
-        TypeOrmModule.forFeature([User, UserProjectRole, Project, Log, ResetPassword]),
+        TypeOrmModule.forFeature([User, UserProjectRole, Project, Issue, Label, Comment, Log, ResetPassword]),
       ],
       providers: [
         SeedService,
         ProjectService,
         UserService,
         AuthService,
+        IssueService,
+        LabelService,
+        CommentService,
         ObjectValidationService,
         LoggerService,
         { provide: EmailService, useValue: mockEmailService },
@@ -103,13 +115,19 @@ describe('SeedService', () => {
     userRepository = module.get<Repository<User>>(getRepositoryToken(User));
     projectRepository = module.get<Repository<Project>>(getRepositoryToken(Project));
     userProjectRoleRepository = module.get<Repository<UserProjectRole>>(getRepositoryToken(UserProjectRole));
+    issueRepository = module.get<Repository<Issue>>(getRepositoryToken(Issue));
+    labelRepository = module.get<Repository<Label>>(getRepositoryToken(Label));
+    commentRepository = module.get<Repository<Comment>>(getRepositoryToken(Comment));
     loggerRepository = module.get<Repository<Log>>(getRepositoryToken(Log));
   });
 
   afterEach(async () => {
+    await commentRepository.clear();
+    await issueRepository.clear();
+    await labelRepository.clear();
+    await userProjectRoleRepository.clear();
     await userRepository.clear();
     await projectRepository.clear();
-    await userProjectRoleRepository.clear();
     await loggerRepository.clear();
   });
 
@@ -140,6 +158,15 @@ describe('SeedService', () => {
       const userProjectRolesCount: number = await userProjectRoleRepository.count();
       expect(userProjectRolesCount).toBeGreaterThanOrEqual(100);
 
+      const labelsCount: number = await labelRepository.count();
+      expect(labelsCount).toBe(200); // 50 projects x 4 labels
+
+      const issuesCount: number = await issueRepository.count();
+      expect(issuesCount).toBe(250); // 50 projects x 5 issues
+
+      const commentsCount: number = await commentRepository.count();
+      expect(commentsCount).toBe(100); // 50 projects x 2 commented issues
+
       const logsCount: number = await loggerRepository.count();
       expect(logsCount).toBeGreaterThanOrEqual(100);
 
@@ -149,7 +176,7 @@ describe('SeedService', () => {
       const warnLogsCount: number = await loggerRepository.count({ where: { level: 'WARN' } });
       expect(warnLogsCount).toBeGreaterThanOrEqual(6);
 
-    }, 50000);
+    }, 150000);
 
     it('should skip seeding if environment variables not set', async () => {
       await seedService.seed();
@@ -172,6 +199,15 @@ describe('SeedService', () => {
 
       const userProjectRolesCount: number = await userProjectRoleRepository.count();
       expect(userProjectRolesCount).toBe(0);
+
+      const labelsCount: number = await labelRepository.count();
+      expect(labelsCount).toBe(0);
+
+      const issuesCount: number = await issueRepository.count();
+      expect(issuesCount).toBe(0);
+
+      const commentsCount: number = await commentRepository.count();
+      expect(commentsCount).toBe(0);
 
       const logsCount: number = await loggerRepository.count();
       expect(logsCount).toBe(0);
@@ -200,13 +236,22 @@ describe('SeedService', () => {
       const userProjectRolesCount: number = await userProjectRoleRepository.count();
       expect(userProjectRolesCount).toBeGreaterThanOrEqual(100);
 
+      const labelsCount: number = await labelRepository.count();
+      expect(labelsCount).toBe(200); // unchanged by the second seed() call
+
+      const issuesCount: number = await issueRepository.count();
+      expect(issuesCount).toBe(250); // unchanged by the second seed() call
+
+      const commentsCount: number = await commentRepository.count();
+      expect(commentsCount).toBe(100); // unchanged by the second seed() call
+
       const logsCount: number = await loggerRepository.count();
       expect(logsCount).toBeGreaterThanOrEqual(100);
 
       const warnLogsCount: number = await loggerRepository.count({ where: { level: 'WARN' } });
       expect(warnLogsCount).toBe(6);
 
-    }, 50000);
+    }, 150000);
   });
 
 });

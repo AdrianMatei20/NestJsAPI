@@ -8,6 +8,9 @@ import { PassportModule } from '@nestjs/passport';
 import { AuthModule } from './auth/auth.module';
 import { ProjectModule } from './resources/project/project.module';
 import { UserModule } from './resources/user/user.module';
+import { IssueModule } from './resources/issue/issue.module';
+import { LabelModule } from './resources/label/label.module';
+import { CommentModule } from './resources/comment/comment.module';
 import { LoggerModule } from './logger/logger.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { PrometheusModule } from '@willsoto/nestjs-prometheus';
@@ -16,6 +19,9 @@ import { MonitoringModule } from './metrics/monitoring.module';
 import { User } from './resources/user/entities/user.entity';
 import { Project } from './resources/project/entities/project.entity';
 import { UserProjectRole } from './resources/project/entities/user-project-role.entity';
+import { Issue } from './resources/issue/entities/issue.entity';
+import { Label } from './resources/label/entities/label.entity';
+import { Comment } from './resources/comment/entities/comment.entity';
 import { Log } from './logger/entities/log.entity';
 import { ResetPassword } from './auth/reset-password/reset-password.entity';
 
@@ -32,6 +38,9 @@ import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { HelloResolver } from './graphql/hello/hello.resolver';
 import { ProjectResolver } from './graphql/project/project.resolver';
+import { IssueResolver } from './graphql/issue/issue.resolver';
+import { LabelResolver } from './graphql/label/label.resolver';
+import { CommentResolver } from './graphql/comment/comment.resolver';
 import { join } from 'path';
 import { CacheModule } from './cache/cache.module';
 
@@ -48,6 +57,9 @@ import { CacheModule } from './cache/cache.module';
     AuthModule,
     ProjectModule,
     UserModule,
+    IssueModule,
+    LabelModule,
+    CommentModule,
     LoggerModule,
     TypeOrmModule.forRoot({
       type: process.env.DB_TYPE as any,
@@ -59,7 +71,7 @@ import { CacheModule } from './cache/cache.module';
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
       synchronize: true,
     }),
-    TypeOrmModule.forFeature([User, Project, UserProjectRole, Log, ResetPassword]),
+    TypeOrmModule.forFeature([User, Project, UserProjectRole, Issue, Label, Comment, Log, ResetPassword]),
     GraphQLModule.forRoot<ApolloDriverConfig>({
       driver: ApolloDriver,
       autoSchemaFile: join(process.cwd(), 'src/schema.gql'), // auto-generate
@@ -89,6 +101,9 @@ import { CacheModule } from './cache/cache.module';
     ResetPasswordService,
     HelloResolver,
     ProjectResolver,
+    IssueResolver,
+    LabelResolver,
+    CommentResolver,
   ],
 })
 export class AppModule {

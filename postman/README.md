@@ -30,6 +30,14 @@ These are hardcoded, safe-to-commit collection variables — they're derived fro
 
 Run **Auth > Login > "Login - success (seeded project editor)"** then **Project > "Resolve seeded project id (Project Phoenix)"** before the "insufficient project role" 403 requests — the resolver looks up the project by name and stores its (DB-generated, non-deterministic) id as `seededProjectId`.
 
+Seeding also deterministically creates 4 labels (`bug`, `frontend`, `backend`, `urgent`) and 5 issues per project — see `SeedService.seedIssuesLabelsAndComments` for the exact templates/cycling logic. On Project Phoenix specifically, issue #2 ("Design initial database schema") always has one seeded comment. The **Issue** and **Label** folders each have a "Resolve seeded ... id" request (same pattern as the project one) that looks these up by title/name and stores `seededIssueId` / `seededLabelId`.
+
+## Issue tracking: roles
+
+- **Issue / Label**: creating or updating requires an OWNER, ADMIN, or EDITOR project role; deleting requires OWNER or ADMIN. A global admin bypasses project membership entirely.
+- **Comment**: any project member — including VIEWER — may create one (reuses `IssueService`'s own "must be a project member" check, since that's exactly what commenting requires). Editing or deleting a comment is restricted to its own author or a project OWNER/ADMIN.
+- Seeding only creates OWNER + EDITOR relationships, so no seeded account has a VIEWER role by default. That's enough for the "Delete issue/label - 403" requests (the seeded **editor** genuinely lacks delete rights), but the "Create/Update issue/label - 403" requests need a VIEWER specifically, since EDITOR *can* create/update — those requests' descriptions call this out and need a manually-assigned VIEWER to actually demonstrate.
+
 ## Other requests that need manual values
 
 A few flows involve values that only exist outside the API response (e.g. sent via email, or requiring a fresh, non-duplicate email per run):

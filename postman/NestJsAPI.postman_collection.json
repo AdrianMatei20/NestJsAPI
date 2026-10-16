@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "4133f15a-2b02-4fa8-b4bd-709df64424c8",
     "name": "NestJsAPI",
-    "description": "REST API collection for the NestJsAPI project (a Jira-like project tracking backend built with NestJS). Covers every REST endpoint with both success and failure scenarios (validation errors, auth/role failures, not-found cases).\n\n**Auth model**: session-cookie based (express-session + passport). Run a \"Login\" request first — Postman's cookie jar will then automatically attach the session cookie to subsequent requests against the same {{baseUrl}}. Requests marked \"not logged in\" explicitly disable auth/cookies for that one request via a noauth override, so they still fail correctly even if you are logged in from a previous request.\n\n**Seeded test data**: SeedService assigns @test.com users to projects using a fixed \"memberIndices\" list per project in test-data/projects.json, so the same users always end up with the same roles on the same projects across every fresh seed. This collection relies on that: testOwnerEmail (James Smith) is always OWNER, and testEditorEmail (Patricia Perez) is always an EDITOR, of the \"Project Phoenix\" project — used by the \"Resolve seeded project id\" / \"insufficient project role\" requests in the Project folder. These emails are derived from committed, non-secret test data, so they're hardcoded as collection variables; only the shared password comes from your own .env (DEFAULT_PASSWORD).\n\n**Setup**: open this collection's Variables tab and fill in the \"Current value\" column for adminEmail / adminPassword / defaultEmail / defaultPassword to match your local .env seed values. Never commit real values into those fields.",
+    "description": "REST API collection for the NestJsAPI project (a Jira-like project tracking backend built with NestJS). Covers every REST endpoint with both success and failure scenarios (validation errors, auth/role failures, not-found cases).\n\n**Auth model**: session-cookie based (express-session + passport). Run a \"Login\" request first — Postman's cookie jar will then automatically attach the session cookie to subsequent requests against the same {{baseUrl}}. Requests marked \"not logged in\" explicitly disable auth/cookies for that one request via a noauth override, so they still fail correctly even if you are logged in from a previous request.\n\n**Seeded test data**: SeedService assigns @test.com users to projects using a fixed \"memberIndices\" list per project in test-data/projects.json, so the same users always end up with the same roles on the same projects across every fresh seed. This collection relies on that: testOwnerEmail (James Smith) is always OWNER, and testEditorEmail (Patricia Perez) is always an EDITOR, of the \"Project Phoenix\" project — used by the \"Resolve seeded project id\" / \"insufficient project role\" requests in the Project folder. These emails are derived from committed, non-secret test data, so they're hardcoded as collection variables; only the shared password comes from your own .env (DEFAULT_PASSWORD).\n\n**Setup**: open this collection's Variables tab and fill in the \"Current value\" column for adminEmail / adminPassword / defaultEmail / defaultPassword to match your local .env seed values. Never commit real values into those fields.\n\n**Issue tracking**: the Issue/Label/Comment folders cover the core \"Jira-like\" domain. Issues/Labels require OWNER/ADMIN/EDITOR project roles to create or update (OWNER/ADMIN to delete); Comments may be created by any project member, including VIEWER, and edited/deleted by their own author or a project OWNER/ADMIN. SeedService seeds 4 labels and 5 issues per project deterministically (see its source for the exact templates), so Project Phoenix always has the same seeded issues/labels to test against.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
@@ -2803,6 +2803,1664 @@
       ]
     },
     {
+      "name": "Issue",
+      "description": "",
+      "item": [
+        {
+          "name": "Resolve seeded issue id (Design initial database schema)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/issue?projectId={{seededProjectId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "issue"
+              ],
+              "query": [
+                {
+                  "key": "projectId",
+                  "value": "{{seededProjectId}}",
+                  "disabled": false
+                }
+              ]
+            },
+            "description": "Log in as admin first, and run \"Resolve seeded project id (Project Phoenix)\" first too. Looks up a specific deterministically-seeded issue on Project Phoenix and stores its id as {{seededIssueId}} — this issue already has a seeded comment on it (see the Comment folder)."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "const target = (json.data || []).find(i => i.title === 'Design initial database schema');",
+                  "pm.test(\"Seeded issue found\", function () {",
+                  "    pm.expect(target).to.not.be.undefined;",
+                  "});",
+                  "if (target) {",
+                  "    pm.collectionVariables.set(\"seededIssueId\", target.id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create issue - success (editor)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/issue",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "issue"
+              ]
+            },
+            "description": "Run \"Login - success (seeded project editor)\" and \"Resolve seeded project id (Project Phoenix)\" first. OWNER/ADMIN/EDITOR project roles may create issues. Expect 201 Created.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"projectId\": \"{{seededProjectId}}\",\n  \"title\": \"Postman test issue\",\n  \"description\": \"Created from the Postman collection.\",\n  \"type\": \"BUG\",\n  \"priority\": \"HIGH\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "if (pm.response.code === 201) {",
+                  "    const json = pm.response.json();",
+                  "    if (json.data && json.data.id) {",
+                  "        pm.collectionVariables.set(\"issueId\", json.data.id);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create issue - 403 insufficient project role",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/issue",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "issue"
+              ]
+            },
+            "description": "Log in as a project member with the VIEWER role first (not seeded by default — see README). Expect 403 Forbidden.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"projectId\": \"{{seededProjectId}}\",\n  \"title\": \"Should be rejected\",\n  \"description\": \"Attempted by a VIEWER project member.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 403\", function () {",
+                  "    pm.response.to.have.status(403);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create issue - 401 not logged in",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/issue",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "issue"
+              ]
+            },
+            "description": "No session cookie sent. Expect 401 Unauthorized.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"projectId\": \"{{seededProjectId}}\",\n  \"title\": \"Should be rejected\",\n  \"description\": \"No session cookie sent.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 401\", function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create issue - 400 missing params",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/issue",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "issue"
+              ]
+            },
+            "description": "Log in first. Missing \"description\". Expect 400 Bad Request.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"projectId\": \"{{seededProjectId}}\",\n  \"title\": \"Missing description\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 400\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create issue - 400 invalid assignee id",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/issue",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "issue"
+              ]
+            },
+            "description": "Log in first. assigneeId is not a valid UUID. Expect 400 Bad Request.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"projectId\": \"{{seededProjectId}}\",\n  \"title\": \"Bad assignee\",\n  \"description\": \"Test\",\n  \"assigneeId\": \"not-a-uuid\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 400\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List issues for a project - success",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/issue?projectId={{seededProjectId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "issue"
+              ],
+              "query": [
+                {
+                  "key": "projectId",
+                  "value": "{{seededProjectId}}",
+                  "disabled": false
+                }
+              ]
+            },
+            "description": "Log in first (as a project member or admin). Expect 200 OK with Project Phoenix's seeded issues."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List issues - 400 missing projectId",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/issue",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "issue"
+              ]
+            },
+            "description": "Log in first. No projectId query param. Expect 400 Bad Request."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 400\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List issues - 403 not a project member",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/issue?projectId={{seededProjectId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "issue"
+              ],
+              "query": [
+                {
+                  "key": "projectId",
+                  "value": "{{seededProjectId}}",
+                  "disabled": false
+                }
+              ]
+            },
+            "description": "Log in as a regular user who is not a member of Project Phoenix first (e.g. {{defaultEmail}}, if it was never added to this project). Expect 403 Forbidden."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 403\", function () {",
+                  "    pm.response.to.have.status(403);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List issues - 401 not logged in",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/issue?projectId={{seededProjectId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "issue"
+              ],
+              "query": [
+                {
+                  "key": "projectId",
+                  "value": "{{seededProjectId}}",
+                  "disabled": false
+                }
+              ]
+            },
+            "description": "No session cookie sent. Expect 401 Unauthorized.",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 401\", function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get issue by id - success",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/issue/{{seededIssueId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "issue",
+                "{{seededIssueId}}"
+              ]
+            },
+            "description": "Log in first, and run \"Resolve seeded issue id\" first. Expect 200 OK."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get issue by id - 400 invalid uuid",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/issue/not-a-uuid",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "issue",
+                "not-a-uuid"
+              ]
+            },
+            "description": "Log in first. Expect 400 Bad Request."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 400\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get issue by id - 404 not found",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/issue/{{nonExistentUuid}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "issue",
+                "{{nonExistentUuid}}"
+              ]
+            },
+            "description": "Log in first. Valid UUID shape but no such issue. Expect 404 Not Found."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 404\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update issue - success (status transition)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/issue/{{issueId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "issue",
+                "{{issueId}}"
+              ]
+            },
+            "description": "Run \"Create issue - success (editor)\" first so {{issueId}} is set. Log in as the editor or project owner/admin. Expect 200 OK.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"IN_PROGRESS\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update issue - 403 insufficient project role",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/issue/{{seededIssueId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "issue",
+                "{{seededIssueId}}"
+              ]
+            },
+            "description": "Log in as a VIEWER project member first. Expect 403 Forbidden.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"DONE\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 403\", function () {",
+                  "    pm.response.to.have.status(403);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update issue - unassign (assigneeId: null)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/issue/{{issueId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "issue",
+                "{{issueId}}"
+              ]
+            },
+            "description": "Log in as the editor or project owner/admin. Clears the issue's assignee. Expect 200 OK.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"assigneeId\": null\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete issue - 403 insufficient project role",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/issue/{{issueId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "issue",
+                "{{issueId}}"
+              ]
+            },
+            "description": "Log in as the seeded editor first. Only OWNER/ADMIN project roles may delete. Expect 403 Forbidden. Run this BEFORE the success case below."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 403\", function () {",
+                  "    pm.response.to.have.status(403);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete issue - 400 invalid uuid",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/issue/not-a-uuid",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "issue",
+                "not-a-uuid"
+              ]
+            },
+            "description": "Log in first. Expect 400 Bad Request."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 400\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete issue - success (owner/admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/issue/{{issueId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "issue",
+                "{{issueId}}"
+              ]
+            },
+            "description": "Log in as the project owner or a global admin. Run this LAST — deletes the issue created by \"Create issue - success (editor)\". Expect 200 OK."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Label",
+      "description": "",
+      "item": [
+        {
+          "name": "Resolve seeded label id (bug)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/label?projectId={{seededProjectId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "label"
+              ],
+              "query": [
+                {
+                  "key": "projectId",
+                  "value": "{{seededProjectId}}",
+                  "disabled": false
+                }
+              ]
+            },
+            "description": "Log in first, and run \"Resolve seeded project id (Project Phoenix)\" first. Looks up the seeded \"bug\" label on Project Phoenix and stores its id as {{seededLabelId}}."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "const target = (json.data || []).find(l => l.name === 'bug');",
+                  "pm.test(\"Seeded label found\", function () {",
+                  "    pm.expect(target).to.not.be.undefined;",
+                  "});",
+                  "if (target) {",
+                  "    pm.collectionVariables.set(\"seededLabelId\", target.id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create label - success (editor)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/label",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "label"
+              ]
+            },
+            "description": "Run \"Login - success (seeded project editor)\" and \"Resolve seeded project id (Project Phoenix)\" first. Expect 201 Created.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"projectId\": \"{{seededProjectId}}\",\n  \"name\": \"postman-test\",\n  \"color\": \"#22c55e\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "if (pm.response.code === 201) {",
+                  "    const json = pm.response.json();",
+                  "    if (json.data && json.data.id) {",
+                  "        pm.collectionVariables.set(\"labelId\", json.data.id);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create label - 403 insufficient project role",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/label",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "label"
+              ]
+            },
+            "description": "Log in as a VIEWER project member first. Expect 403 Forbidden.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"projectId\": \"{{seededProjectId}}\",\n  \"name\": \"should-be-rejected\",\n  \"color\": \"#000000\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 403\", function () {",
+                  "    pm.response.to.have.status(403);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create label - 400 missing params",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/label",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "label"
+              ]
+            },
+            "description": "Log in first. Missing \"color\". Expect 400 Bad Request.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"projectId\": \"{{seededProjectId}}\",\n  \"name\": \"missing-color\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 400\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List labels for a project - success",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/label?projectId={{seededProjectId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "label"
+              ],
+              "query": [
+                {
+                  "key": "projectId",
+                  "value": "{{seededProjectId}}",
+                  "disabled": false
+                }
+              ]
+            },
+            "description": "Log in first. Expect 200 OK with Project Phoenix's 4 seeded labels (bug, frontend, backend, urgent)."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List labels - 400 missing projectId",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/label",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "label"
+              ]
+            },
+            "description": "Log in first. No projectId query param. Expect 400 Bad Request."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 400\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get label by id - success",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/label/{{seededLabelId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "label",
+                "{{seededLabelId}}"
+              ]
+            },
+            "description": "Log in first, and run \"Resolve seeded label id (bug)\" first. Expect 200 OK."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get label by id - 404 not found",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/label/{{nonExistentUuid}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "label",
+                "{{nonExistentUuid}}"
+              ]
+            },
+            "description": "Log in first. Valid UUID shape but no such label. Expect 404 Not Found."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 404\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update label - success (editor)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/label/{{labelId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "label",
+                "{{labelId}}"
+              ]
+            },
+            "description": "Run \"Create label - success (editor)\" first so {{labelId}} is set. Expect 200 OK.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"postman-test-renamed\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update label - 403 insufficient project role",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/label/{{seededLabelId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "label",
+                "{{seededLabelId}}"
+              ]
+            },
+            "description": "Log in as a VIEWER project member first. Expect 403 Forbidden.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"should-be-rejected\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 403\", function () {",
+                  "    pm.response.to.have.status(403);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete label - 403 insufficient project role",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/label/{{labelId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "label",
+                "{{labelId}}"
+              ]
+            },
+            "description": "Log in as the seeded editor first. Only OWNER/ADMIN project roles may delete. Expect 403 Forbidden. Run this BEFORE the success case below."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 403\", function () {",
+                  "    pm.response.to.have.status(403);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete label - success (owner/admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/label/{{labelId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "label",
+                "{{labelId}}"
+              ]
+            },
+            "description": "Log in as the project owner or a global admin. Run this LAST — deletes the label created by \"Create label - success (editor)\". Expect 200 OK."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Comment",
+      "description": "",
+      "item": [
+        {
+          "name": "Create comment - success (any project member, incl. viewer)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/comment",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "comment"
+              ]
+            },
+            "description": "Run \"Resolve seeded issue id\" first. Unlike issues/labels, any project member — including VIEWER — may comment. Expect 201 Created.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"issueId\": \"{{seededIssueId}}\",\n  \"body\": \"Posted from the Postman collection.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "if (pm.response.code === 201) {",
+                  "    const json = pm.response.json();",
+                  "    if (json.data && json.data.id) {",
+                  "        pm.collectionVariables.set(\"commentId\", json.data.id);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create comment - 403 not a project member",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/comment",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "comment"
+              ]
+            },
+            "description": "Log in as a user who is not a member of Project Phoenix. Expect 403 Forbidden (reuses IssueService's own membership check).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"issueId\": \"{{seededIssueId}}\",\n  \"body\": \"Should be rejected.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 403\", function () {",
+                  "    pm.response.to.have.status(403);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create comment - 400 missing body",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/comment",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "comment"
+              ]
+            },
+            "description": "Log in as a project member first. Missing \"body\". Expect 400 Bad Request.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"issueId\": \"{{seededIssueId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 400\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List comments for an issue - success",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/comment?issueId={{seededIssueId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "comment"
+              ],
+              "query": [
+                {
+                  "key": "issueId",
+                  "value": "{{seededIssueId}}",
+                  "disabled": false
+                }
+              ]
+            },
+            "description": "Log in as a project member first. This seeded issue already has one comment from seeding, plus whatever you've added above. Expect 200 OK."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List comments - 400 missing issueId",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/comment",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "comment"
+              ]
+            },
+            "description": "Log in first. No issueId query param. Expect 400 Bad Request."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 400\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update comment - success (own comment)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/comment/{{commentId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "comment",
+                "{{commentId}}"
+              ]
+            },
+            "description": "Run \"Create comment - success\" first (as the same user) so {{commentId}} is set and you are its author. Expect 200 OK.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"body\": \"Edited from the Postman collection.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update comment - 403 not the author or an owner/admin",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/comment/{{commentId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "comment",
+                "{{commentId}}"
+              ]
+            },
+            "description": "Log in as a different project member (not the comment's author, and not OWNER/ADMIN) first. Expect 403 Forbidden.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"body\": \"Should be rejected.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 403\", function () {",
+                  "    pm.response.to.have.status(403);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update comment - 404 not found",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/comment/{{nonExistentUuid}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "comment",
+                "{{nonExistentUuid}}"
+              ]
+            },
+            "description": "Log in first. Valid UUID shape but no such comment. Expect 404 Not Found.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"body\": \"Test\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 404\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete comment - 403 not the author or an owner/admin",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/comment/{{commentId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "comment",
+                "{{commentId}}"
+              ]
+            },
+            "description": "Log in as a different project member (not the comment's author, and not OWNER/ADMIN) first. Expect 403 Forbidden. Run this BEFORE the success case below."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 403\", function () {",
+                  "    pm.response.to.have.status(403);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete comment - success (own comment, or as owner/admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/comment/{{commentId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "comment",
+                "{{commentId}}"
+              ]
+            },
+            "description": "Log in as the comment's own author, or as the project owner/admin. Run this LAST — deletes the comment created above. Expect 200 OK."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
       "name": "Logger",
       "description": "",
       "item": [
@@ -3183,6 +4841,26 @@
     {
       "key": "newUserPassword",
       "value": "P@ssword123"
+    },
+    {
+      "key": "seededIssueId",
+      "value": ""
+    },
+    {
+      "key": "seededLabelId",
+      "value": ""
+    },
+    {
+      "key": "issueId",
+      "value": ""
+    },
+    {
+      "key": "labelId",
+      "value": ""
+    },
+    {
+      "key": "commentId",
+      "value": ""
     }
   ]
 }
